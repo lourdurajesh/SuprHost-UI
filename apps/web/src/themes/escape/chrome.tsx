@@ -1,13 +1,14 @@
 import Link from "next/link";
 import { AccountMenu } from "@/components/account-menu";
+import { MobileMenu } from "@/components/mobile-menu";
 import { Icon } from "@/components/icons";
 import type { Site } from "@/lib/pms";
 
 function Wordmark({ site }: { site: Site }) {
   return (
-    <Link href="/" className="leading-none">
-      <span className="block text-2xl tracking-tight text-ink">{site.brandName}</span>
-      {site.location && <span className="mt-1 block text-[10px] uppercase tracking-[0.2em] text-ink-soft">{site.location.label}</span>}
+    <Link href="/" className="min-w-0 leading-none">
+      <span className="block truncate text-xl tracking-tight text-ink sm:text-2xl">{site.brandName}</span>
+      {site.location && <span className="mt-1 hidden truncate text-eyebrow uppercase text-ink-soft sm:block">{site.location.label}</span>}
     </Link>
   );
 }
@@ -15,13 +16,13 @@ function Wordmark({ site }: { site: Site }) {
 export function SiteHeader({ site }: { site: Site }) {
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md">
-      <div className="mx-auto flex h-[76px] max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex h-[76px] max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
         <Wordmark site={site} />
-        <nav aria-label="Main" className="flex items-center gap-1 text-[15px] text-ink sm:gap-3">
+        <nav aria-label="Main" className="flex shrink-0 items-center gap-2 text-ink md:gap-3">
           <Link href="/#about" className="hidden rounded-full px-3 py-2 hover:text-ink-soft md:inline">
             Our story
           </Link>
-          <Link href="/stays" className="hidden rounded-full px-3 py-2 hover:text-ink-soft sm:inline">
+          <Link href="/stays" className="hidden rounded-full px-3 py-2 hover:text-ink-soft md:inline">
             Stays
           </Link>
           <Link href="/#faq" className="hidden rounded-full px-3 py-2 hover:text-ink-soft md:inline">
@@ -30,10 +31,13 @@ export function SiteHeader({ site }: { site: Site }) {
           <Link href="/#contact" className="hidden rounded-full px-3 py-2 hover:text-ink-soft lg:inline">
             Contact
           </Link>
-          <AccountMenu />
-          <Link href="/stays" className="ml-1 rounded-full bg-brand px-5 py-2.5 text-white transition hover:brightness-125">
+          <span className="hidden md:inline-flex">
+            <AccountMenu />
+          </span>
+          <Link href="/stays" className="inline-flex min-h-11 shrink-0 items-center whitespace-nowrap rounded-full bg-brand px-5 text-white transition hover:brightness-125">
             Book now
           </Link>
+          <MobileMenu brandName={site.brandName} whatsapp={site.contact.whatsapp?.replace(/D/g, "") || null} phone={site.contact.phone} />
         </nav>
       </div>
     </header>
@@ -43,13 +47,13 @@ export function SiteHeader({ site }: { site: Site }) {
 export function SiteFooter({ site }: { site: Site }) {
   const { contact } = site;
   const whatsapp = contact.whatsapp?.replace(/\D/g, "");
-  const label = "text-[11px] uppercase tracking-[0.16em] text-ink-soft";
+  const label = "text-eyebrow uppercase text-ink-soft";
   const link = "text-ink hover:text-ink-soft";
   return (
-    <footer id="contact" className="mt-28 border-t border-line">
+    <footer id="contact" className="mt-20 border-t border-line lg:mt-28">
       <div className="mx-auto grid max-w-7xl gap-12 px-4 py-16 sm:px-6 lg:grid-cols-[1.3fr_1fr] lg:px-8">
         <div className="lg:border-r lg:border-line lg:pr-16">
-          <h2 className="text-3xl tracking-tight sm:text-4xl">Talk to us before you book</h2>
+          <h2 className="text-h1">Talk to us before you book</h2>
           <p className="mt-4 max-w-md leading-relaxed text-ink-soft">
             Questions about a stay, a special occasion or getting here? We usually reply within minutes.
           </p>
@@ -71,7 +75,7 @@ export function SiteFooter({ site }: { site: Site }) {
             )}
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-8 text-[15px]">
+        <div className="grid grid-cols-2 gap-8 text-base">
           <div>
             <p className={label}>Explore</p>
             <ul className="mt-5 space-y-3">

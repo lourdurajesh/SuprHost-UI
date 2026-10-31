@@ -7,7 +7,7 @@ export default function SignInPage() {
   return (
     <div className="mx-auto grid max-w-5xl gap-12 px-4 pb-10 pt-12 sm:px-6 lg:grid-cols-2 lg:pt-20">
       <div>
-        <h1 className="text-4xl leading-tight tracking-tight sm:text-5xl">Welcome back</h1>
+        <h1 className="text-h1">Welcome back</h1>
         <p className="mt-4 max-w-md text-lg leading-relaxed text-ink-soft">
           Sign in to see your upcoming and past stays, find your booking details and get in touch with us about a trip.
         </p>

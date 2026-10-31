@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createBooking, PmsError } from "@/lib/pms";
-import { clientIp, isDisposableEmail, isSameOrigin, rateLimit, verifyTurnstile } from "@/lib/security";
+import { clientIp, isDisposableEmail, isSameOrigin, rateLimit } from "@/lib/security";
+import { readSessionToken } from "@/lib/session";
 import { isSiteKey } from "@/lib/sites";
 import { createBookingBody } from "@/lib/validation";
 
@@ -20,6 +21,10 @@ export async function POST(request: NextRequest, ctx: RouteContext<"/[site]/api/
   if (!request.headers.get("content-type")?.startsWith("application/json")) {
     return NextResponse.json({ error: "unsupported_media_type" }, { status: 415 });
   }
+
+  // Booking belongs to a signed-in guest; the checkout signs them in (and creates the account) first.
+  const sessionToken = await readSessionToken();
+  if (!sessionToken) return NextResponse.json({ error: "sign_in_required" }, { status: 401 });
 
   const ip = clientIp(request);
   if (!rateLimit("booking:ip", ip, 5, 10 * 60_000)) {
@@ -44,7 +49,7 @@ export async function POST(request: NextRequest, ctx: RouteContext<"/[site]/api/
     return NextResponse.json({ error: "invalid_request", fields }, { status: 400 });
   }
 
-  const { elapsedMs, turnstileToken, idempotencyKey, listingId, checkIn, checkOut, guests, name, email, phone, message } =
+  const { elapsedMs, idempotencyKey, listingId, checkIn, checkOut, guests, name, email, phone, message } =
     parsed.data;
   if (elapsedMs < MIN_FILL_MS) return silentlyAccept();
   if (isDisposableEmail(email)) {
@@ -53,18 +58,17 @@ export async function POST(request: NextRequest, ctx: RouteContext<"/[site]/api/
   if (!rateLimit("booking:email", email, 3, 60 * 60_000) || !rateLimit("booking:phone", phone, 3, 60 * 60_000)) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429, headers: { "Retry-After": "3600" } });
   }
-  if (!(await verifyTurnstile(turnstileToken, ip))) {
-    return NextResponse.json({ error: "challenge_failed" }, { status: 403 });
-  }
 
   try {
     const hold = await createBooking(
       site,
       { listingId, checkIn, checkOut, guests, name, email, phone, message },
-      { clientIp: ip, userAgent: request.headers.get("user-agent") ?? "", turnstileToken, idempotencyKey },
+      { clientIp: ip, userAgent: request.headers.get("user-agent") ?? "", turnstileToken: null, idempotencyKey },
+      sessionToken,
     );
     return NextResponse.json(hold, { status: 201 });
   } catch (e) {
+    if (e instanceof PmsError && e.status === 401) return NextResponse.json({ error: "sign_in_required" }, { status: 401 });
     if (e instanceof PmsError && e.status === 409) return NextResponse.json({ error: "dates_unavailable" }, { status: 409 });
     if (e instanceof PmsError && e.status === 422) return NextResponse.json({ error: e.code, message: e.message }, { status: 422 });
     console.error("booking create failed", { site, status: e instanceof PmsError ? e.status : undefined });

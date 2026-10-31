@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
+import { connection } from "next/server";
 import { PaymentPanel } from "@/components/payment-panel";
 import { getBooking, getSite } from "@/lib/pms";
 import { bookingToken } from "@/lib/validation";
@@ -15,7 +16,7 @@ export default function CheckoutPage({ params }: PageProps<"/[site]/checkout/[to
   return (
     <div className="mx-auto max-w-6xl px-4 pb-10 pt-8 sm:px-6 sm:pt-12">
       <CheckoutSteps current={1} />
-      <h1 className="mt-6 font-display text-3xl tracking-tight sm:text-4xl">Payment</h1>
+      <h1 className="mt-6 text-h1">Payment</h1>
       <Suspense fallback={<div className="mt-8 h-[28rem] animate-pulse rounded-3xl bg-sand-deep" />}>
         <CheckoutContent params={params} />
       </Suspense>
@@ -24,6 +25,8 @@ export default function CheckoutPage({ params }: PageProps<"/[site]/checkout/[to
 }
 
 async function CheckoutContent({ params }: Pick<PageProps<"/[site]/checkout/[token]">, "params">) {
+  // A hold's countdown and status are live: always render at request time.
+  await connection();
   const { site: key, token } = await params;
   const booking = bookingToken.safeParse(token).success ? await getBooking(key, token) : null;
   const site = await getSite(key);
@@ -41,7 +44,7 @@ async function CheckoutContent({ params }: Pick<PageProps<"/[site]/checkout/[tok
 
   return (
     <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_420px] lg:gap-12">
-      <section className="rounded-3xl border border-line bg-white/80 p-6 sm:p-8">
+      <section>
         <p className="text-sm text-ink-soft">
           Reservation <span className="font-mono font-medium text-ink">{booking.reference}</span> for {booking.guestName}
         </p>
@@ -73,7 +76,7 @@ async function CheckoutContent({ params }: Pick<PageProps<"/[site]/checkout/[tok
 
 function Gone({ message, href = "/#stays" }: { message: string; href?: string }) {
   return (
-    <div className="mt-8 rounded-3xl border border-line bg-white/80 p-8">
+    <div className="mt-8 rounded-2xl border border-line p-6 sm:p-8">
       <p>{message}</p>
       <Link href={href} className="mt-5 inline-flex rounded-full bg-brand px-6 py-3 font-medium text-white">
         Choose dates again

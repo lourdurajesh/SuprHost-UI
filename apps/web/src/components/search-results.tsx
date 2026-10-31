@@ -82,7 +82,7 @@ export function SearchResults({ hits, query, currency }: Props) {
                 {h.maxGuests} guests{h.bedrooms ? ` · ${h.bedrooms} bedroom${h.bedrooms === 1 ? "" : "s"}` : ""}
                 {h.bathrooms ? ` · ${h.bathrooms} bath${h.bathrooms === 1 ? "" : "s"}` : ""}
               </p>
-              <p className="mt-2 text-[15px]">
+              <p className="mt-2 text-base">
                 {h.total && h.nights ? (
                   <>
                     <span>{formatMoney(h.total, currency)}</span>

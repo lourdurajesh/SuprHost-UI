@@ -1,8 +1,9 @@
 import { notFound } from "next/navigation";
 import { getListings, getSite, type ListingImage } from "@/lib/pms";
 import { About, Faq, Gallery, Hero, Highlights, Intro, Stays, Testimonials } from "@/themes/escape/home";
+import { Suspense } from "react";
 
-export default async function HomePage({ params }: PageProps<"/[site]">) {
+async function HomePageContent({ params }: Pick<PageProps<"/[site]">, "params">) {
   const { site: key } = await params;
   const [site, listings] = await Promise.all([getSite(key), getListings(key)]);
   if (!site) notFound();
@@ -43,5 +44,14 @@ export default async function HomePage({ params }: PageProps<"/[site]">) {
       <Testimonials items={site.testimonials} />
       <Faq items={site.faqs} />
     </>
+  );
+}
+
+// Reads the URL inside <Suspense> so the shell renders at once and client navigations stay instant.
+export default function HomePage({ params }: PageProps<"/[site]">) {
+  return (
+    <Suspense fallback={<div className="mx-auto mt-6 h-[80svh] max-w-7xl animate-pulse rounded-3xl bg-sand-deep" aria-hidden />}>
+      <HomePageContent params={params} />
+    </Suspense>
   );
 }

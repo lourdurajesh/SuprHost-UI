@@ -485,9 +485,12 @@ const codes = (g.__suprhostCodes ??= new Map());
 const sessions = (g.__suprhostSessions ??= new Map());
 
 /** In the real PMS, role comes from the tenant's staff users; the mock treats the site's own email as the host. */
+const accounts = ((g as { __suprhostAccounts?: Map<string, { name?: string; phone?: string }> }).__suprhostAccounts ??= new Map());
+
 function sessionFor(email: string): GuestSession {
   const host = email === site.contact.email;
-  return { email, name: null, role: host ? "host" : "guest", pmsUrl: host ? (process.env.PMS_APP_URL ?? "http://localhost:5173") : null };
+  const account = accounts.get(email);
+  return { email, name: account?.name ?? null, phone: account?.phone ?? null, role: host ? "host" : "guest", pmsUrl: host ? (process.env.PMS_APP_URL ?? "http://localhost:5173") : null };
 }
 
 export const mock = {
@@ -511,7 +514,11 @@ export const mock = {
     return buildQuote(listing, checkIn, checkOut, guests);
   },
 
-  createBooking: async (key: string, input: CreateBookingInput): Promise<BookingHold> => {
+  createBooking: async (key: string, input: CreateBookingInput, sessionToken: string): Promise<BookingHold> => {
+    const session = sessions.get(sha(sessionToken));
+    if (!session || session.expiresAt < Date.now()) throw new PmsError(401, "sign_in_required", "Sign in with your email to book.");
+    if (session.email !== input.email.toLowerCase()) throw new PmsError(422, "invalid_request", "Book with the email you signed in with.");
+    accounts.set(session.email, { ...accounts.get(session.email), name: input.name, phone: input.phone });
     const listing = listings.find((l) => l.id === input.listingId);
     if (!listing || key !== site.key) throw new PmsError(404, "listing_not_found", "Listing not found");
     if (input.guests > listing.maxGuests) throw new PmsError(422, "too_many_guests", "Too many guests for this stay");
@@ -602,7 +609,7 @@ export const mock = {
     return code;
   },
 
-  verifyCode: async (key: string, email: string, code: string): Promise<SessionGrant> => {
+  verifyCode: async (key: string, email: string, code: string, details: { name?: string; phone?: string } = {}): Promise<SessionGrant> => {
     const entry = codes.get(email);
     if (key !== site.key || !entry || entry.expiresAt < Date.now() || entry.attempts >= 5) {
       throw new PmsError(401, "invalid_code", "That code is invalid or has expired");
@@ -614,6 +621,8 @@ export const mock = {
     const sessionToken = randomBytes(32).toString("base64url");
     const expiresAt = Date.now() + 30 * 24 * 3600_000;
     sessions.set(sha(sessionToken), { email, expiresAt });
+    const known = accounts.get(email) ?? {};
+    accounts.set(email, { name: details.name || known.name, phone: details.phone || known.phone });
     return { sessionToken, expiresAt: new Date(expiresAt).toISOString(), session: sessionFor(email) };
   },
 

@@ -37,7 +37,7 @@ async function Trips({ params }: Pick<PageProps<"/[site]/account">, "params">) {
     <>
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-4xl tracking-tight sm:text-5xl">My trips</h1>
+          <h1 className="text-h1">My trips</h1>
           <p className="mt-2 text-ink-soft">Signed in as {session.email}</p>
         </div>
         {session.role === "host" && session.pmsUrl && (

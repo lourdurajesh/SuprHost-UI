@@ -17,7 +17,7 @@ export function Hero({ site, stays }: { site: Site; stays: ListingSummary[] }) {
     <section className="relative overflow-hidden">
       <div className="mx-auto grid max-w-7xl lg:min-h-[calc(100svh-76px)] lg:grid-cols-[1.25fr_1fr]">
         <div className="relative z-10 flex min-w-0 flex-col justify-center px-4 pb-12 pt-10 sm:px-6 lg:py-20 lg:pl-8 lg:pr-14">
-          <h1 className="max-w-xl text-[2.6rem] leading-[1.08] tracking-tight sm:text-6xl">{site.tagline}</h1>
+          <h1 className="max-w-xl text-display">{site.tagline}</h1>
           <p className="mt-6 max-w-lg text-lg leading-relaxed text-ink-soft">{site.intro}</p>
           <div className="mt-10">
             <HeroSearch cities={[...new Set(stays.map((s) => s.city))].sort()} />
@@ -43,7 +43,7 @@ export function Hero({ site, stays }: { site: Site; stays: ListingSummary[] }) {
 export function Intro({ site }: { site: Site }) {
   return (
     <section className={`${container} py-24 text-center sm:py-32`}>
-      <p className="mx-auto max-w-3xl text-2xl leading-relaxed tracking-tight sm:text-[2rem] sm:leading-snug">{site.statement}</p>
+      <p className="mx-auto max-w-3xl text-h2 tracking-tight">{site.statement}</p>
       <Link href="/#about" className={`${pill} mt-10`}>
         Our story
       </Link>
@@ -55,8 +55,8 @@ export function Stays({ listings, currency }: { listings: ListingSummary[]; curr
   return (
     <section id="stays" className={`${container} scroll-mt-24`}>
       <div className="flex items-end justify-between gap-4">
-        <h2 className="text-3xl tracking-tight sm:text-[2.6rem]">Our homes</h2>
-        <Link href="/stays" className="mr-0 shrink-0 text-[15px] underline decoration-1 underline-offset-4 hover:text-ink-soft sm:mr-28">
+        <h2 className="text-h1">Our homes</h2>
+        <Link href="/stays" className="mr-0 shrink-0 text-base underline decoration-1 underline-offset-4 hover:text-ink-soft sm:mr-28">
           View all {listings.length} stays
         </Link>
       </div>
@@ -102,8 +102,8 @@ export function About({ about }: { about: Site["about"] }) {
       <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-24">
         <ListingPhoto image={about.image} name="" sizes="(min-width: 1024px) 50vw, 100vw" className="aspect-[4/3] rounded-3xl lg:aspect-[4/5]" />
         <div>
-          <p className="text-[11px] uppercase tracking-[0.18em] text-ink-soft">Our story</p>
-          <h2 className="mt-4 text-4xl leading-tight tracking-tight sm:text-5xl">{about.title}</h2>
+          <p className="text-eyebrow uppercase text-ink-soft">Our story</p>
+          <h2 className="mt-4 text-h1">{about.title}</h2>
           <p className="mt-6 whitespace-pre-line text-lg leading-relaxed text-ink-soft">{about.body}</p>
         </div>
       </div>
@@ -132,7 +132,7 @@ export function Testimonials({ items }: { items: Site["testimonials"] }) {
         <Carousel label="Guest reviews" slideClassName="w-full" gapClassName="gap-0" arrowTone="dark">
           {items.map((t) => (
             <figure key={t.author} className="px-12 text-center sm:px-20">
-              <blockquote className="text-2xl leading-snug tracking-tight sm:text-4xl sm:leading-tight">“{t.quote}”</blockquote>
+              <blockquote className="text-h2">“{t.quote}”</blockquote>
               <figcaption className="mt-10 text-sm">
                 <span className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-white/15 text-base">
                   {t.author.charAt(0)}
@@ -156,7 +156,7 @@ export function Faq({ items }: { items: Site["faqs"] }) {
     <section id="faq" className={`${container} scroll-mt-24 py-24 sm:py-32`}>
       <div className="grid gap-12 lg:grid-cols-[1fr_1.6fr]">
         <div>
-          <h2 className="text-3xl tracking-tight sm:text-[2.6rem]">Questions, answered</h2>
+          <h2 className="text-h1">Questions, answered</h2>
           <p className="mt-5 text-ink-soft">Can’t find what you need? Message us and we’ll reply quickly.</p>
         </div>
         <div className="divide-y divide-line border-y border-line">

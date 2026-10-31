@@ -93,9 +93,14 @@ export async function getQuote(key: string, listingId: string, checkIn: string, 
 }
 
 /** Creates a booking that holds its dates until paid or until the hold expires. */
-export async function createBooking(key: string, input: CreateBookingInput, ctx: RequestContext): Promise<BookingHold> {
-  if (useMock) return mock.createBooking(key, input);
-  return pmsFetch<BookingHold>(`/sites/${site(key)}/bookings`, { method: "POST", body: input, headers: abuseHeaders(ctx) });
+/** Bookings belong to a signed-in guest: the session must match the booking email. */
+export async function createBooking(key: string, input: CreateBookingInput, ctx: RequestContext, sessionToken: string): Promise<BookingHold> {
+  if (useMock) return mock.createBooking(key, input, sessionToken);
+  return pmsFetch<BookingHold>(`/sites/${site(key)}/bookings`, {
+    method: "POST",
+    body: input,
+    headers: { ...abuseHeaders(ctx), "X-Guest-Session": sessionToken },
+  });
 }
 
 /** Booking as seen by the holder of its secret token. Never cached. */
@@ -138,9 +143,19 @@ export async function requestSignInCode(key: string, email: string, ctx: Request
   return { testModeCode: res.testModeCode ?? null };
 }
 
-export async function verifySignInCode(key: string, email: string, code: string, ctx: RequestContext): Promise<SessionGrant> {
-  if (useMock) return mock.verifyCode(key, email, code);
-  return pmsFetch<SessionGrant>(`/sites/${site(key)}/auth/verify`, { method: "POST", body: { email, code }, headers: abuseHeaders(ctx) });
+export async function verifySignInCode(
+  key: string,
+  email: string,
+  code: string,
+  ctx: RequestContext,
+  details: { name?: string; phone?: string } = {},
+): Promise<SessionGrant> {
+  if (useMock) return mock.verifyCode(key, email, code, details);
+  return pmsFetch<SessionGrant>(`/sites/${site(key)}/auth/verify`, {
+    method: "POST",
+    body: { email, code, ...details },
+    headers: abuseHeaders(ctx),
+  });
 }
 
 export async function getGuestSession(key: string, sessionToken: string): Promise<GuestSession | null> {

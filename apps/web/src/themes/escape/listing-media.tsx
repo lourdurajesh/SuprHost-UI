@@ -1,6 +1,12 @@
 import Image from "next/image";
 import type { ListingImage } from "@/lib/pms";
 
+/**
+ * Local media (http://localhost / 127.0.0.1 in development) bypasses the image optimiser, which
+ * refuses private addresses by design (SSRF protection). Production media is on a public domain.
+ */
+export const skipOptimizer = (url: string) => url.endsWith(".svg") || /^https?:\/\/(localhost|127\.0\.0\.1)(:|\/)/.test(url);
+
 // Photo, or a warm placeholder when the host has not uploaded one yet. Photos come pre-sized from
 // the CDN and go through next/image (AVIF/WebP, responsive); `sizes` keeps phones from
 // downloading desktop widths. SVG placeholders are served as-is.
@@ -29,7 +35,7 @@ export function ListingPhoto({
           fill
           sizes={sizes}
           priority={priority}
-          unoptimized={image.url.endsWith(".svg")}
+          unoptimized={skipOptimizer(image.url)}
           className={`object-cover ${imgClassName}`}
         />
       </div>
@@ -41,7 +47,7 @@ export function ListingPhoto({
       aria-label={name}
       className={`relative flex items-end overflow-hidden bg-gradient-to-br from-[#d9c6a5] via-[#c7b08a] to-[#8f7a5a] ${className}`}
     >
-      {name && <span className="m-4 font-display text-2xl text-white/90 drop-shadow-sm">{name}</span>}
+      {name && <span className="m-4 text-h3 text-white/90 drop-shadow-sm">{name}</span>}
     </div>
   );
 }

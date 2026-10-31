@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useRef } from "react";
 import type { ListingImage } from "@/lib/pms/types";
 import { Icon } from "./icons";
+import { skipOptimizer } from "@/themes/escape/listing-media";
 
 // "Show all photos": native <dialog> (focus trap, Esc to close, no library). Images inside load
 // lazily, so the listing page pays nothing until the guest opens the tour.
@@ -49,7 +50,7 @@ export function PhotoTour({ images, name }: { images: ListingImage[]; name: stri
                   fill
                   loading="lazy"
                   sizes="(min-width: 640px) 900px, 100vw"
-                  unoptimized={img.url.endsWith(".svg")}
+                  unoptimized={skipOptimizer(img.url)}
                   className="object-cover"
                 />
               </div>

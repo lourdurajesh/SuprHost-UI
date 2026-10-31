@@ -113,6 +113,7 @@ export interface SearchResult {
 export interface GuestSession {
   email: string;
   name: string | null;
+  phone: string | null;
   /** "host" when the email belongs to a staff user of this tenant in the PMS. */
   role: "guest" | "host";
   /** Set for hosts only: where the "Open PMS" link goes. */

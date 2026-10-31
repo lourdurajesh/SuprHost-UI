@@ -28,7 +28,7 @@ export function ListingCard({ listing, currency, priority }: { listing: ListingS
         {listing.name}
       </h3>
       <p className="mt-1 text-sm text-ink-soft">{meta.join(" · ")}</p>
-      <p className="mt-3 text-[15px]">
+      <p className="mt-3 text-base">
         <span className="text-ink">{formatMoney(listing.fromPrice, currency)}</span>
         <span className="text-ink-soft"> / night</span>
       </p>

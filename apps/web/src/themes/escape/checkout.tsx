@@ -45,19 +45,25 @@ export function StaySummary({
   footer?: React.ReactNode;
 }) {
   return (
-    <aside className="h-fit overflow-hidden rounded-3xl border border-line bg-white shadow-[0_20px_60px_-30px_rgba(31,27,22,0.35)]">
-      <ListingPhoto image={image} name={name} sizes="400px" className="aspect-[16/9]" />
-      <div className="p-6">
-        <p className="text-xs font-medium uppercase tracking-[0.15em] text-accent">{propertyName}</p>
-        <p className="mt-1 font-display text-2xl">{name}</p>
+    // Above the form on phones (what am I booking?), beside it from lg up.
+    <aside className="order-first h-fit overflow-hidden rounded-2xl border border-line bg-white lg:sticky lg:top-24 lg:order-none">
+      <ListingPhoto image={image} name={name} sizes="420px" className="aspect-[16/9] max-lg:hidden" />
+      <div className="p-5 sm:p-6">
+        <div className="flex items-center gap-4">
+          <ListingPhoto image={image} name="" sizes="80px" className="h-16 w-20 shrink-0 rounded-lg lg:hidden" />
+          <div className="min-w-0">
+            <p className="text-eyebrow uppercase text-accent">{propertyName}</p>
+            <p className="mt-0.5 text-h3">{name}</p>
+          </div>
+        </div>
 
         <div className="mt-5 grid grid-cols-2 gap-3 text-sm">
-          <div className="rounded-xl bg-sand-deep px-3 py-2.5">
-            <p className="text-xs text-ink-soft">Check-in</p>
+          <div className="border-l-2 border-line pl-3">
+            <p className="text-eyebrow uppercase text-ink-soft">Check-in</p>
             <p className="font-medium">{formatDate(checkIn, { weekday: "short", day: "numeric", month: "short" })}</p>
           </div>
-          <div className="rounded-xl bg-sand-deep px-3 py-2.5">
-            <p className="text-xs text-ink-soft">Check-out</p>
+          <div className="border-l-2 border-line pl-3">
+            <p className="text-eyebrow uppercase text-ink-soft">Check-out</p>
             <p className="font-medium">{formatDate(checkOut, { weekday: "short", day: "numeric", month: "short" })}</p>
           </div>
         </div>

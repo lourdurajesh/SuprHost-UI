@@ -62,7 +62,7 @@ export function AccountMenu() {
         <span className="hidden text-sm sm:inline">{session.role === "host" ? "Host" : "Account"}</span>
       </button>
       {open && (
-        <div role="menu" className="absolute right-0 mt-2 w-60 overflow-hidden rounded-2xl bg-white py-2 text-[15px] shadow-xl ring-1 ring-line">
+        <div role="menu" className="absolute right-0 mt-2 w-60 overflow-hidden rounded-2xl bg-white py-2 text-base shadow-xl ring-1 ring-line">
           <p className="truncate px-4 pb-2 pt-1 text-xs text-ink-soft">{session.email}</p>
           <Link role="menuitem" href="/account" className="flex items-center gap-3 px-4 py-2.5 hover:bg-sand-deep">
             <Icon name="calendar" className="h-4 w-4" /> My trips

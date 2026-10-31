@@ -32,8 +32,14 @@ export const signInCodeBody = z
   .object({ email: emailField, website: z.string().max(0).optional(), turnstileToken: z.string().max(2048).nullable() })
   .strict();
 
+/** Name and phone arrive when the code is confirmed at checkout: they create the guest's account. */
 export const signInVerifyBody = z
-  .object({ email: emailField, code: z.string().regex(/^\d{6}$/, "Enter the 6-digit code") })
+  .object({
+    email: emailField,
+    code: z.string().regex(/^\d{6}$/, "Enter the 6-digit code"),
+    name: z.string().trim().min(2).max(100).optional(),
+    phone: phone.optional(),
+  })
   .strict();
 
 const csv = (v: unknown) => (typeof v === "string" && v ? v.split(",").filter(Boolean) : undefined);
@@ -75,7 +81,8 @@ export const createBookingBody = z
     // Anti-spam fields, never forwarded to the PMS.
     website: z.string().max(0).optional(), // honeypot: must stay empty
     elapsedMs: z.number().int().nonnegative(),
-    turnstileToken: z.string().max(2048).nullable(),
+    // Signed-in guests passed Turnstile when they requested their email code.
+    turnstileToken: z.string().max(2048).nullable().optional(),
     idempotencyKey: z.string().uuid(),
   })
   .strict()

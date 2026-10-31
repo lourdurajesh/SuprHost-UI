@@ -59,12 +59,12 @@ export function SearchFilters({ query, facets, currency, count }: Props) {
     (query.minPrice || query.maxPrice ? 1 : 0) +
     (query.city ? 1 : 0);
 
-  const field = "rounded-full bg-white px-4 py-2.5 text-sm ring-1 ring-line outline-none focus:ring-ink";
+  const field = "min-h-11 shrink-0 rounded-full bg-white px-4 py-2.5 text-sm ring-1 ring-line outline-none focus:ring-ink";
   const chip = (on: boolean) =>
-    `rounded-full px-4 py-2 text-sm ring-1 transition ${on ? "bg-ink text-white ring-ink" : "bg-white ring-line hover:ring-ink-soft"}`;
+    `min-h-11 rounded-full px-4 py-2 text-sm ring-1 transition ${on ? "bg-ink text-white ring-ink" : "bg-white ring-line hover:ring-ink-soft"}`;
 
   return (
-    <div className="flex flex-wrap items-center gap-2" aria-busy={pending}>
+    <div className="no-scrollbar -mx-4 flex items-center gap-2 overflow-x-auto px-4 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0" aria-busy={pending}>
       <DateRangeField
         checkIn={query.checkIn ?? null}
         checkOut={query.checkOut ?? null}
@@ -108,12 +108,12 @@ export function SearchFilters({ query, facets, currency, count }: Props) {
       <dialog
         ref={dialog}
         aria-label="Filters"
-        className="m-auto w-[min(640px,calc(100vw-2rem))] rounded-3xl bg-white p-0 text-ink backdrop:bg-black/40"
+        className="m-auto w-[min(640px,calc(100vw-2rem))] max-w-none rounded-2xl bg-white p-0 text-ink backdrop:bg-black/40 max-sm:mb-0 max-sm:w-full max-sm:rounded-b-none"
         onClick={(e) => e.target === dialog.current && dialog.current.close()}
       >
         <div className="flex items-center justify-between border-b border-line px-6 py-4">
           <p className="text-lg">Filters</p>
-          <button type="button" onClick={() => dialog.current?.close()} aria-label="Close filters" className="rounded-full p-2 hover:bg-sand-deep">
+          <button type="button" onClick={() => dialog.current?.close()} aria-label="Close filters" className="grid h-11 w-11 place-items-center rounded-full hover:bg-sand-deep">
             <Icon name="close" />
           </button>
         </div>
@@ -125,7 +125,7 @@ export function SearchFilters({ query, facets, currency, count }: Props) {
             </p>
             <div className="mt-4 grid grid-cols-2 gap-3">
               {(["minPrice", "maxPrice"] as const).map((k) => (
-                <label key={k} className="rounded-2xl px-4 py-2 ring-1 ring-line">
+                <label key={k} className="rounded-xl px-4 py-2 ring-1 ring-line">
                   <span className="block text-xs text-ink-soft">{k === "minPrice" ? "Minimum" : "Maximum"}</span>
                   <input
                     type="number"

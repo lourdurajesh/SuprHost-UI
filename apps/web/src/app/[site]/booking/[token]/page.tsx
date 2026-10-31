@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
+import { connection } from "next/server";
 import { Icon } from "@/components/icons";
 import { formatDate } from "@/lib/dates";
 import { getBooking, getSite } from "@/lib/pms";
@@ -24,13 +25,15 @@ export default function ConfirmationPage({ params }: PageProps<"/[site]/booking/
 }
 
 async function Confirmation({ params }: Pick<PageProps<"/[site]/booking/[token]">, "params">) {
+  // Booking status is live: always render at request time.
+  await connection();
   const { site: key, token } = await params;
   const booking = bookingToken.safeParse(token).success ? await getBooking(key, token) : null;
   const site = await getSite(key);
 
   if (!booking || !site) {
     return (
-      <div className="mt-8 rounded-3xl border border-line bg-white/80 p-8">
+      <div className="mt-8 rounded-2xl border border-line p-6 sm:p-8">
         <p>We couldn’t find this booking. Please check the link in your confirmation email, or contact us.</p>
       </div>
     );
@@ -45,28 +48,26 @@ async function Confirmation({ params }: Pick<PageProps<"/[site]/booking/[token]"
   return (
     <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_420px] lg:gap-12">
       <section>
-        <div className="relative overflow-hidden rounded-3xl bg-brand p-8 text-white sm:p-10">
-          <div aria-hidden className="absolute -right-16 -top-16 h-56 w-56 rounded-full bg-white/10" />
-          <div aria-hidden className="absolute -bottom-20 right-24 h-40 w-40 rounded-full bg-accent/40" />
-          <span className="relative flex h-14 w-14 items-center justify-center rounded-full bg-white text-brand">
+        <div className="rounded-2xl bg-brand p-6 text-white sm:p-10">
+          <span className="flex h-12 w-12 items-center justify-center rounded-full bg-white text-brand">
             <Icon name="check" className="h-7 w-7" strokeWidth={2.5} />
           </span>
-          <h1 className="relative mt-6 font-display text-3xl tracking-tight sm:text-4xl">
+          <h1 className="mt-5 text-h1">
             {booking.status === "confirmed" ? `You’re going to ${booking.listing.name}!` : "This booking is no longer active"}
           </h1>
-          <p className="relative mt-3 max-w-lg text-white/80">
+          <p className="mt-3 max-w-lg text-white/85">
             {booking.status === "confirmed"
               ? `Thank you, ${booking.guestName.split(" ")[0]}. Your booking is confirmed and the details are on their way to ${booking.guestEmailMasked}.`
               : "Please contact us if you think this is a mistake."}
           </p>
-          <div className="relative mt-6 inline-flex items-center gap-3 rounded-full bg-white/15 px-4 py-2 text-sm">
+          <div className="mt-6 inline-flex flex-wrap items-center gap-x-3 rounded-full bg-white/15 px-4 py-2 text-sm">
             Booking reference <span className="font-mono text-base font-medium tracking-wider">{booking.reference}</span>
           </div>
         </div>
 
         {booking.status === "confirmed" && (
           <>
-            <div className="mt-6 grid gap-4 sm:grid-cols-3">
+            <div className="mt-8 grid gap-6 sm:grid-cols-3">
               <Fact icon="key" label="Check-in" value={`${formatDate(booking.checkIn, { weekday: "short", day: "numeric", month: "short" })}, from ${site.policies.checkInTime}`} />
               <Fact icon="sun" label="Check-out" value={`${formatDate(booking.checkOut, { weekday: "short", day: "numeric", month: "short" })}, by ${site.policies.checkOutTime}`} />
               <Fact
@@ -80,8 +81,8 @@ async function Confirmation({ params }: Pick<PageProps<"/[site]/booking/[token]"
               />
             </div>
 
-            <div className="mt-6 rounded-3xl border border-line bg-white/80 p-6 sm:p-8">
-              <h2 className="font-display text-xl">What happens next</h2>
+            <div className="mt-10 border-t border-line pt-8">
+              <h2 className="text-h2">What happens next</h2>
               <ol className="mt-5 space-y-5">
                 {[
                   ["mail", "Check your inbox", "Your confirmation and receipt are on the way. Keep the booking reference handy."],
@@ -89,9 +90,7 @@ async function Confirmation({ params }: Pick<PageProps<"/[site]/booking/[token]"
                   ["key", "Arrive and relax", `Check-in is from ${site.policies.checkInTime}. Bring a photo ID for each adult guest.`],
                 ].map(([icon, title, text]) => (
                   <li key={title} className="flex gap-4">
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent/15 text-accent">
-                      <Icon name={icon} />
-                    </span>
+                    <Icon name={icon} className="mt-0.5 h-6 w-6 shrink-0 text-accent" />
                     <div>
                       <p className="font-medium">{title}</p>
                       <p className="text-sm text-ink-soft">{text}</p>
@@ -141,8 +140,8 @@ async function Confirmation({ params }: Pick<PageProps<"/[site]/booking/[token]"
 
 function Fact({ icon, label, value }: { icon: string; label: string; value: string }) {
   return (
-    <div className="rounded-2xl border border-line bg-white/80 p-4">
-      <p className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-ink-soft">
+    <div className="border-t border-line pt-3">
+      <p className="text-eyebrow flex items-center gap-2 uppercase text-ink-soft">
         <Icon name={icon} className="h-4 w-4" /> {label}
       </p>
       <p className="mt-1.5 font-medium">{value}</p>

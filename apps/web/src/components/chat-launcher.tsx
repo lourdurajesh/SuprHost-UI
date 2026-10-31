@@ -26,7 +26,8 @@ export function ChatLauncher({ brandName, whatsapp }: Props) {
   }
 
   return (
-    <div className="fixed bottom-24 right-4 z-40 sm:right-6 lg:bottom-6">
+    // Desktop only: on smaller screens the bottom edge belongs to the booking bar, and chat lives in the menu.
+    <div className="fixed bottom-6 right-6 z-40 hidden lg:block">
       {open && (
         <div
           role="dialog"
@@ -77,7 +78,7 @@ export function ChatLauncher({ brandName, whatsapp }: Props) {
               <Icon name="arrowRight" className="h-4 w-4" />
             </button>
           </form>
-          <p className="px-4 pb-3 text-center text-[11px] text-ink-soft">Messages open in WhatsApp</p>
+          <p className="px-4 pb-3 text-center text-xs text-ink-soft">Messages open in WhatsApp</p>
         </div>
       )}
       <button

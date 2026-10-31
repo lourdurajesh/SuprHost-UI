@@ -95,7 +95,7 @@ export function StaysMap({ pins, activeId, onPinHover, className = "", approxima
           const node = document.createElement(p.href ? "a" : "div");
           if (p.href) (node as HTMLAnchorElement).href = p.href;
           node.className =
-            "block rounded-full bg-white px-3 py-1.5 text-[13px] font-medium text-[#3d3a3a] shadow-[0_2px_10px_rgba(0,0,0,0.18)] ring-1 ring-black/5 transition-transform hover:scale-110";
+            "block rounded-full bg-white px-3 py-1.5 text-sm font-medium text-[#3d3a3a] shadow-[0_2px_10px_rgba(0,0,0,0.18)] ring-1 ring-black/5 transition-transform hover:scale-110";
           node.textContent = p.label;
           if (p.title) node.title = p.title;
           node.addEventListener("mouseenter", () => onPinHover?.(p.id));

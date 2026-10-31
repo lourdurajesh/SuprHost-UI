@@ -5,10 +5,10 @@ import { BookingWidget } from "@/components/booking-widget";
 import { amenityIcon, Icon } from "@/components/icons";
 import { PhotoTour } from "@/components/photo-tour";
 import { StaysMap } from "@/components/stays-map";
-import { formatMoney } from "@/lib/dates";
 import { getListing, getListings, getSite } from "@/lib/pms";
 import { ListingCard } from "@/themes/escape/listing-card";
 import { ListingPhoto } from "@/themes/escape/listing-media";
+import { Suspense } from "react";
 
 export async function generateStaticParams({ params }: { params: { site: string } }) {
   const listings = await getListings(params.site);
@@ -32,7 +32,7 @@ export async function generateMetadata({ params }: PageProps<"/[site]/stays/[lis
   };
 }
 
-export default async function ListingPage({ params }: PageProps<"/[site]/stays/[listing]">) {
+async function ListingPageContent({ params }: Pick<PageProps<"/[site]/stays/[listing]">, "params">) {
   const { site: key, listing: slug } = await params;
   const [site, listing, all] = await Promise.all([getSite(key), getListing(key, slug), getListings(key)]);
   if (!site || !listing) notFound();
@@ -65,9 +65,9 @@ export default async function ListingPage({ params }: PageProps<"/[site]/stays/[
       <article className="mx-auto max-w-7xl px-4 pb-28 pt-6 sm:px-6 lg:px-8 lg:pb-10">
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
 
-        <nav aria-label="Sections" className="no-scrollbar sticky top-[76px] z-30 -mx-4 flex gap-6 overflow-x-auto border-b border-line bg-white/95 px-4 py-3 text-[15px] backdrop-blur sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+        <nav aria-label="Sections" className="no-scrollbar sticky top-[76px] z-30 -mx-4 flex gap-6 overflow-x-auto border-b border-line bg-white/95 px-4 py-1 text-sm backdrop-blur sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
           {[["photos", "Photos"], ["amenities", "Amenities"], ["things", "Things to know"], ["location", "Location"], ["book", "Book"]].map(([id, label]) => (
-            <a key={id} href={`#${id}`} className="shrink-0 text-ink-soft hover:text-ink">
+            <a key={id} href={`#${id}`} className="shrink-0 py-3 text-ink-soft hover:text-ink">
               {label}
             </a>
           ))}
@@ -76,7 +76,7 @@ export default async function ListingPage({ params }: PageProps<"/[site]/stays/[
         {/* One large photo carousel with a counter; the photo tour shows them all. */}
         <div id="photos" className="relative mt-5 scroll-mt-32">
           {photos.length > 0 ? (
-            <Carousel label={`Photos of ${listing.name}`} slideClassName="w-full" gapClassName="gap-0" counter className="overflow-hidden rounded-3xl">
+            <Carousel label={`Photos of ${listing.name}`} slideClassName="w-full" gapClassName="gap-0" counter className="overflow-hidden rounded-2xl">
               {photos.map((img, i) => (
                 <ListingPhoto
                   key={`${img.url}-${i}`}
@@ -84,55 +84,50 @@ export default async function ListingPage({ params }: PageProps<"/[site]/stays/[
                   name={i === 0 ? listing.name : ""}
                   sizes="(min-width: 1280px) 1216px, 100vw"
                   priority={i === 0}
-                  className="aspect-[4/3] sm:aspect-[16/8]"
+                  className="aspect-[4/3] sm:aspect-video lg:aspect-auto lg:h-[min(60vh,540px)]"
                 />
               ))}
             </Carousel>
           ) : (
-            <ListingPhoto image={null} name={listing.name} sizes="100vw" className="aspect-[16/8] rounded-3xl" />
+            <ListingPhoto image={null} name={listing.name} sizes="100vw" className="aspect-video rounded-2xl lg:aspect-auto lg:h-[min(60vh,540px)]" />
           )}
           <div className="absolute left-4 top-4">
             <PhotoTour images={photos} name={listing.name} />
           </div>
         </div>
 
-        <div className="mt-10 grid gap-14 lg:grid-cols-[1fr_400px]">
+        <div className="mt-8 grid gap-10 lg:mt-10 lg:grid-cols-[minmax(0,1fr)_380px] lg:gap-14">
           <div>
             <header>
-              <p className="text-sm uppercase tracking-[0.14em] text-ink-soft">
+              <p className="text-eyebrow uppercase text-ink-soft">
                 {listing.city} · {listing.propertyName}
               </p>
-              <h1 className="mt-2 text-4xl leading-tight tracking-tight sm:text-5xl">{listing.name}</h1>
-              <ul className="mt-3 flex flex-wrap items-center text-ink-soft">
-                {specs.map((s, i) => (
-                  <li key={s.label} className="flex items-center">
-                    {i > 0 && <span aria-hidden className="mx-3 h-4 w-px bg-line" />}
-                    {s.label}
-                  </li>
-                ))}
-              </ul>
+              <h1 className="mt-2 text-h1">{listing.name}</h1>
+              <p className="mt-3 text-ink-soft">{specs.map((s) => s.label).join(" · ")}</p>
             </header>
 
             {listing.highlights.length > 0 && (
-              <ul className="mt-8 grid gap-px overflow-hidden rounded-3xl bg-line sm:grid-cols-3">
+              <ul className="mt-8 space-y-5 border-y border-line py-8">
                 {listing.highlights.map((h) => (
-                  <li key={h.title} className="bg-sand-deep p-6">
-                    <Icon name={h.icon} className="h-6 w-6" strokeWidth={1.3} />
-                    <p className="mt-4">{h.title}</p>
-                    <p className="mt-1 text-sm text-ink-soft">{h.text}</p>
+                  <li key={h.title} className="flex gap-4">
+                    <Icon name={h.icon} className="mt-0.5 h-6 w-6 shrink-0" strokeWidth={1.3} />
+                    <div>
+                      <p className="font-medium">{h.title}</p>
+                      <p className="text-ink-soft">{h.text}</p>
+                    </div>
                   </li>
                 ))}
               </ul>
             )}
 
             <section className="mt-10">
-              <h2 className="font-display text-3xl">About this stay</h2>
-              <p className="mt-5 whitespace-pre-line text-lg leading-relaxed text-ink-soft">{listing.description}</p>
+              <h2 className="text-h2">About this stay</h2>
+              <p className="mt-5 whitespace-pre-line text-lead text-ink-soft">{listing.description}</p>
             </section>
 
             {listing.amenities.length > 0 && (
               <section id="amenities" className="mt-12 scroll-mt-36 border-t border-line pt-10">
-                <h2 className="font-display text-3xl">What this place offers</h2>
+                <h2 className="text-h2">What this place offers</h2>
                 <ul className="mt-6 grid gap-x-8 gap-y-4 sm:grid-cols-2">
                   {listing.amenities.map((a) => (
                     <li key={a} className="flex items-center gap-4">
@@ -144,7 +139,7 @@ export default async function ListingPage({ params }: PageProps<"/[site]/stays/[
             )}
 
             <section id="things" className="mt-12 scroll-mt-36 border-t border-line pt-10">
-              <h2 className="font-display text-3xl">Things to know</h2>
+              <h2 className="text-h2">Things to know</h2>
               <div className="mt-6 grid gap-8 sm:grid-cols-3">
                 <div>
                   <h3 className="flex items-center gap-2 font-medium">
@@ -177,7 +172,7 @@ export default async function ListingPage({ params }: PageProps<"/[site]/stays/[
 
             {(listing.location ?? site.location) && (
               <section id="location" className="mt-12 scroll-mt-36 border-t border-line pt-10">
-                <h2 className="font-display text-3xl">Where you’ll be</h2>
+                <h2 className="text-h2">Where you’ll be</h2>
                 <p className="mt-2 text-ink-soft">
                   {listing.city}
                   {site.location ? ` · ${site.location.label}` : ""}. The exact address is shared after booking.
@@ -186,13 +181,13 @@ export default async function ListingPage({ params }: PageProps<"/[site]/stays/[
                   pins={[{ id: listing.id, lat: (listing.location ?? site.location)!.lat, lng: (listing.location ?? site.location)!.lng, label: listing.name }]}
                   approximate
                   zoom={13}
-                  className="mt-6 h-[360px] rounded-3xl"
+                  className="mt-6 h-72 rounded-2xl sm:h-[360px]"
                 />
               </section>
             )}
           </div>
 
-          <aside id="book" className="scroll-mt-36 lg:sticky lg:top-[140px] lg:self-start" aria-label="Check availability">
+          <aside id="book" className="scroll-mt-36 lg:sticky lg:top-[136px] lg:max-h-[calc(100dvh-152px)] lg:self-start lg:overflow-y-auto" aria-label="Check availability">
             <BookingWidget
               listingId={listing.id}
               maxGuests={listing.maxGuests}
@@ -206,9 +201,9 @@ export default async function ListingPage({ params }: PageProps<"/[site]/stays/[
         </div>
 
         {others.length > 0 && (
-          <section className="mt-24 border-t border-line pt-14">
-            <h2 className="font-display text-3xl">You might also like</h2>
-            <div className="mt-8 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+          <section className="mt-16 border-t border-line pt-12 lg:mt-24 lg:pt-14">
+            <h2 className="text-h2">You might also like</h2>
+            <div className="mt-8 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
               {others.map((l) => (
                 <ListingCard key={l.id} listing={l} currency={site.currency} />
               ))}
@@ -217,12 +212,15 @@ export default async function ListingPage({ params }: PageProps<"/[site]/stays/[
         )}
       </article>
 
-      {/* Mobile booking bar: plain link, no JS. */}
-      <div className="fixed inset-x-0 bottom-0 z-30 bg-gradient-to-t from-white via-white/95 to-white/0 px-4 pb-4 pt-6 lg:hidden">
-        <a href="#book" className="mx-auto flex max-w-xl items-center justify-center gap-2 rounded-full bg-brand px-6 py-4 text-white shadow-lg">
-          Select dates <span className="text-white/60">·</span> {formatMoney(listing.fromPrice, site.currency)} / night
-        </a>
-      </div>
     </>
+  );
+}
+
+// Reads the URL inside <Suspense> so the shell renders at once and client navigations stay instant.
+export default function ListingPage({ params }: PageProps<"/[site]/stays/[listing]">) {
+  return (
+    <Suspense fallback={<div className="mx-auto mt-6 h-[70svh] max-w-7xl animate-pulse rounded-3xl bg-sand-deep" aria-hidden />}>
+      <ListingPageContent params={params} />
+    </Suspense>
   );
 }

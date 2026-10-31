@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { connection } from "next/server";
 import { SearchFilters } from "@/components/search-filters";
 import { SearchResults } from "@/components/search-results";
 import { getSite, searchListings, type SearchQuery } from "@/lib/pms";
@@ -14,7 +15,7 @@ export const metadata: Metadata = {
 export default function StaysPage({ params, searchParams }: PageProps<"/[site]/stays">) {
   return (
     <div className="mx-auto max-w-[1440px] px-4 pb-16 pt-6 sm:px-6 lg:px-8">
-      <h1 className="text-3xl tracking-tight sm:text-[2.6rem]">All stays</h1>
+      <h1 className="text-h1">All stays</h1>
       <Suspense fallback={<ResultsSkeleton />}>
         <StaysContent params={params} searchParams={searchParams} />
       </Suspense>
@@ -23,6 +24,8 @@ export default function StaysPage({ params, searchParams }: PageProps<"/[site]/s
 }
 
 async function StaysContent({ params, searchParams }: Pick<PageProps<"/[site]/stays">, "params" | "searchParams">) {
+  // Search results depend on today's availability: always render at request time.
+  await connection();
   const { site: key } = await params;
   const query: SearchQuery = searchParamsSchema.parse(await searchParams);
   if (query.checkIn && query.checkOut && query.checkOut <= query.checkIn) query.checkOut = undefined;
@@ -49,7 +52,7 @@ function ResultsSkeleton() {
           <div key={i} className="aspect-[4/3] animate-pulse rounded-2xl bg-sand-deep" />
         ))}
       </div>
-      <div className="hidden h-[70svh] animate-pulse rounded-3xl bg-sand-deep lg:block" />
+      <div className="hidden h-[70svh] animate-pulse rounded-2xl bg-sand-deep lg:block" />
     </div>
   );
 }

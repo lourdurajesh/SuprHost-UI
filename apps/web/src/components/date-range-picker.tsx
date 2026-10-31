@@ -11,6 +11,8 @@ interface Props {
   checkIn: string | null;
   checkOut: string | null;
   maxNights: number;
+  /** Shortest stay; check-out dates before it are disabled. */
+  minNights?: number;
   onChange: (checkIn: string | null, checkOut: string | null) => void;
 }
 
@@ -37,7 +39,7 @@ function isBusyNight(date: string, busy: Busy) {
   return busy.some((b) => date >= b.start && date < b.end);
 }
 
-export function DateRangePicker({ today, busy, checkIn, checkOut, maxNights, onChange }: Props) {
+export function DateRangePicker({ today, busy, checkIn, checkOut, maxNights, minNights = 1, onChange }: Props) {
   // Near the end of a month, open on the next one rather than a grid of past days.
   const [view, setView] = useState(() => monthStart(checkIn ?? addDays(today, 5)));
   const [hover, setHover] = useState<string | null>(null);
@@ -45,7 +47,7 @@ export function DateRangePicker({ today, busy, checkIn, checkOut, maxNights, onC
   const lastBookable = addDays(today, 540);
 
   function canCheckOut(date: string) {
-    if (!checkIn || date <= checkIn) return false;
+    if (!checkIn || date < addDays(checkIn, minNights)) return false;
     if (date > addDays(checkIn, maxNights)) return false;
     return !overlapsBusy(checkIn, date, busy);
   }
@@ -67,7 +69,7 @@ export function DateRangePicker({ today, busy, checkIn, checkOut, maxNights, onC
           type="button"
           onClick={() => setView(addMonths(view, -1))}
           disabled={view <= monthStart(today)}
-          className="rounded-full p-2 text-ink-soft hover:bg-sand-deep disabled:opacity-30"
+          className="grid h-11 w-11 place-items-center rounded-full text-ink-soft hover:bg-sand-deep disabled:opacity-30"
           aria-label="Previous month"
         >
           ←
@@ -76,7 +78,7 @@ export function DateRangePicker({ today, busy, checkIn, checkOut, maxNights, onC
           type="button"
           onClick={() => setView(addMonths(view, 1))}
           disabled={view >= monthStart(lastBookable)}
-          className="rounded-full p-2 text-ink-soft hover:bg-sand-deep disabled:opacity-30"
+          className="grid h-11 w-11 place-items-center rounded-full text-ink-soft hover:bg-sand-deep disabled:opacity-30"
           aria-label="Next month"
         >
           →
