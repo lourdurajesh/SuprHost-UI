@@ -126,7 +126,8 @@ export interface SessionGrant {
 }
 
 export interface TripSummary {
-  token: string;
+  /** Secret booking link token; null for stays the host recorded in the PMS (no guest link). */
+  token: string | null;
   reference: string;
   status: BookingStatus;
   listing: { name: string; slug: string; propertyName: string; image: ListingImage | null };

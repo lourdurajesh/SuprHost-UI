@@ -59,7 +59,7 @@ async function Trips({ params }: Pick<PageProps<"/[site]/account">, "params">) {
         ) : (
           <ul className="mt-5 space-y-4">
             {upcoming.map((t) => (
-              <TripRow key={t.token} trip={t} whatsapp={whatsapp} />
+              <TripRow key={t.reference} trip={t} whatsapp={whatsapp} />
             ))}
           </ul>
         )}
@@ -70,7 +70,7 @@ async function Trips({ params }: Pick<PageProps<"/[site]/account">, "params">) {
           <h2 className="text-2xl tracking-tight">Past and cancelled</h2>
           <ul className="mt-5 space-y-4">
             {past.map((t) => (
-              <TripRow key={t.token} trip={t} whatsapp={whatsapp} muted />
+              <TripRow key={t.reference} trip={t} whatsapp={whatsapp} muted />
             ))}
           </ul>
         </section>
@@ -107,9 +107,11 @@ function TripRow({ trip, whatsapp, muted = false }: { trip: TripSummary; whatsap
         </p>
       </div>
       <div className="flex gap-2 sm:flex-col">
-        <Link href={`/booking/${encodeURIComponent(trip.token)}`} className="rounded-full bg-brand px-5 py-2.5 text-center text-sm text-white">
-          View booking
-        </Link>
+        {trip.token && (
+          <Link href={`/booking/${encodeURIComponent(trip.token)}`} className="rounded-full bg-brand px-5 py-2.5 text-center text-sm text-white">
+            View booking
+          </Link>
+        )}
         {whatsapp && (
           <a
             href={`https://wa.me/${whatsapp}?text=${encodeURIComponent(`Hello! About booking ${trip.reference}`)}`}

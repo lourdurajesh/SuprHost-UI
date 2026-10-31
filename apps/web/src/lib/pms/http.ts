@@ -21,13 +21,18 @@ export async function pmsFetch<T>(path: string, { method = "GET", body, headers 
   if (!pmsConfigured) throw new PmsError(503, "pms_not_configured", "PMS API is not configured");
 
   const payload = body === undefined ? "" : JSON.stringify(body);
-  const timestamp = Math.floor(Date.now() / 1000).toString();
+  // Wall-clock seconds for the signature. performance.timeOrigin + now() rather than Date.now():
+  // Next.js refuses Date.now() during prerendering, and this value is never rendered.
+  const timestamp = Math.floor((performance.timeOrigin + performance.now()) / 1000).toString();
   const bodyHash = createHash("sha256").update(payload).digest("hex");
+  // Sign the target exactly as it goes on the wire (URL normalisation drops an empty "?", etc.).
+  const url = new URL(`${baseUrl}/api/public/v1${path}`);
+  const signedPath = `${url.pathname.slice(new URL(baseUrl!).pathname.replace(/\/$/, "").length + "/api/public/v1".length)}${url.search}`;
   const signature = createHmac("sha256", secret!)
-    .update(`${method}\n${path}\n${timestamp}\n${bodyHash}`)
+    .update(`${method}\n${signedPath}\n${timestamp}\n${bodyHash}`)
     .digest("base64url");
 
-  const res = await fetch(`${baseUrl}/api/public/v1${path}`, {
+  const res = await fetch(url, {
     method,
     body: payload || undefined,
     headers: {

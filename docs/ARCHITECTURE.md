@@ -129,7 +129,8 @@ Layered; each layer is cheap and the combination is expensive for an attacker.
 
 1. **Edge:** CDN bot management / WAF managed rules; block known bad ASNs on POST routes.
 2. **Invisible challenge:** Cloudflare Turnstile token on every form, verified server-side by
-   the BFF *and* re-verified by the backend (token forwarded) so the BFF can't be skipped.
+   the BFF. Tokens are single-use, so the backend cannot re-verify; it can't be reached without
+   the BFF's request signature anyway, and applies its own per-guest rate limits.
 3. **Form signals:** honeypot field; minimum fill time (e.g. 3 s); signed form token tied to the
    rendered page and expiring after 30 min.
 4. **Rate limits (backend, real guest IP):** per IP, per email, per phone, per listing, and

@@ -63,7 +63,8 @@ export async function getListings(key: string): Promise<ListingSummary[]> {
   "use cache";
   cacheLife("hours");
   cacheTag(`site:${key}`, `listings:${key}`);
-  return useMock ? mock.listings(key) : pmsFetch<ListingSummary[]>(`/sites/${site(key)}/listings`);
+  // Unknown site (404) means no listings, never an error: pages and the sitemap render empty.
+  return useMock ? mock.listings(key) : ((await orNull(pmsFetch<ListingSummary[]>(`/sites/${site(key)}/listings`))) ?? []);
 }
 
 export async function getListing(key: string, slug: string): Promise<Listing | null> {
@@ -127,13 +128,14 @@ export async function searchListings(key: string, q: SearchQuery): Promise<Searc
 // ---- guest accounts: passwordless email codes; the PMS owns codes and sessions -------------
 
 /**
- * Asks the PMS to email a sign-in code. Returns the code itself only in mock mode (no email
- * provider exists there), so testers can sign in; the real PMS never returns it.
+ * Asks the PMS to email a sign-in code. The code itself comes back only from the mock or from a
+ * PMS deployment without an email provider that opts in for testing (refused in production).
  */
 export async function requestSignInCode(key: string, email: string, ctx: RequestContext): Promise<{ testModeCode: string | null }> {
   if (useMock) return { testModeCode: await mock.requestCode(key, email) };
-  await pmsFetch<unknown>(`/sites/${site(key)}/auth/code`, { method: "POST", body: { email }, headers: abuseHeaders(ctx) });
-  return { testModeCode: null };
+  const res = await pmsFetch<{ testModeCode?: string }>(`/sites/${site(key)}/auth/code`, { method: "POST", body: { email }, headers: abuseHeaders(ctx) });
+  // Present only when the PMS has no email provider yet and is configured to expose codes (never in production).
+  return { testModeCode: res.testModeCode ?? null };
 }
 
 export async function verifySignInCode(key: string, email: string, code: string, ctx: RequestContext): Promise<SessionGrant> {
