@@ -1,0 +1,71 @@
+@import "tailwindcss";
+
+/* Design tokens. --brand and --accent are set per site from the PMS (site.colors) on the site
+   layout; the rest belong to the theme. Escape: calm, airy and editorial — white space, warm
+   charcoal ink, one sans-serif in a light weight, pill-shaped controls. */
+:root {
+  --brand: #3d3a3a;
+  --accent: #4e8e82;
+  --sand: #ffffff;
+  --sand-deep: #f5f3f0;
+  --ink: #3d3a3a;
+  --ink-soft: #7a7471;
+  --line: #e9e5e0;
+  --busy: #cfc9c3;
+}
+
+@theme inline {
+  --color-brand: var(--brand);
+  --color-accent: var(--accent);
+  --color-sand: var(--sand);
+  --color-sand-deep: var(--sand-deep);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-line: var(--line);
+  --color-busy: var(--busy);
+  --font-sans: var(--font-body);
+  --font-display: var(--font-body);
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-rendering: optimizeLegibility;
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--sand);
+  color: var(--ink);
+}
+
+/* Headings stay light, as in the theme's editorial look. */
+h1,
+h2,
+h3 {
+  font-weight: 400;
+  letter-spacing: -0.015em;
+}
+
+:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

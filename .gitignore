@@ -13,3 +13,4 @@ Keys/
 .turbo/
 *.log
 .DS_Store
+*.tsbuildinfo
