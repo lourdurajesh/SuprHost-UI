@@ -71,7 +71,7 @@ export function SignInForm({ next = "/account" }: { next?: string }) {
     setError(res?.status === 429 ? "Too many attempts. Please request a new code later." : "That code is invalid or has expired.");
   }
 
-  const input = "mt-1.5 w-full rounded-xl border border-line bg-white px-4 py-3.5 text-base outline-none focus:border-ink";
+  const input = "mt-1.5 w-full rounded-xl border border-field bg-white px-4 py-3.5 text-base outline-none focus:border-ink";
   const button = "w-full rounded-full bg-brand px-6 py-4 text-white transition hover:brightness-125 disabled:opacity-50";
 
   return step === "email" ? (

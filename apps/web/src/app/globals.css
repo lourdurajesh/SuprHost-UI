@@ -5,12 +5,14 @@
    charcoal ink, one sans-serif in a light weight, pill-shaped controls. */
 :root {
   --brand: #3d3a3a;
-  --accent: #4e8e82;
+  --accent: #3f746a;
   --sand: #ffffff;
   --sand-deep: #f5f3f0;
   --ink: #3d3a3a;
-  --ink-soft: #7a7471;
+  --ink-soft: #6b6562;
   --line: #e9e5e0;
+  /* Borders that identify a control (text inputs, radios): >= 3:1 on sand and sand-deep (WCAG 1.4.11). */
+  --field: #8f8985;
   --busy: #cfc9c3;
 }
 
@@ -39,6 +41,7 @@
   --color-ink: var(--ink);
   --color-ink-soft: var(--ink-soft);
   --color-line: var(--line);
+  --color-field: var(--field);
   --color-busy: var(--busy);
   --font-sans: var(--font-body);
   --font-display: var(--font-body);

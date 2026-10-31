@@ -17,6 +17,7 @@ interface Props {
 }
 
 const WEEKDAYS = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
+const SPOKEN = new Intl.DateTimeFormat("en-IN", { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
 
 function monthStart(iso: string) {
   return `${iso.slice(0, 7)}-01`;
@@ -116,7 +117,7 @@ export function DateRangePicker({ today, busy, checkIn, checkOut, maxNights, min
                     onClick={() => select(date)}
                     onMouseEnter={() => setHover(date)}
                     aria-pressed={isStart || isEnd}
-                    aria-label={`${date}${busyNight ? ", unavailable" : ""}`}
+                    aria-label={`${SPOKEN.format(toUtc(date))}${busyNight ? ", unavailable" : ""}`}
                     className={[
                       "my-0.5 h-10 transition-colors",
                       isStart || isEnd ? "rounded-full bg-brand font-medium text-white" : "",

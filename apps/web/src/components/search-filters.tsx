@@ -125,7 +125,7 @@ export function SearchFilters({ query, facets, currency, count }: Props) {
             </p>
             <div className="mt-4 grid grid-cols-2 gap-3">
               {(["minPrice", "maxPrice"] as const).map((k) => (
-                <label key={k} className="rounded-xl px-4 py-2 ring-1 ring-line">
+                <label key={k} className="rounded-xl px-4 py-2 ring-1 ring-field focus-within:ring-2 focus-within:ring-ink">
                   <span className="block text-xs text-ink-soft">{k === "minPrice" ? "Minimum" : "Maximum"}</span>
                   <input
                     type="number"
@@ -146,12 +146,12 @@ export function SearchFilters({ query, facets, currency, count }: Props) {
             <section>
               <h3 className="text-base">Location</h3>
               <div className="mt-3 flex flex-wrap gap-2">
-                <button type="button" className={chip(!draft.city)} onClick={() => setDraft({ ...draft, city: undefined })}>
+                <button type="button" aria-pressed={!draft.city} className={chip(!draft.city)} onClick={() => setDraft({ ...draft, city: undefined })}>
                   Anywhere
                 </button>
                 {facets.cities.map((c) => (
-                  <button key={c.value} type="button" className={chip(draft.city === c.value)} onClick={() => setDraft({ ...draft, city: c.value })}>
-                    {c.value} <span className="opacity-60">· {c.count}</span>
+                  <button key={c.value} type="button" aria-pressed={draft.city === c.value} className={chip(draft.city === c.value)} onClick={() => setDraft({ ...draft, city: c.value })}>
+                    {c.value} <span className="opacity-80">· {c.count}</span>
                   </button>
                 ))}
               </div>
@@ -169,7 +169,7 @@ export function SearchFilters({ query, facets, currency, count }: Props) {
                   className={chip(draft.types?.includes(t.value) ?? false)}
                   onClick={() => setDraft({ ...draft, types: toggle(draft.types, t.value) })}
                 >
-                  {TYPE_LABEL[t.value]} <span className="opacity-60">· {t.count}</span>
+                  {TYPE_LABEL[t.value]} <span className="opacity-80">· {t.count}</span>
                 </button>
               ))}
             </div>
@@ -179,7 +179,7 @@ export function SearchFilters({ query, facets, currency, count }: Props) {
             <h3 className="text-base">Bedrooms</h3>
             <div className="mt-3 flex flex-wrap gap-2">
               {[undefined, 1, 2, 3, 4, 5].map((n) => (
-                <button key={n ?? "any"} type="button" className={chip(draft.bedrooms === n)} onClick={() => setDraft({ ...draft, bedrooms: n })}>
+                <button key={n ?? "any"} type="button" aria-pressed={draft.bedrooms === n} className={chip(draft.bedrooms === n)} onClick={() => setDraft({ ...draft, bedrooms: n })}>
                   {n ? `${n}+` : "Any"}
                 </button>
               ))}

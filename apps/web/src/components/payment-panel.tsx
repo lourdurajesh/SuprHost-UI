@@ -110,7 +110,7 @@ export function PaymentPanel({ token, total, currency, methods, holdExpiresAt, s
           return (
             <label
               key={m}
-              className={`flex cursor-pointer items-start gap-4 rounded-2xl border p-4 transition ${
+              className={`flex cursor-pointer items-start gap-4 rounded-2xl border p-4 transition has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ink ${
                 selected ? "border-brand bg-brand/[0.04] ring-4 ring-brand/10" : "border-line bg-white hover:border-ink-soft/40"
               }`}
             >
@@ -124,7 +124,7 @@ export function PaymentPanel({ token, total, currency, methods, holdExpiresAt, s
               </span>
               <span
                 aria-hidden
-                className={`mt-1 flex h-5 w-5 items-center justify-center rounded-full border-2 ${selected ? "border-brand" : "border-line"}`}
+                className={`mt-1 flex h-5 w-5 items-center justify-center rounded-full border-2 ${selected ? "border-brand" : "border-field"}`}
               >
                 {selected && <span className="h-2.5 w-2.5 rounded-full bg-brand" />}
               </span>

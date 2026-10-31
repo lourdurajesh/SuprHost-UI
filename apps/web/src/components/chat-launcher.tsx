@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Icon } from "./icons";
 
 interface Props {
@@ -16,6 +16,18 @@ const QUICK = ["Is it available on my dates?", "Can you arrange a pickup?", "Are
 export function ChatLauncher({ brandName, whatsapp }: Props) {
   const [open, setOpen] = useState(false);
   const [text, setText] = useState("");
+  const panel = useRef<HTMLDivElement>(null);
+  const launcher = useRef<HTMLButtonElement>(null);
+
+  // Opening moves focus into the panel; Escape closes it and returns focus to the launcher.
+  useEffect(() => {
+    if (open) panel.current?.querySelector<HTMLElement>("textarea")?.focus();
+  }, [open]);
+
+  function close() {
+    setOpen(false);
+    launcher.current?.focus();
+  }
 
   function send(message: string) {
     const page = typeof window !== "undefined" ? window.location.href.split("#")[0] : "";
@@ -30,8 +42,10 @@ export function ChatLauncher({ brandName, whatsapp }: Props) {
     <div className="fixed bottom-6 right-6 z-40 hidden lg:block">
       {open && (
         <div
+          ref={panel}
           role="dialog"
           aria-label={`Chat with ${brandName}`}
+          onKeyDown={(e) => e.key === "Escape" && close()}
           className="mb-3 w-[min(360px,calc(100vw-2rem))] overflow-hidden rounded-3xl bg-white shadow-2xl ring-1 ring-line"
         >
           <div className="flex items-center gap-3 bg-brand px-5 py-4 text-white">
@@ -42,7 +56,7 @@ export function ChatLauncher({ brandName, whatsapp }: Props) {
                 <span className="h-2 w-2 rounded-full bg-emerald-400" /> Usually replies within an hour
               </p>
             </div>
-            <button type="button" onClick={() => setOpen(false)} aria-label="Close chat" className="rounded-full p-1.5 hover:bg-white/10">
+            <button type="button" onClick={close} aria-label="Close chat" className="grid h-11 w-11 place-items-center rounded-full hover:bg-white/10">
               <Icon name="close" className="h-5 w-5" />
             </button>
           </div>
@@ -52,7 +66,7 @@ export function ChatLauncher({ brandName, whatsapp }: Props) {
             </p>
             <div className="flex flex-wrap gap-2">
               {QUICK.map((q) => (
-                <button key={q} type="button" onClick={() => send(q)} className="rounded-full bg-white px-3 py-1.5 text-xs ring-1 ring-line hover:ring-ink">
+                <button key={q} type="button" onClick={() => send(q)} className="min-h-9 rounded-full bg-white px-3 py-1.5 text-xs ring-1 ring-line hover:ring-ink">
                   {q}
                 </button>
               ))}
@@ -74,7 +88,7 @@ export function ChatLauncher({ brandName, whatsapp }: Props) {
               aria-label="Message"
               className="max-h-28 flex-1 resize-none rounded-2xl bg-sand-deep px-4 py-2.5 text-sm outline-none"
             />
-            <button type="submit" disabled={!text.trim()} className="rounded-full bg-brand p-3 text-white disabled:opacity-40" aria-label="Send on WhatsApp">
+            <button type="submit" disabled={!text.trim()} className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-brand text-white disabled:opacity-40" aria-label="Send on WhatsApp">
               <Icon name="arrowRight" className="h-4 w-4" />
             </button>
           </form>
@@ -82,6 +96,7 @@ export function ChatLauncher({ brandName, whatsapp }: Props) {
         </div>
       )}
       <button
+        ref={launcher}
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}

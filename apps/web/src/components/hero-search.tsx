@@ -25,7 +25,7 @@ export function HeroSearch({ cities }: { cities: string[] }) {
   }
 
   const label = "block text-eyebrow uppercase text-ink-soft";
-  const field = "w-full bg-transparent text-sm text-ink outline-none";
+  const field = "min-h-7 w-full bg-transparent text-sm text-ink outline-none";
   const divider = <span aria-hidden className="hidden h-8 w-px bg-line sm:block" />;
   return (
     <form

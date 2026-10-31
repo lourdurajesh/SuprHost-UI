@@ -34,6 +34,7 @@ export function StaySummary({
   guests,
   quote,
   footer,
+  phoneFirst = true,
 }: {
   name: string;
   propertyName: string;
@@ -43,10 +44,12 @@ export function StaySummary({
   guests: number;
   quote: Quote;
   footer?: React.ReactNode;
+  /** Above the main column on phones (checkout: "what am I booking?"); false keeps it after (confirmation). */
+  phoneFirst?: boolean;
 }) {
   return (
-    // Above the form on phones (what am I booking?), beside it from lg up.
-    <aside className="order-first h-fit overflow-hidden rounded-2xl border border-line bg-white lg:sticky lg:top-24 lg:order-none">
+    // Beside the main column from lg up.
+    <aside className={`${phoneFirst ? "order-first lg:order-none" : ""} h-fit overflow-hidden rounded-2xl border border-line bg-white lg:sticky lg:top-24`}>
       <ListingPhoto image={image} name={name} sizes="420px" className="aspect-[16/9] max-lg:hidden" />
       <div className="p-5 sm:p-6">
         <div className="flex items-center gap-4">

@@ -8,7 +8,7 @@ function Wordmark({ site }: { site: Site }) {
   return (
     <Link href="/" className="min-w-0 leading-none">
       <span className="block truncate text-xl tracking-tight text-ink sm:text-2xl">{site.brandName}</span>
-      {site.location && <span className="mt-1 hidden truncate text-eyebrow uppercase text-ink-soft sm:block">{site.location.label}</span>}
+      {site.location && <span className="mt-1 hidden truncate text-eyebrow uppercase text-ink-soft lg:block">{site.location.label}</span>}
     </Link>
   );
 }
@@ -19,16 +19,16 @@ export function SiteHeader({ site }: { site: Site }) {
       <div className="mx-auto flex h-[76px] max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
         <Wordmark site={site} />
         <nav aria-label="Main" className="flex shrink-0 items-center gap-2 text-ink md:gap-3">
-          <Link href="/#about" className="hidden rounded-full px-3 py-2 hover:text-ink-soft md:inline">
+          <Link href="/#about" className="hidden min-h-11 items-center rounded-full px-3 hover:text-ink-soft md:inline-flex">
             Our story
           </Link>
-          <Link href="/stays" className="hidden rounded-full px-3 py-2 hover:text-ink-soft md:inline">
+          <Link href="/stays" className="hidden min-h-11 items-center rounded-full px-3 hover:text-ink-soft md:inline-flex">
             Stays
           </Link>
-          <Link href="/#faq" className="hidden rounded-full px-3 py-2 hover:text-ink-soft md:inline">
+          <Link href="/#faq" className="hidden min-h-11 items-center rounded-full px-3 hover:text-ink-soft md:inline-flex">
             FAQ
           </Link>
-          <Link href="/#contact" className="hidden rounded-full px-3 py-2 hover:text-ink-soft lg:inline">
+          <Link href="/#contact" className="hidden min-h-11 items-center rounded-full px-3 hover:text-ink-soft lg:inline-flex">
             Contact
           </Link>
           <span className="hidden md:inline-flex">
@@ -37,7 +37,7 @@ export function SiteHeader({ site }: { site: Site }) {
           <Link href="/stays" className="inline-flex min-h-11 shrink-0 items-center whitespace-nowrap rounded-full bg-brand px-5 text-white transition hover:brightness-125">
             Book now
           </Link>
-          <MobileMenu brandName={site.brandName} whatsapp={site.contact.whatsapp?.replace(/D/g, "") || null} phone={site.contact.phone} />
+          <MobileMenu brandName={site.brandName} whatsapp={site.contact.whatsapp?.replace(/\D/g, "") || null} phone={site.contact.phone} />
         </nav>
       </div>
     </header>

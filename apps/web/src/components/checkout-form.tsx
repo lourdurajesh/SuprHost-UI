@@ -86,6 +86,14 @@ export function CheckoutForm({ listingId, checkIn, checkOut, guests, holdMinutes
     return found;
   }
 
+  // Moves focus to the first field with an error (after it renders), so a failed submit is never
+  // silent when the field has scrolled out of view, and screen readers announce the message.
+  function showErrors(found: FieldErrors) {
+    setErrors(found);
+    const first = (["name", "email", "phone", "message", "code"] as const).find((f) => found[f]);
+    if (first) requestAnimationFrame(() => document.getElementById(first)?.focus());
+  }
+
   async function book(): Promise<void> {
     setBusy("book");
     try {
@@ -108,10 +116,11 @@ export function CheckoutForm({ listingId, checkIn, checkOut, guests, holdMinutes
 
       if (res.ok && typeof body.token === "string") {
         // Full navigation so the header picks up a session started on this page.
+        // eslint-disable-next-line @next/next/no-location-assign-relative-destination
         window.location.assign(`/checkout/${encodeURIComponent(body.token)}`);
         return;
       }
-      if (res.status === 400 && body.fields) setErrors(body.fields);
+      if (res.status === 400 && body.fields) showErrors(body.fields);
       else if (res.status === 401) {
         setStep("details");
         setErrors({ form: "Your sign-in has expired. Confirm your email again to continue." });
@@ -150,7 +159,7 @@ export function CheckoutForm({ listingId, checkIn, checkOut, guests, holdMinutes
     e.preventDefault();
     if (busy) return;
     const found = checkDetails();
-    setErrors(found);
+    showErrors(found);
     if (Object.keys(found).length) return;
     if (session) await book();
     else await sendCode();
@@ -175,7 +184,7 @@ export function CheckoutForm({ listingId, checkIn, checkOut, guests, holdMinutes
   }
 
   const input =
-    "mt-1.5 w-full rounded-lg border border-line bg-white px-4 py-3 text-base outline-none transition placeholder:text-ink-soft/70 focus:border-brand focus:ring-4 focus:ring-brand/10 read-only:bg-sand read-only:text-ink-soft";
+    "mt-1.5 w-full rounded-lg border border-field bg-white px-4 py-3 text-base outline-none transition placeholder:text-ink-soft focus:border-brand focus:ring-4 focus:ring-brand/10 read-only:bg-sand read-only:text-ink-soft";
   const error = (f: Field) =>
     errors[f] && (
       <p id={`${f}-error`} className="mt-1.5 text-sm text-red-700">

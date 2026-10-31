@@ -125,6 +125,7 @@ async function Confirmation({ params }: Pick<PageProps<"/[site]/booking/[token]"
       </section>
 
       <StaySummary
+        phoneFirst={false}
         name={booking.listing.name}
         propertyName={booking.listing.propertyName}
         image={booking.listing.image}

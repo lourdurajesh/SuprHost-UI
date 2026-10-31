@@ -98,6 +98,7 @@ export function StaysMap({ pins, activeId, onPinHover, className = "", approxima
             "block rounded-full bg-white px-3 py-1.5 text-sm font-medium text-[#3d3a3a] shadow-[0_2px_10px_rgba(0,0,0,0.18)] ring-1 ring-black/5 transition-transform hover:scale-110";
           node.textContent = p.label;
           if (p.title) node.title = p.title;
+          if (p.title && p.href) node.setAttribute("aria-label", `${p.title}, ${p.label}`);
           node.addEventListener("mouseenter", () => onPinHover?.(p.id));
           node.addEventListener("mouseleave", () => onPinHover?.(null));
           const marker = new maplibregl.Marker({ element: node }).setLngLat([p.lng, p.lat]).addTo(m);
@@ -132,7 +133,7 @@ export function StaysMap({ pins, activeId, onPinHover, className = "", approxima
   }, [activeId]);
 
   return (
-    <div ref={el} className={`relative overflow-hidden bg-sand-deep ${className}`}>
+    <div ref={el} role="region" aria-label="Map" className={`relative overflow-hidden bg-sand-deep ${className}`}>
       {failed && <p className="absolute inset-0 flex items-center justify-center text-sm text-ink-soft">Map unavailable</p>}
     </div>
   );

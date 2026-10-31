@@ -77,7 +77,7 @@ async function BookContent({ params, searchParams }: Pick<PageProps<"/[site]/boo
         footer={
           <>
             <p className="mt-5 rounded-xl bg-sand-deep px-4 py-3 text-xs leading-relaxed text-ink-soft">{site.policies.cancellation}</p>
-            <Link href={`/stays/${listing.slug}`} className="mt-4 inline-block text-sm font-medium underline underline-offset-4">
+            <Link href={`/stays/${listing.slug}`} className="mt-2 inline-flex min-h-11 items-center text-sm font-medium underline underline-offset-4">
               Change dates or guests
             </Link>
           </>

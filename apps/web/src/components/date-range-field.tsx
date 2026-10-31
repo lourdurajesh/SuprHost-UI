@@ -146,7 +146,7 @@ export function DateRangeField({ checkIn, checkOut, onChange, timezone, variant 
         </button>
       ) : (
         <button type="button" onClick={open} className="block w-full text-left">
-          <span className="text-eyebrow block text-ink-soft">{label}</span>
+          <span className="block text-eyebrow uppercase text-ink-soft">{label}</span>
           <span className={`block truncate text-sm ${checkIn && checkOut ? "text-ink" : "text-ink-soft"}`}>{summary}</span>
         </button>
       )}

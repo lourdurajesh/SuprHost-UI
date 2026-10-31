@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { getSite } from "@/lib/pms";
 import { allSiteKeys } from "@/lib/sites";
+import { readable } from "@/lib/colors";
 import { ChatLauncher } from "@/components/chat-launcher";
 import { SiteFooter, SiteHeader } from "@/themes/escape/chrome";
 
@@ -27,7 +28,6 @@ export async function generateMetadata({ params }: LayoutProps<"/[site]">): Prom
 
 type SiteParams = LayoutProps<"/[site]">["params"];
 
-const HEX = /^#[0-9a-f]{6}$/i;
 
 // The layout never awaits the URL itself: each part that needs the site reads it inside its own
 // <Suspense>, so the page body renders without waiting and client navigations stay instant.
@@ -53,9 +53,10 @@ export default function SiteLayout({ children, params }: LayoutProps<"/[site]">)
 async function Header({ params }: { params: SiteParams }) {
   const site = await getSite((await params).site);
   if (!site) notFound();
-  // Brand colours come from the PMS (validated there); only plain hex values reach the stylesheet.
-  const primary = HEX.test(site.colors.primary) ? site.colors.primary : "#3d3a3a";
-  const accent = HEX.test(site.colors.accent) ? site.colors.accent : "#4e8e82";
+  // Brand colours come from the PMS (validated there); only plain hex values reach the stylesheet,
+  // darkened if needed so white text on brand and accent text on sand stay at 4.5:1 (WCAG AA).
+  const primary = readable(site.colors.primary, "#3d3a3a", "#ffffff");
+  const accent = readable(site.colors.accent, "#4e8e82", "#f5f3f0");
   return (
     <>
       <style>{`:root{--brand:${primary};--accent:${accent}}`}</style>
