@@ -107,7 +107,8 @@ async function Trips({ params }: Pick<PageProps<"/[site]/account">, "params">) {
 
 function TripRow({ trip, whatsapp, muted = false }: { trip: TripSummary; whatsapp?: string; muted?: boolean }) {
   return (
-    <li className={`flex flex-col gap-5 rounded-3xl p-4 ring-1 ring-line sm:flex-row sm:items-center ${muted ? "opacity-75" : ""}`}>
+    // No opacity for past trips: faded text would drop below 4.5:1.
+    <li className={`flex flex-col gap-5 rounded-3xl p-4 ring-1 sm:flex-row sm:items-center ${muted ? "ring-line bg-sand-deep/40" : "ring-line"}`}>
       <ListingPhoto image={trip.listing.image} name="" sizes="200px" className="aspect-[4/3] w-full shrink-0 rounded-2xl sm:w-44" />
       <div className="flex-1">
         <p className="text-sm text-ink-soft">
@@ -124,6 +125,11 @@ function TripRow({ trip, whatsapp, muted = false }: { trip: TripSummary; whatsap
         {trip.token && (
           <Link href={`/booking/${encodeURIComponent(trip.token)}`} className="rounded-full bg-brand px-5 py-2.5 text-center text-sm text-white">
             View booking
+          </Link>
+        )}
+        {trip.token && muted && trip.status === "confirmed" && (
+          <Link href={`/review/${encodeURIComponent(trip.token)}`} className="rounded-full px-5 py-2.5 text-center text-sm ring-1 ring-ink hover:bg-sand-deep">
+            Write a review
           </Link>
         )}
         {whatsapp && (

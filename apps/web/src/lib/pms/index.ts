@@ -7,6 +7,7 @@ import type {
   BookingHold,
   BookingSummary,
   CancelResult,
+  ReviewState,
   CreateBookingInput,
   Listing,
   ListingSummary,
@@ -143,6 +144,21 @@ export async function changeBookingDates(
     method: "POST",
     body: dates,
     headers: { ...abuseHeaders(ctx), "X-Guest-Session": sessionToken },
+  });
+}
+
+/** Whether the holder of a booking token can review the stay (from the review email or My trips). */
+export async function getReviewState(key: string, token: string): Promise<ReviewState | null> {
+  if (useMock) return null;
+  return orNull(pmsFetch<ReviewState>(`/sites/${site(key)}/bookings/${encodeURIComponent(token)}/review`));
+}
+
+export async function submitReview(key: string, token: string, review: { rating: number; text: string }, ctx: RequestContext): Promise<void> {
+  if (useMock) return;
+  await pmsFetch<unknown>(`/sites/${site(key)}/bookings/${encodeURIComponent(token)}/review`, {
+    method: "POST",
+    body: review,
+    headers: abuseHeaders(ctx),
   });
 }
 

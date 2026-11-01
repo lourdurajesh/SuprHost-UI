@@ -61,6 +61,8 @@ export const searchParamsSchema = z.object({
 /** Secret booking token from the PMS (base64url, 32 chars). */
 export const bookingToken = z.string().regex(/^[A-Za-z0-9_-]{32,64}$/);
 
+export const reviewBody = z.object({ rating: z.number().int().min(1).max(5), text: z.string().trim().min(10).max(2000) }).strict();
+
 export const changeDatesBody = z
   .object({ checkIn: isoDate, checkOut: isoDate })
   .strict()

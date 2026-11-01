@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ListingSummary } from "@/lib/pms";
 import { formatMoney } from "@/lib/dates";
+import { Rating } from "@/components/rating";
 import { WishlistButton } from "@/components/wishlist";
 import { ListingPhoto } from "./listing-media";
 
@@ -23,8 +24,11 @@ export function ListingCard({ listing, currency, priority, addsGst }: { listing:
         className="aspect-[4/3] rounded-2xl"
         imgClassName="transition-transform duration-700 ease-out group-hover:scale-[1.04]"
       />
-      <p className="mt-4 text-sm text-ink-soft">
-        {listing.city} · {listing.propertyName}
+      <p className="mt-4 flex items-center justify-between gap-3 text-sm text-ink-soft">
+        <span>
+          {listing.city} · {listing.propertyName}
+        </span>
+        <Rating rating={listing.rating} className="shrink-0 text-ink" />
       </p>
       <h3 className="mt-1 text-2xl leading-snug tracking-tight group-hover:underline group-hover:decoration-1 group-hover:underline-offset-4">
         {listing.name}

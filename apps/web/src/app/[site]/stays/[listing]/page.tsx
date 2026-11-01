@@ -4,6 +4,8 @@ import { Carousel } from "@/components/carousel";
 import { BookingWidget } from "@/components/booking-widget";
 import { amenityIcon, Icon } from "@/components/icons";
 import { PhotoTour } from "@/components/photo-tour";
+import { Rating } from "@/components/rating";
+import { formatDate } from "@/lib/dates";
 import { StaysMap } from "@/components/stays-map";
 import { TrackRecentView, WishlistButton } from "@/components/wishlist";
 import { getListing, getListings, getSite } from "@/lib/pms";
@@ -59,7 +61,11 @@ async function ListingPageContent({ params }: Pick<PageProps<"/[site]/stays/[lis
     amenityFeature: listing.amenities.map((a) => ({ "@type": "LocationFeatureSpecification", name: a, value: true })),
     ...(photos.length ? { image: photos.map((i) => new URL(i.url, site.canonicalUrl).toString()) } : {}),
     containedInPlace: { "@type": "LodgingBusiness", name: site.brandName, url: site.canonicalUrl },
+    ...(listing.rating && listing.rating.count > 0
+      ? { aggregateRating: { "@type": "AggregateRating", ratingValue: listing.rating.average, reviewCount: listing.rating.count, bestRating: 5, worstRating: 1 } }
+      : {}),
   };
+  const reviews = listing.reviews ?? [];
 
   return (
     <>
@@ -67,7 +73,7 @@ async function ListingPageContent({ params }: Pick<PageProps<"/[site]/stays/[lis
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
 
         <nav aria-label="Sections" className="no-scrollbar sticky top-[76px] z-30 -mx-4 flex gap-6 overflow-x-auto border-b border-line bg-white/95 px-4 py-1 text-sm backdrop-blur sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
-          {[["photos", "Photos"], ["amenities", "Amenities"], ["things", "Things to know"], ["location", "Location"], ["book", "Book"]].map(([id, label]) => (
+          {[["photos", "Photos"], ["amenities", "Amenities"], ...(reviews.length ? [["reviews", "Reviews"]] : []), ["things", "Things to know"], ["location", "Location"], ["book", "Book"]].map(([id, label]) => (
             <a key={id} href={`#${id}`} className="shrink-0 py-3 text-ink-soft hover:text-ink">
               {label}
             </a>
@@ -108,6 +114,11 @@ async function ListingPageContent({ params }: Pick<PageProps<"/[site]/stays/[lis
                 <WishlistButton listingId={listing.id} name={listing.name} className="shrink-0 ring-1 ring-line" />
               </div>
               <p className="mt-3 text-ink-soft">{specs.map((s) => s.label).join(" · ")}</p>
+              {listing.rating && listing.rating.count > 0 && (
+                <a href="#reviews" className="mt-2 inline-flex min-h-11 items-center underline-offset-4 hover:underline">
+                  <Rating rating={listing.rating} />
+                </a>
+              )}
               <TrackRecentView
                 stay={{ slug: listing.slug, name: listing.name, place: listing.city, image: listing.image, fromPrice: listing.fromPrice }}
               />
@@ -176,6 +187,32 @@ async function ListingPageContent({ params }: Pick<PageProps<"/[site]/stays/[lis
                 </div>
               </div>
             </section>
+
+            {reviews.length > 0 && (
+              <section id="reviews" className="mt-12 scroll-mt-36 border-t border-line pt-10" aria-labelledby="reviews-heading">
+                <h2 id="reviews-heading" className="flex flex-wrap items-baseline gap-x-3 text-h2">
+                  Guest reviews <Rating rating={listing.rating} className="text-base" />
+                </h2>
+                <ul className="mt-6 grid gap-8 md:grid-cols-2">
+                  {reviews.map((r, i) => (
+                    <li key={`${r.author}-${r.month}-${i}`}>
+                      <p className="flex items-center gap-2 text-sm">
+                        <span className="font-medium">{r.author}</span>
+                        <span className="text-ink-soft">· {formatDate(`${r.month}-01`, { month: "long", year: "numeric" })}</span>
+                        <span className="sr-only">, rated {r.rating} out of 5</span>
+                        <span aria-hidden className="tracking-widest">{"★".repeat(r.rating)}<span className="text-field">{"★".repeat(5 - r.rating)}</span></span>
+                      </p>
+                      <p className="mt-2 whitespace-pre-line">{r.text}</p>
+                      {r.reply && (
+                        <p className="mt-3 border-l-2 border-line pl-4 text-sm text-ink-soft">
+                          <span className="font-medium text-ink">Reply from {site.brandName}:</span> {r.reply}
+                        </p>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
 
             {(listing.location ?? site.location) && (
               <section id="location" className="mt-12 scroll-mt-36 border-t border-line pt-10">

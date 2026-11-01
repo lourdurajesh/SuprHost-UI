@@ -7,6 +7,7 @@ import { formatMoney } from "@/lib/dates";
 import { ListingPhoto } from "@/themes/escape/listing-media";
 import { Icon } from "./icons";
 import { StaysMap } from "./stays-map";
+import { Rating } from "./rating";
 import { WishlistButton } from "./wishlist";
 
 interface Props {
@@ -76,8 +77,11 @@ export function SearchResults({ hits, query, currency, addsGst }: Props) {
                   </span>
                 )}
               </div>
-              <p className="mt-3 text-sm text-ink-soft">
-                {h.city} · {h.propertyName}
+              <p className="mt-3 flex items-center justify-between gap-3 text-sm text-ink-soft">
+                <span>
+                  {h.city} · {h.propertyName}
+                </span>
+                <Rating rating={h.rating} className="shrink-0 text-ink" />
               </p>
               <h3 className="mt-0.5 text-xl tracking-tight group-hover:underline group-hover:decoration-1 group-hover:underline-offset-4">
                 {h.name}

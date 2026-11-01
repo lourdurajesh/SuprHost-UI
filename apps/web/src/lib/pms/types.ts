@@ -69,9 +69,36 @@ export interface ListingSummary {
   /** Approximate pin for maps; the exact address is shared after booking. */
   location: { lat: number; lng: number } | null;
   instantBook: boolean;
+  /** Published website reviews; null until there are some. */
+  rating?: RatingSummary | null;
+}
+
+export interface RatingSummary {
+  average: number;
+  count: number;
+}
+
+export interface PublicReview {
+  author: string;
+  /** yyyy-MM */
+  month: string;
+  rating: number;
+  text: string;
+  reply: string | null;
+}
+
+export interface ReviewState {
+  canReview: boolean;
+  submitted: boolean;
+  stayName: string;
+  checkIn: string;
+  checkOut: string;
+  guestFirstName: string;
+  reason: string | null;
 }
 
 export interface Listing extends ListingSummary {
+  reviews?: PublicReview[] | null;
   description: string;
   highlights: { icon: string; title: string; text: string }[];
   houseRules: string[];
