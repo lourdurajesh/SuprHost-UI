@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { requestSignInCode } from "@/lib/pms";
+import { PmsError, requestSignInCode } from "@/lib/pms";
 import { clientIp, isSameOrigin, rateLimit, verifyTurnstile } from "@/lib/security";
 import { isSiteKey } from "@/lib/sites";
 import { signInCodeBody } from "@/lib/validation";
@@ -34,10 +34,14 @@ export async function POST(request: NextRequest, ctx: RouteContext<"/[site]/api/
       turnstileToken,
       idempotencyKey: crypto.randomUUID(),
     });
-    // Mock data only (no email provider): hand the code back so the tester can sign in.
+    // Development and demos (PublicApi:ExposeSignInCodes): hand the code back so the tester can sign in.
     if (testModeCode) return NextResponse.json({ status: "sent", testModeCode }, { status: 202 });
-  } catch {
-    // Same answer either way; failures are visible in server logs and PMS metrics.
+  } catch (e) {
+    // The email provider being down says nothing about the address, so the guest is told to retry
+    // instead of waiting for a code that will never come. Other failures keep the same answer.
+    if (e instanceof PmsError && e.status === 503) {
+      return NextResponse.json({ error: "email_unavailable" }, { status: 503, headers: { "Retry-After": "60" } });
+    }
     console.error("sign-in code request failed", { site });
   }
   return accepted();
