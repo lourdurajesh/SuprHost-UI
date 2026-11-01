@@ -37,7 +37,7 @@ async function HomePageContent({ params }: Pick<PageProps<"/[site]">, "params">)
       />
       <Hero site={site} stays={listings} />
       <Intro site={site} />
-      <Stays listings={listings} currency={site.currency} />
+      <Stays listings={listings} currency={site.currency} addsGst={site.pricesAddGst} />
       <Highlights items={site.highlights} />
       <About about={site.about} />
       <Gallery images={gallery} />

@@ -43,6 +43,8 @@ export interface Site {
   /** "simulated" until a payment plugin is enabled: the payment step confirms without charging. */
   payments: { mode: "simulated" | "live"; methods: PaymentMethod[]; holdMinutes: number };
   features: FeatureCode[];
+  /** The host is GST-registered: per-night prices are before tax, quotes and trip totals include it. */
+  pricesAddGst: boolean;
 }
 
 export type PropertyType = "cottage" | "suite" | "villa" | "home" | "apartment";
@@ -145,6 +147,14 @@ export interface Availability {
   from: string;
   to: string;
   busy: { start: string; end: string }[];
+  /** Check-ins on nights [start, end) need at least minNights (seasonal minimum stays). */
+  rules: StayRule[];
+}
+
+export interface StayRule {
+  start: string;
+  end: string;
+  minNights: number;
 }
 
 export interface Quote {
@@ -154,7 +164,12 @@ export interface Quote {
   guests: number;
   nights: number;
   currency: string;
+  /** Before tax; they add up to subtotal. */
   lines: { label: string; amount: number }[];
+  subtotal?: number;
+  /** Added on top of the lines (GST), empty when the host doesn't charge tax. */
+  taxes?: { label: string; amount: number }[] | null;
+  /** What the guest pays. */
   total: number;
 }
 

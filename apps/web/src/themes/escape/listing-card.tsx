@@ -4,7 +4,7 @@ import { formatMoney } from "@/lib/dates";
 import { ListingPhoto } from "./listing-media";
 
 // Borderless card: the photo carries it; text stays quiet underneath.
-export function ListingCard({ listing, currency, priority }: { listing: ListingSummary; currency: string; priority?: boolean }) {
+export function ListingCard({ listing, currency, priority, addsGst }: { listing: ListingSummary; currency: string; priority?: boolean; addsGst?: boolean }) {
   const meta = [
     `${listing.maxGuests} guests`,
     listing.bedrooms && `${listing.bedrooms} bedroom${listing.bedrooms === 1 ? "" : "s"}`,
@@ -30,7 +30,7 @@ export function ListingCard({ listing, currency, priority }: { listing: ListingS
       <p className="mt-1 text-sm text-ink-soft">{meta.join(" · ")}</p>
       <p className="mt-3 text-base">
         <span className="text-ink">{formatMoney(listing.fromPrice, currency)}</span>
-        <span className="text-ink-soft"> / night</span>
+        <span className="text-ink-soft"> / night{addsGst ? " + GST" : ""}</span>
       </p>
     </Link>
   );

@@ -99,6 +99,7 @@ const site: Site = {
   timezone: "Asia/Kolkata",
   payments: { mode: "simulated", methods: ["upi", "card", "netbanking"], holdMinutes: 15 },
   features: ["website.public", "website.instant_book"],
+  pricesAddGst: false,
 };
 
 const listings: Listing[] = [
@@ -439,6 +440,8 @@ function buildQuote(listing: Listing, checkIn: string, checkOut: string, guests:
     nights,
     currency: site.currency,
     lines: [{ label: `₹${listing.fromPrice.toLocaleString("en-IN")} × ${nights} night${nights === 1 ? "" : "s"}`, amount: stay }],
+    subtotal: stay,
+    taxes: [],
     total: stay,
   };
 }
@@ -506,6 +509,7 @@ export const mock = {
     from,
     to,
     busy: [...seededBusy(listingId, today()), ...heldRanges(listingId)],
+    rules: [],
   }),
 
   quote: async (key: string, listingId: string, checkIn: string, checkOut: string, guests: number): Promise<Quote> => {

@@ -51,7 +51,7 @@ export function Intro({ site }: { site: Site }) {
   );
 }
 
-export function Stays({ listings, currency }: { listings: ListingSummary[]; currency: string }) {
+export function Stays({ listings, currency, addsGst }: { listings: ListingSummary[]; currency: string; addsGst?: boolean }) {
   return (
     <section id="stays" className={`${container} scroll-mt-24`}>
       <div className="flex items-end justify-between gap-4">
@@ -70,7 +70,7 @@ export function Stays({ listings, currency }: { listings: ListingSummary[]; curr
           slideClassName="w-[85%] sm:w-[calc((100%-1.5rem)/2)] lg:w-[calc((100%-3rem)/3)]"
         >
           {listings.map((l, i) => (
-            <ListingCard key={l.id} listing={l} currency={currency} priority={i < 3} />
+            <ListingCard key={l.id} listing={l} currency={currency} priority={i < 3} addsGst={addsGst} />
           ))}
         </Carousel>
       )}

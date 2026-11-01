@@ -81,6 +81,12 @@ export function StaySummary({
               <dd>{formatMoney(l.amount, quote.currency)}</dd>
             </div>
           ))}
+          {(quote.taxes ?? []).map((t) => (
+            <div key={t.label} className="flex justify-between">
+              <dt className="text-ink-soft">{t.label}</dt>
+              <dd>{formatMoney(t.amount, quote.currency)}</dd>
+            </div>
+          ))}
           <div className="flex justify-between border-t border-line pt-3 text-lg font-medium">
             <dt>Total</dt>
             <dd>{formatMoney(quote.total, quote.currency)}</dd>

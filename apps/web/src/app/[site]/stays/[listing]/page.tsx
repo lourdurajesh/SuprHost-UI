@@ -196,6 +196,7 @@ async function ListingPageContent({ params }: Pick<PageProps<"/[site]/stays/[lis
               fromPrice={listing.fromPrice}
               currency={site.currency}
               timezone={site.timezone}
+              pricesAddGst={site.pricesAddGst}
             />
           </aside>
         </div>
@@ -205,7 +206,7 @@ async function ListingPageContent({ params }: Pick<PageProps<"/[site]/stays/[lis
             <h2 className="text-h2">You might also like</h2>
             <div className="mt-8 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
               {others.map((l) => (
-                <ListingCard key={l.id} listing={l} currency={site.currency} />
+                <ListingCard key={l.id} listing={l} currency={site.currency} addsGst={site.pricesAddGst} />
               ))}
             </div>
           </section>

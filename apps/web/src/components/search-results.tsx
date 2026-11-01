@@ -12,6 +12,8 @@ interface Props {
   hits: SearchHit[];
   query: SearchQuery;
   currency: string;
+  /** Per-night prices are before GST; trip totals already include it. */
+  addsGst?: boolean;
 }
 
 function compactPrice(amount: number) {
@@ -20,7 +22,7 @@ function compactPrice(amount: number) {
 
 // List + map, Airbnb-style: hovering a card highlights its pin and vice versa. On phones the map
 // is a full-screen toggle so the list stays fast to scroll.
-export function SearchResults({ hits, query, currency }: Props) {
+export function SearchResults({ hits, query, currency, addsGst }: Props) {
   const [active, setActive] = useState<string | null>(null);
   const [showMap, setShowMap] = useState(false);
   const carry = new URLSearchParams(
@@ -88,13 +90,13 @@ export function SearchResults({ hits, query, currency }: Props) {
                     <span>{formatMoney(h.total, currency)}</span>
                     <span className="text-ink-soft">
                       {" "}
-                      total · {h.nights} night{h.nights === 1 ? "" : "s"}
+                      total{addsGst ? " incl. GST" : ""} · {h.nights} night{h.nights === 1 ? "" : "s"}
                     </span>
                   </>
                 ) : (
                   <>
                     <span>{formatMoney(h.fromPrice, currency)}</span>
-                    <span className="text-ink-soft"> / night</span>
+                    <span className="text-ink-soft"> / night{addsGst ? " + GST" : ""}</span>
                   </>
                 )}
               </p>

@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { addDays, overlapsBusy, toIso, toUtc } from "@/lib/dates";
+import { addDays, minNightsOn, overlapsBusy, toIso, toUtc } from "@/lib/dates";
+import type { StayRule } from "@/lib/pms/types";
 
 type Busy = { start: string; end: string }[];
 
@@ -13,6 +14,8 @@ interface Props {
   maxNights: number;
   /** Shortest stay; check-out dates before it are disabled. */
   minNights?: number;
+  /** Seasonal minimum stays, by check-in night. */
+  rules?: StayRule[];
   onChange: (checkIn: string | null, checkOut: string | null) => void;
 }
 
@@ -40,7 +43,7 @@ function isBusyNight(date: string, busy: Busy) {
   return busy.some((b) => date >= b.start && date < b.end);
 }
 
-export function DateRangePicker({ today, busy, checkIn, checkOut, maxNights, minNights = 1, onChange }: Props) {
+export function DateRangePicker({ today, busy, checkIn, checkOut, maxNights, minNights = 1, rules = [], onChange }: Props) {
   // Near the end of a month, open on the next one rather than a grid of past days.
   const [view, setView] = useState(() => monthStart(checkIn ?? addDays(today, 5)));
   const [hover, setHover] = useState<string | null>(null);
@@ -48,7 +51,7 @@ export function DateRangePicker({ today, busy, checkIn, checkOut, maxNights, min
   const lastBookable = addDays(today, 540);
 
   function canCheckOut(date: string) {
-    if (!checkIn || date < addDays(checkIn, minNights)) return false;
+    if (!checkIn || date < addDays(checkIn, minNightsOn(checkIn, rules, minNights))) return false;
     if (date > addDays(checkIn, maxNights)) return false;
     return !overlapsBusy(checkIn, date, busy);
   }

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import type { Availability } from "@/lib/pms/types";
-import { formatDate, nightsBetween, todayIn } from "@/lib/dates";
+import { formatDate, minNightsOn, nightsBetween, todayIn } from "@/lib/dates";
 import { DateRangePicker } from "./date-range-picker";
 import { Icon } from "./icons";
 
@@ -23,6 +23,7 @@ interface DialogProps {
   busy?: Availability["busy"];
   minNights?: number;
   maxNights?: number;
+  rules?: Availability["rules"];
 }
 
 /**
@@ -61,10 +62,12 @@ function DatesDialogContent({
   busy = [],
   minNights = 1,
   maxNights = 60,
+  rules = [],
 }: Omit<DialogProps, "open" | "onOpenChange"> & { close: () => void }) {
   const today = useSyncExternalStore(noSubscribe, () => todayIn(timezone), () => null);
   const [draft, setDraft] = useState<{ checkIn: string | null; checkOut: string | null }>({ checkIn, checkOut });
   const nights = draft.checkIn && draft.checkOut ? nightsBetween(draft.checkIn, draft.checkOut) : 0;
+  const minimum = draft.checkIn ? minNightsOn(draft.checkIn, rules, minNights) : minNights;
 
   function apply() {
     close();
@@ -81,7 +84,7 @@ function DatesDialogContent({
           </p>
           <p className="text-sm text-ink-soft">
             {draft.checkIn ? formatDate(draft.checkIn) : "Check-in"} → {draft.checkOut ? formatDate(draft.checkOut) : "Check-out"}
-            {minNights > 1 && ` · ${minNights}-night minimum`}
+            {minimum > 1 && ` · ${minimum}-night minimum${draft.checkIn && minimum !== minNights ? " for this check-in" : ""}`}
           </p>
         </div>
         <button type="button" onClick={close} aria-label="Close" className="grid h-11 w-11 shrink-0 place-items-center rounded-full hover:bg-sand-deep">
@@ -97,6 +100,7 @@ function DatesDialogContent({
             checkOut={draft.checkOut}
             minNights={minNights}
             maxNights={maxNights}
+            rules={rules}
             onChange={(ci, co) => setDraft({ checkIn: ci, checkOut: co })}
           />
         )}

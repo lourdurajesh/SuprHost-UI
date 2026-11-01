@@ -35,6 +35,11 @@ export function overlapsBusy(checkIn: string, checkOut: string, busy: { start: s
   return busy.some((b) => checkIn < b.end && b.start < checkOut);
 }
 
+/** Shortest stay for a check-in on `checkIn`: a seasonal rule covering that night, or the listing's own minimum. */
+export function minNightsOn(checkIn: string, rules: { start: string; end: string; minNights: number }[], fallback: number): number {
+  return rules.find((r) => checkIn >= r.start && checkIn < r.end)?.minNights ?? fallback;
+}
+
 export function formatDate(iso: string, opts: Intl.DateTimeFormatOptions = { day: "numeric", month: "short", year: "numeric" }): string {
   return new Intl.DateTimeFormat("en-IN", { ...opts, timeZone: "UTC" }).format(toUtc(iso));
 }

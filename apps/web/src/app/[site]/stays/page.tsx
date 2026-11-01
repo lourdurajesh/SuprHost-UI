@@ -38,7 +38,7 @@ async function StaysContent({ params, searchParams }: Pick<PageProps<"/[site]/st
         <SearchFilters key={JSON.stringify(query)} query={query} facets={result.facets} currency={site.currency} count={result.hits.length} />
       </div>
       <div className="mt-6">
-        <SearchResults hits={result.hits} query={query} currency={site.currency} />
+        <SearchResults hits={result.hits} query={query} currency={site.currency} addsGst={site.pricesAddGst} />
       </div>
     </>
   );
