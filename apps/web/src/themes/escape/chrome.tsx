@@ -15,7 +15,7 @@ function Wordmark({ site }: { site: Site }) {
 
 export function SiteHeader({ site }: { site: Site }) {
   return (
-    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md">
+    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md print:hidden">
       <div className="mx-auto flex h-[76px] max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
         <Wordmark site={site} />
         <nav aria-label="Main" className="flex shrink-0 items-center gap-2 text-ink md:gap-3">
@@ -50,7 +50,7 @@ export function SiteFooter({ site }: { site: Site }) {
   const label = "text-eyebrow uppercase text-ink-soft";
   const link = "text-ink hover:text-ink-soft";
   return (
-    <footer id="contact" className="mt-20 border-t border-line lg:mt-28">
+    <footer id="contact" className="mt-20 border-t border-line lg:mt-28 print:hidden">
       <div className="mx-auto grid max-w-7xl gap-12 px-4 py-16 sm:px-6 lg:grid-cols-[1.3fr_1fr] lg:px-8">
         <div className="lg:border-r lg:border-line lg:pr-16">
           <h2 className="text-h1">Talk to us before you book</h2>

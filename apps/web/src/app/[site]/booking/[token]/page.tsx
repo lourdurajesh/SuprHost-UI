@@ -4,12 +4,13 @@ import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { connection } from "next/server";
 import { Icon } from "@/components/icons";
-import { formatDate } from "@/lib/dates";
-import { getBooking, getSite } from "@/lib/pms";
+import { ManageBooking } from "@/components/manage-booking";
+import { formatDate, formatMoney } from "@/lib/dates";
+import { getBooking, getListing, getSite } from "@/lib/pms";
 import { bookingToken } from "@/lib/validation";
 import { CheckoutSteps, StaySummary } from "@/themes/escape/checkout";
 
-export const metadata: Metadata = { title: "Booking confirmed", robots: { index: false, follow: false } };
+export const metadata: Metadata = { title: "Your booking", robots: { index: false, follow: false } };
 
 const METHOD_LABEL = { upi: "UPI", card: "Card", netbanking: "Net banking" } as const;
 
@@ -39,6 +40,8 @@ async function Confirmation({ params }: Pick<PageProps<"/[site]/booking/[token]"
     );
   }
   if (booking.status === "pending_payment") redirect(`/checkout/${encodeURIComponent(token)}`);
+  const listing = booking.manage && booking.listing.slug ? await getListing(key, booking.listing.slug) : null;
+  const cancelled = booking.status === "cancelled";
 
   const mapsUrl = site.location
     ? `https://www.google.com/maps/search/?api=1&query=${site.location.lat},${site.location.lng}`
@@ -53,12 +56,14 @@ async function Confirmation({ params }: Pick<PageProps<"/[site]/booking/[token]"
             <Icon name="check" className="h-7 w-7" strokeWidth={2.5} />
           </span>
           <h1 className="mt-5 text-h1">
-            {booking.status === "confirmed" ? `You’re going to ${booking.listing.name}!` : "This booking is no longer active"}
+            {booking.status === "confirmed" ? `You’re going to ${booking.listing.name}!` : cancelled ? "This booking is cancelled" : "This booking is no longer active"}
           </h1>
           <p className="mt-3 max-w-lg text-white/85">
             {booking.status === "confirmed"
               ? `Thank you, ${booking.guestName.split(" ")[0]}. Your booking is confirmed and the details are on their way to ${booking.guestEmailMasked}.`
-              : "Please contact us if you think this is a mistake."}
+              : cancelled
+                ? `The dates are released. Any refund is shown in the email we sent to ${booking.guestEmailMasked}.`
+                : "Please contact us if you think this is a mistake."}
           </p>
           <div className="mt-6 inline-flex flex-wrap items-center gap-x-3 rounded-full bg-white/15 px-4 py-2 text-sm">
             Booking reference <span className="font-mono text-base font-medium tracking-wider">{booking.reference}</span>
@@ -120,7 +125,32 @@ async function Confirmation({ params }: Pick<PageProps<"/[site]/booking/[token]"
                 </Link>
               </div>
             </div>
+
+            {booking.manage && (
+              <ManageBooking
+                token={token}
+                listingId={booking.quote.listingId}
+                checkIn={booking.checkIn}
+                checkOut={booking.checkOut}
+                guests={booking.guests}
+                total={booking.quote.total}
+                currency={booking.quote.currency}
+                timezone={site.timezone}
+                manage={booking.manage}
+                minNights={listing?.minNights ?? 1}
+                maxNights={listing?.maxNights ?? 30}
+              />
+            )}
           </>
+        )}
+
+        {cancelled && (
+          <p className="mt-6 text-sm text-ink-soft">
+            Total was {formatMoney(booking.quote.total, booking.quote.currency)}.{" "}
+            <Link href={`/booking/${encodeURIComponent(token)}/receipt`} className="underline underline-offset-4">
+              View receipt
+            </Link>
+          </p>
         )}
       </section>
 

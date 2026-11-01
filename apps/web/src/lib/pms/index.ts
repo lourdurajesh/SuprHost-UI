@@ -6,6 +6,7 @@ import type {
   Availability,
   BookingHold,
   BookingSummary,
+  CancelResult,
   CreateBookingInput,
   Listing,
   ListingSummary,
@@ -116,6 +117,32 @@ export async function payBooking(key: string, token: string, payment: PaymentInp
     method: "POST",
     body: payment,
     headers: abuseHeaders(ctx),
+  });
+}
+
+/** Cancels under the site's rule; the session must belong to the booking's guest. */
+export async function cancelBooking(key: string, token: string, ctx: RequestContext, sessionToken: string): Promise<CancelResult> {
+  if (useMock) return mock.cancel(key, token);
+  return pmsFetch<CancelResult>(`/sites/${site(key)}/bookings/${encodeURIComponent(token)}/cancel`, {
+    method: "POST",
+    body: {},
+    headers: { ...abuseHeaders(ctx), "X-Guest-Session": sessionToken },
+  });
+}
+
+/** Moves the stay (re-priced) while changes are still free; the session must belong to the booking's guest. */
+export async function changeBookingDates(
+  key: string,
+  token: string,
+  dates: { checkIn: string; checkOut: string },
+  ctx: RequestContext,
+  sessionToken: string,
+): Promise<BookingSummary> {
+  if (useMock) return mock.changeDates(key, token, dates);
+  return pmsFetch<BookingSummary>(`/sites/${site(key)}/bookings/${encodeURIComponent(token)}/dates`, {
+    method: "POST",
+    body: dates,
+    headers: { ...abuseHeaders(ctx), "X-Guest-Session": sessionToken },
   });
 }
 

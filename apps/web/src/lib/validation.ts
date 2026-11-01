@@ -61,6 +61,12 @@ export const searchParamsSchema = z.object({
 /** Secret booking token from the PMS (base64url, 32 chars). */
 export const bookingToken = z.string().regex(/^[A-Za-z0-9_-]{32,64}$/);
 
+export const changeDatesBody = z
+  .object({ checkIn: isoDate, checkOut: isoDate })
+  .strict()
+  .refine((v) => v.checkOut > v.checkIn, { message: "Check-out must be after check-in", path: ["checkOut"] })
+  .refine((v) => nightsBetween(v.checkIn, v.checkOut) <= 60, { message: "Stays are limited to 60 nights", path: ["checkOut"] });
+
 export const paymentBody = z
   .object({
     method: z.enum(["upi", "card", "netbanking"]),

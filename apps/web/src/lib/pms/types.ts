@@ -45,6 +45,8 @@ export interface Site {
   features: FeatureCode[];
   /** The host is GST-registered: per-night prices are before tax, quotes and trip totals include it. */
   pricesAddGst: boolean;
+  /** Printed on receipts when the host charges GST. */
+  gstin: string | null;
 }
 
 export type PropertyType = "cottage" | "suite" | "villa" | "home" | "apartment";
@@ -167,6 +169,8 @@ export interface Quote {
   /** Before tax; they add up to subtotal. */
   lines: { label: string; amount: number }[];
   subtotal?: number;
+  /** Room nights only (no fees or tax); cancellation charges are based on it. */
+  nightsTotal?: number;
   /** Added on top of the lines (GST), empty when the host doesn't charge tax. */
   taxes?: { label: string; amount: number }[] | null;
   /** What the guest pays. */
@@ -207,6 +211,25 @@ export interface BookingSummary {
   holdExpiresAt: string | null;
   payment: { status: "unpaid" | "paid"; method: PaymentMethod | null; paidAt: string | null; mode: "simulated" | "live" };
   paymentMethods: PaymentMethod[];
+  /** What the guest can do from My trips; amounts include tax. */
+  manage?: ManageInfo | null;
+}
+
+export interface ManageInfo {
+  canCancel: boolean;
+  canChangeDates: boolean;
+  /** Last day (ISO) to cancel or change for free. */
+  freeUntil: string | null;
+  cancellationCharge: number;
+  refund: number;
+  /** Why something isn't possible, in the guest's words. */
+  reason: string | null;
+}
+
+export interface CancelResult {
+  status: "cancelled";
+  charge: number;
+  refund: number;
 }
 
 export interface PaymentInput {

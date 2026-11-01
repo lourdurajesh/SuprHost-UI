@@ -39,7 +39,7 @@ export function ChatLauncher({ brandName, whatsapp }: Props) {
 
   return (
     // Desktop only: on smaller screens the bottom edge belongs to the booking bar, and chat lives in the menu.
-    <div className="fixed bottom-6 right-6 z-40 hidden lg:block">
+    <div className="fixed bottom-6 right-6 z-40 hidden lg:block print:hidden">
       {open && (
         <div
           ref={panel}

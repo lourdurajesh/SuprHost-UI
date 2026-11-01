@@ -4,6 +4,7 @@ import type {
   Availability,
   BookingHold,
   BookingSummary,
+  CancelResult,
   CreateBookingInput,
   Listing,
   ListingImage,
@@ -100,6 +101,7 @@ const site: Site = {
   payments: { mode: "simulated", methods: ["upi", "card", "netbanking"], holdMinutes: 15 },
   features: ["website.public", "website.instant_book"],
   pricesAddGst: false,
+  gstin: null,
 };
 
 const listings: Listing[] = [
@@ -472,6 +474,10 @@ function summary(b: StoredBooking): BookingSummary {
       mode: site.payments.mode,
     },
     paymentMethods: site.payments.methods,
+    manage:
+      b.status === "confirmed"
+        ? { canCancel: true, canChangeDates: true, freeUntil: addDays(b.input.checkIn, -7), cancellationCharge: 0, refund: b.quote.total, reason: null }
+        : null,
   };
 }
 
@@ -560,6 +566,22 @@ export const mock = {
     b.paidAt = Date.now();
     b.method = payment.method;
     return { status: "succeeded" };
+  },
+
+  cancel: async (key: string, token: string): Promise<CancelResult> => {
+    const b = store.get(token);
+    if (!b || key !== site.key) throw new PmsError(404, "not_found", "Booking not found");
+    b.status = "cancelled";
+    return { status: "cancelled", charge: 0, refund: b.quote.total };
+  },
+
+  changeDates: async (key: string, token: string, dates: { checkIn: string; checkOut: string }): Promise<BookingSummary> => {
+    const b = store.get(token);
+    if (!b || key !== site.key) throw new PmsError(404, "not_found", "Booking not found");
+    const listing = listings.find((l) => l.id === b.input.listingId)!;
+    b.input = { ...b.input, ...dates };
+    b.quote = buildQuote(listing, dates.checkIn, dates.checkOut, b.input.guests);
+    return summary(b);
   },
 
   search: async (key: string, q: SearchQuery): Promise<SearchResult> => {
