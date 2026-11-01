@@ -5,6 +5,7 @@ import { BookingWidget } from "@/components/booking-widget";
 import { amenityIcon, Icon } from "@/components/icons";
 import { PhotoTour } from "@/components/photo-tour";
 import { StaysMap } from "@/components/stays-map";
+import { TrackRecentView, WishlistButton } from "@/components/wishlist";
 import { getListing, getListings, getSite } from "@/lib/pms";
 import { ListingCard } from "@/themes/escape/listing-card";
 import { ListingPhoto } from "@/themes/escape/listing-media";
@@ -102,8 +103,14 @@ async function ListingPageContent({ params }: Pick<PageProps<"/[site]/stays/[lis
               <p className="text-eyebrow uppercase text-ink-soft">
                 {listing.city} · {listing.propertyName}
               </p>
-              <h1 className="mt-2 text-h1">{listing.name}</h1>
+              <div className="mt-2 flex items-start justify-between gap-4">
+                <h1 className="text-h1">{listing.name}</h1>
+                <WishlistButton listingId={listing.id} name={listing.name} className="shrink-0 ring-1 ring-line" />
+              </div>
               <p className="mt-3 text-ink-soft">{specs.map((s) => s.label).join(" · ")}</p>
+              <TrackRecentView
+                stay={{ slug: listing.slug, name: listing.name, place: listing.city, image: listing.image, fromPrice: listing.fromPrice }}
+              />
             </header>
 
             {listing.highlights.length > 0 && (

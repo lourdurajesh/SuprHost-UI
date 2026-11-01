@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ListingSummary } from "@/lib/pms";
 import { formatMoney } from "@/lib/dates";
+import { WishlistButton } from "@/components/wishlist";
 import { ListingPhoto } from "./listing-media";
 
 // Borderless card: the photo carries it; text stays quiet underneath.
@@ -12,6 +13,7 @@ export function ListingCard({ listing, currency, priority, addsGst }: { listing:
   ].filter(Boolean);
 
   return (
+    <div className="relative">
     <Link href={`/stays/${listing.slug}`} prefetch={true} className="group block">
       <ListingPhoto
         image={listing.image}
@@ -33,5 +35,7 @@ export function ListingCard({ listing, currency, priority, addsGst }: { listing:
         <span className="text-ink-soft"> / night{addsGst ? " + GST" : ""}</span>
       </p>
     </Link>
+    <WishlistButton listingId={listing.id} name={listing.name} className="absolute right-3 top-3" />
+    </div>
   );
 }

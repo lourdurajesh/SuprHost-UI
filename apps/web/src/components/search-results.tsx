@@ -7,6 +7,7 @@ import { formatMoney } from "@/lib/dates";
 import { ListingPhoto } from "@/themes/escape/listing-media";
 import { Icon } from "./icons";
 import { StaysMap } from "./stays-map";
+import { WishlistButton } from "./wishlist";
 
 interface Props {
   hits: SearchHit[];
@@ -58,7 +59,8 @@ export function SearchResults({ hits, query, currency, addsGst }: Props) {
     <div className="grid gap-8 lg:grid-cols-[1fr_minmax(0,0.85fr)]">
       <ul className={`grid gap-x-6 gap-y-10 sm:grid-cols-2 ${showMap ? "hidden lg:grid" : ""}`}>
         {hits.map((h) => (
-          <li key={h.id} onMouseEnter={() => setActive(h.id)} onMouseLeave={() => setActive(null)}>
+          <li key={h.id} className="relative" onMouseEnter={() => setActive(h.id)} onMouseLeave={() => setActive(null)}>
+            <WishlistButton listingId={h.id} name={h.name} className="absolute right-3 top-3 z-10" />
             <Link href={`/stays/${h.slug}${carry ? `?${carry}` : ""}`} className="group block">
               <div className="relative">
                 <ListingPhoto

@@ -12,7 +12,7 @@ const secret = process.env.PMS_API_SECRET;
 export const pmsConfigured = Boolean(baseUrl && keyId && secret);
 
 interface CallOptions {
-  method?: "GET" | "POST";
+  method?: "GET" | "POST" | "PUT" | "DELETE";
   body?: unknown;
   headers?: Record<string, string>;
 }

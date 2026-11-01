@@ -4,7 +4,8 @@ import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { Icon } from "@/components/icons";
 import { formatDate, formatMoney, todayIn } from "@/lib/dates";
-import { getGuestSession, getSite, getTrips, type TripSummary } from "@/lib/pms";
+import { getGuestSession, getSite, getTrips, getWishlist, type TripSummary } from "@/lib/pms";
+import { ListingCard } from "@/themes/escape/listing-card";
 import { readSessionToken } from "@/lib/session";
 import { ListingPhoto } from "@/themes/escape/listing-media";
 
@@ -25,7 +26,7 @@ async function Trips({ params }: Pick<PageProps<"/[site]/account">, "params">) {
   const token = await readSessionToken();
   const session = token ? await getGuestSession(key, token) : null;
   if (!token || !session) redirect("/account/signin");
-  const [site, trips] = await Promise.all([getSite(key), getTrips(key, token)]);
+  const [site, trips, saved] = await Promise.all([getSite(key), getTrips(key, token), getWishlist(key, token).catch(() => [])]);
   if (!site) return null;
 
   const today = todayIn(site.timezone);
@@ -75,6 +76,19 @@ async function Trips({ params }: Pick<PageProps<"/[site]/account">, "params">) {
           </ul>
         </section>
       )}
+
+      <section className="mt-12" aria-labelledby="saved-heading">
+        <h2 id="saved-heading" className="text-2xl tracking-tight">Saved stays</h2>
+        {saved.length === 0 ? (
+          <p className="mt-3 text-ink-soft">Tap the heart on any stay to save it here.</p>
+        ) : (
+          <div className="mt-5 grid gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
+            {saved.map((l) => (
+              <ListingCard key={l.id} listing={l} currency={site.currency} addsGst={site.pricesAddGst} />
+            ))}
+          </div>
+        )}
+      </section>
 
       <section className="mt-12 rounded-3xl p-6 ring-1 ring-line sm:p-8">
         <h2 className="text-xl tracking-tight">Messages</h2>

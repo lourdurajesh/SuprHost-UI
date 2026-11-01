@@ -200,6 +200,20 @@ export async function getTrips(key: string, sessionToken: string): Promise<TripS
   return pmsFetch<TripSummary[]>(`/sites/${site(key)}/me/trips`, { headers: { "X-Guest-Session": sessionToken } });
 }
 
+/** The signed-in guest's saved stays (still on the site), newest first. */
+export async function getWishlist(key: string, sessionToken: string): Promise<ListingSummary[]> {
+  if (useMock) return mock.wishlist(key, sessionToken);
+  return pmsFetch<ListingSummary[]>(`/sites/${site(key)}/me/wishlist`, { headers: { "X-Guest-Session": sessionToken } });
+}
+
+export async function setWishlisted(key: string, sessionToken: string, listingId: string, saved: boolean, ctx: RequestContext): Promise<void> {
+  if (useMock) return mock.setWishlisted(key, sessionToken, listingId, saved);
+  await pmsFetch<unknown>(`/sites/${site(key)}/me/wishlist/${encodeURIComponent(listingId)}`, {
+    method: saved ? "PUT" : "DELETE",
+    headers: { ...abuseHeaders(ctx), "X-Guest-Session": sessionToken },
+  });
+}
+
 export async function endGuestSession(key: string, sessionToken: string): Promise<void> {
   if (useMock) return mock.logout(key, sessionToken);
   await pmsFetch<unknown>(`/sites/${site(key)}/auth/logout`, { method: "POST", headers: { "X-Guest-Session": sessionToken } });

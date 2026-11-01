@@ -453,6 +453,9 @@ function maskEmail(email: string) {
   return `${user.slice(0, 1)}${"•".repeat(Math.max(2, user.length - 1))}@${domain}`;
 }
 
+// Mock only: saved stays per session token, in memory.
+const wishlists = new Map<string, Set<string>>();
+
 function summary(b: StoredBooking): BookingSummary {
   const listing = listings.find((l) => l.id === b.input.listingId)!;
   const expired = b.status === "pending_payment" && b.holdExpiresAt <= Date.now();
@@ -566,6 +569,18 @@ export const mock = {
     b.paidAt = Date.now();
     b.method = payment.method;
     return { status: "succeeded" };
+  },
+
+  wishlist: async (key: string, sessionToken: string) => {
+    const saved = wishlists.get(sessionToken) ?? new Set<string>();
+    return key === site.key ? listings.filter((l) => saved.has(l.id)).map(toSummary) : [];
+  },
+
+  setWishlisted: async (_key: string, sessionToken: string, listingId: string, saved: boolean) => {
+    const set = wishlists.get(sessionToken) ?? new Set<string>();
+    if (saved) set.add(listingId);
+    else set.delete(listingId);
+    wishlists.set(sessionToken, set);
   },
 
   cancel: async (key: string, token: string): Promise<CancelResult> => {
