@@ -147,6 +147,9 @@ export function ManageBooking({ token, listingId, checkIn, checkOut, guests, tot
         <a href={`/booking/${encodeURIComponent(token)}/receipt`} className={`${button} ring-1 ring-line hover:bg-sand`}>
           Receipt
         </a>
+        <a href={`/booking/${encodeURIComponent(token)}/calendar.ics`} download className={`${button} ring-1 ring-line hover:bg-sand`}>
+          Add to calendar
+        </a>
       </div>
 
       <DatesDialog
