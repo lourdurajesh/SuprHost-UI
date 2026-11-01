@@ -1,14 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useRef, useState, useTransition } from "react";
 import type { SearchHit, SearchQuery } from "@/lib/pms/types";
-import { formatMoney } from "@/lib/dates";
+import { formatDate, formatMoney } from "@/lib/dates";
 import { ListingPhoto } from "@/themes/escape/listing-media";
 import { Icon } from "./icons";
 import { StaysMap } from "./stays-map";
 import { Rating } from "./rating";
 import { WishlistButton } from "./wishlist";
+import { toSearchString } from "./search-filters";
 
 interface Props {
   hits: SearchHit[];
@@ -25,13 +27,41 @@ function compactPrice(amount: number) {
 // List + map, Airbnb-style: hovering a card highlights its pin and vice versa. On phones the map
 // is a full-screen toggle so the list stays fast to scroll.
 export function SearchResults({ hits, query, currency, addsGst }: Props) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const [, startTransition] = useTransition();
   const [active, setActive] = useState<string | null>(null);
   const [showMap, setShowMap] = useState(false);
-  const carry = new URLSearchParams(
-    Object.entries({ checkIn: query.checkIn, checkOut: query.checkOut, guests: query.guests })
-      .filter(([, v]) => v !== undefined)
-      .map(([k, v]) => [k, String(v)]),
-  ).toString();
+  // "Search as I move the map": on while the URL carries an area, and the guest's choice otherwise.
+  const [followMap, setFollowMap] = useState(Boolean(query.bounds));
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const initialBounds = query.bounds ? (query.bounds.split(",").map(Number) as [number, number, number, number]) : null;
+
+  // Dates carried to a stay page: a shifted match carries its own dates.
+  const carryFor = (h?: SearchHit) => {
+    const checkIn = h?.altCheckIn ?? query.checkIn;
+    const checkOut = h?.altCheckOut ?? query.checkOut;
+    const s = new URLSearchParams(
+      Object.entries({ checkIn, checkOut, guests: query.guests })
+        .filter(([, v]) => v !== undefined && v !== null)
+        .map(([k, v]) => [k, String(v)]),
+    ).toString();
+    return s ? `?${s}` : "";
+  };
+
+  function onMapMove(b: [number, number, number, number]) {
+    if (!followMap) return;
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = setTimeout(
+      () => startTransition(() => router.replace(`${pathname}${toSearchString({ ...query, bounds: b.join(",") })}`, { scroll: false })),
+      400,
+    );
+  }
+
+  function toggleFollow(on: boolean) {
+    setFollowMap(on);
+    if (!on && query.bounds) startTransition(() => router.replace(`${pathname}${toSearchString({ ...query, bounds: undefined })}`, { scroll: false }));
+  }
 
   const pins = hits
     .filter((h) => h.location)
@@ -40,9 +70,21 @@ export function SearchResults({ hits, query, currency, addsGst }: Props) {
       lat: h.location!.lat,
       lng: h.location!.lng,
       label: compactPrice(h.fromPrice),
-      href: `/stays/${h.slug}${carry ? `?${carry}` : ""}`,
+      href: `/stays/${h.slug}${carryFor(h)}`,
       title: h.name,
     }));
+
+  if (hits.length === 0 && query.bounds) {
+    return (
+      <div className="rounded-3xl bg-sand-deep p-10 text-center">
+        <p className="text-xl">No stays in this part of the map.</p>
+        <p className="mt-2 text-ink-soft">Zoom out or search the whole area.</p>
+        <Link href={`${pathname}${toSearchString({ ...query, bounds: undefined })}`} className="mt-6 inline-flex min-h-11 items-center rounded-full bg-brand px-6 text-white">
+          Search everywhere
+        </Link>
+      </div>
+    );
+  }
 
   if (hits.length === 0) {
     return (
@@ -62,7 +104,7 @@ export function SearchResults({ hits, query, currency, addsGst }: Props) {
         {hits.map((h) => (
           <li key={h.id} className="relative" onMouseEnter={() => setActive(h.id)} onMouseLeave={() => setActive(null)}>
             <WishlistButton listingId={h.id} name={h.name} className="absolute right-3 top-3 z-10" />
-            <Link href={`/stays/${h.slug}${carry ? `?${carry}` : ""}`} className="group block">
+            <Link href={`/stays/${h.slug}${carryFor(h)}`} className="group block">
               <div className="relative">
                 <ListingPhoto
                   image={h.image}
@@ -90,6 +132,11 @@ export function SearchResults({ hits, query, currency, addsGst }: Props) {
                 {h.maxGuests} guests{h.bedrooms ? ` · ${h.bedrooms} bedroom${h.bedrooms === 1 ? "" : "s"}` : ""}
                 {h.bathrooms ? ` · ${h.bathrooms} bath${h.bathrooms === 1 ? "" : "s"}` : ""}
               </p>
+              {h.altCheckIn && h.altCheckOut && (
+                <p className="mt-1 text-sm font-medium text-accent">
+                  Available {formatDate(h.altCheckIn, { day: "numeric", month: "short" })} – {formatDate(h.altCheckOut, { day: "numeric", month: "short" })}
+                </p>
+              )}
               <p className="mt-2 text-base">
                 {h.total && h.nights ? (
                   <>
@@ -114,12 +161,18 @@ export function SearchResults({ hits, query, currency, addsGst }: Props) {
       {/* Sticky on the wrapper: MapLibre forces position:relative on its own container. */}
       <div className={`${showMap ? "block" : "hidden"} lg:block`}>
         <div className="lg:sticky lg:top-[170px]">
+          <label className="mb-3 flex min-h-11 items-center gap-3 text-sm">
+            <input type="checkbox" checked={followMap} onChange={(e) => toggleFollow(e.target.checked)} className="h-5 w-5 accent-[var(--brand)]" />
+            Search as I move the map
+          </label>
           <StaysMap
             key={hits.map((h) => h.id).join(",")}
             pins={pins}
             activeId={active}
             onPinHover={setActive}
-            className="h-[70svh] rounded-3xl lg:h-[calc(100svh-200px)]"
+            initialBounds={initialBounds}
+            onMoveEnd={onMapMove}
+            className="h-[70svh] rounded-3xl lg:h-[calc(100svh-244px)]"
           />
         </div>
       </div>

@@ -120,11 +120,18 @@ export interface SearchQuery {
   amenities?: string[];
   city?: string;
   sort?: SearchSort;
+  /** Flexible dates: also match stays free up to this many days earlier or later (1–3). */
+  flex?: number;
+  /** "south,west,north,east": only stays with a pin inside the visible map area. */
+  bounds?: string;
 }
 
 export interface SearchHit extends ListingSummary {
   /** null when no dates were given. */
   available: boolean | null;
+  /** With flexible dates: the shifted stay that is free (null when the exact dates are). */
+  altCheckIn?: string | null;
+  altCheckOut?: string | null;
   nights: number | null;
   total: number | null;
 }

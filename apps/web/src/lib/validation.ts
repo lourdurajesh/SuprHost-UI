@@ -56,6 +56,12 @@ export const searchParamsSchema = z.object({
   amenities: z.preprocess(csv, z.array(z.string().max(40)).max(12)).optional().catch(undefined),
   city: z.string().max(60).optional().catch(undefined),
   sort: z.enum(["recommended", "price_asc", "price_desc"]).optional().catch(undefined),
+  flex: z.coerce.number().int().min(1).max(3).optional().catch(undefined),
+  bounds: z
+    .string()
+    .regex(/^-?\d{1,3}(\.\d{1,6})?(,-?\d{1,3}(\.\d{1,6})?){3}$/)
+    .optional()
+    .catch(undefined),
 });
 
 /** Secret booking token from the PMS (base64url, 32 chars). */

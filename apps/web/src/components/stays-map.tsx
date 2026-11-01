@@ -21,6 +21,10 @@ interface Props {
   /** Single-listing maps show an approximate-area circle instead of an exact pin. */
   approximate?: boolean;
   zoom?: number;
+  /** Open on this area ([south, west, north, east]) instead of fitting the pins. */
+  initialBounds?: [number, number, number, number] | null;
+  /** Called after the guest pans or zooms (not after the map's own fitting), with [south, west, north, east]. */
+  onMoveEnd?: (bounds: [number, number, number, number]) => void;
 }
 
 const KEY = process.env.NEXT_PUBLIC_MAPTILER_KEY;
@@ -45,7 +49,11 @@ function mapStyle() {
 }
 
 // MapLibre (~220 KB gzip) is only downloaded when the map scrolls into view.
-export function StaysMap({ pins, activeId, onPinHover, className = "", approximate = false, zoom = 12 }: Props) {
+export function StaysMap({ pins, activeId, onPinHover, className = "", approximate = false, zoom = 12, initialBounds = null, onMoveEnd }: Props) {
+  const moveEnd = useRef(onMoveEnd);
+  useEffect(() => {
+    moveEnd.current = onMoveEnd;
+  }, [onMoveEnd]);
   const el = useRef<HTMLDivElement>(null);
   const map = useRef<MapLibreMap | null>(null);
   const markers = useRef(new Map<string, { marker: Marker; node: HTMLElement }>());
@@ -104,11 +112,21 @@ export function StaysMap({ pins, activeId, onPinHover, className = "", approxima
           const marker = new maplibregl.Marker({ element: node }).setLngLat([p.lng, p.lat]).addTo(m);
           registry.set(p.id, { marker, node });
         }
-        if (pins.length > 1) {
+        if (initialBounds) {
+          const [s, w, n, e] = initialBounds;
+          m.fitBounds([[w, s], [e, n]], { padding: 0, duration: 0 });
+        } else if (pins.length > 1) {
           const bounds = new maplibregl.LngLatBounds();
           pins.forEach((p) => bounds.extend([p.lng, p.lat]));
           m.fitBounds(bounds, { padding: 60, maxZoom: 13, duration: 0 });
         }
+        // Only moves the guest makes count (they carry an originalEvent); fitting above doesn't.
+        m.on("moveend", (ev) => {
+          if (!("originalEvent" in ev) || !ev.originalEvent) return;
+          const b = m.getBounds();
+          const r = (v: number) => Math.round(v * 10_000) / 10_000;
+          moveEnd.current?.([r(b.getSouth()), r(b.getWest()), r(b.getNorth()), r(b.getEast())]);
+        });
       })
       .catch(() => setFailed(true));
     return () => {

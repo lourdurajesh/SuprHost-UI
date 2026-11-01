@@ -68,8 +68,23 @@ export function SearchFilters({ query, facets, currency, count }: Props) {
       <DateRangeField
         checkIn={query.checkIn ?? null}
         checkOut={query.checkOut ?? null}
-        onChange={(ci, co) => apply({ ...query, checkIn: ci ?? undefined, checkOut: co ?? undefined })}
+        onChange={(ci, co) => apply({ ...query, checkIn: ci ?? undefined, checkOut: co ?? undefined, flex: ci ? query.flex : undefined })}
       />
+      {query.checkIn && query.checkOut && (
+        <select
+          aria-label="Date flexibility"
+          value={query.flex ?? ""}
+          onChange={(e) => apply({ ...query, flex: e.target.value ? Number(e.target.value) : undefined })}
+          className={field}
+        >
+          <option value="">Exact dates</option>
+          {[1, 2, 3].map((d) => (
+            <option key={d} value={d}>
+              ± {d} day{d === 1 ? "" : "s"}
+            </option>
+          ))}
+        </select>
+      )}
       <select
         aria-label="Guests"
         value={query.guests ?? ""}
