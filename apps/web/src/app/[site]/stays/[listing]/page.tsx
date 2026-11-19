@@ -83,59 +83,63 @@ async function ListingPageContent({ params }: Pick<PageProps<"/[site]/stays/[lis
           ))}
         </nav>
 
-        {/* Phones and tablets: one swipeable photo with a counter. Desktop: a mosaic (large photo +
-            four) so guests read the place at a glance; any tile or "Show all" opens the photo tour. */}
-        <div id="photos" className="mt-5 scroll-mt-32">
-          <PhotoTour images={photos} name={listing.name}>
-            {photos.length > 0 ? (
-              <>
-                <div className={photos.length >= 5 ? "lg:hidden" : ""}>
-                  <Carousel label={`Photos of ${listing.name}`} slideClassName="w-full" gapClassName="gap-0" counter className="overflow-hidden rounded-2xl">
-                    {photos.map((img, i) => (
-                      <ListingPhoto
-                        key={`${img.url}-${i}`}
-                        image={img}
-                        name={i === 0 ? listing.name : ""}
-                        sizes="(min-width: 1280px) 1216px, 100vw"
-                        priority={i === 0}
-                        className="aspect-[4/3] sm:aspect-video lg:aspect-auto lg:h-[min(60vh,540px)]"
-                      />
-                    ))}
-                  </Carousel>
-                </div>
-                {photos.length >= 5 && (
-                  <div className="hidden h-[min(62vh,540px)] grid-cols-4 grid-rows-2 gap-2 overflow-hidden rounded-2xl lg:grid">
-                    {photos.slice(0, 5).map((img, i) => (
-                      <button
-                        key={`${img.url}-${i}`}
-                        type="button"
-                        data-photo={i}
-                        aria-label={`Open photo ${i + 1} of ${photos.length}`}
-                        className={`group relative overflow-hidden ${i === 0 ? "col-span-2 row-span-2" : ""}`}
-                      >
-                        <ListingPhoto
-                          image={img}
-                          name={i === 0 ? listing.name : ""}
-                          // The large tile reuses the carousel's sizes so the browser fetches one file, not two.
-                          sizes={i === 0 ? "(min-width: 1280px) 1216px, 100vw" : "25vw"}
-                          priority={i === 0}
-                          className="h-full w-full"
-                          imgClassName="transition duration-500 group-hover:scale-[1.03] group-hover:brightness-95"
-                        />
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </>
-            ) : (
-              <ListingPhoto image={null} name={listing.name} sizes="100vw" className="aspect-video rounded-2xl lg:aspect-auto lg:h-[min(60vh,540px)]" />
-            )}
-          </PhotoTour>
-        </div>
-
-        <div className="mt-8 grid gap-10 lg:mt-10 lg:grid-cols-[minmax(0,1fr)_380px] lg:gap-14">
+        {/* Desktop: photos sit in the left column so the booking card starts at the top of the page,
+            fully visible on load, and stays in view while scrolling. */}
+        <div className="mt-5 grid gap-10 lg:grid-cols-[minmax(0,1fr)_380px] lg:gap-12">
           <div>
-            <header>
+            {/* Phones and tablets: one swipeable photo with a counter. Desktop: a mosaic (large photo +
+                four) so guests read the place at a glance; any tile or "Show all" opens the photo tour. */}
+            <div id="photos" className="scroll-mt-32">
+              <PhotoTour images={photos} name={listing.name}>
+                {photos.length > 0 ? (
+                  <>
+                    <div className={photos.length >= 5 ? "lg:hidden" : ""}>
+                      <Carousel label={`Photos of ${listing.name}`} slideClassName="w-full" gapClassName="gap-0" counter className="overflow-hidden rounded-2xl">
+                        {photos.map((img, i) => (
+                          // Tapping a photo opens the slideshow at that photo.
+                          <button key={`${img.url}-${i}`} type="button" data-photo={i} aria-label={`Open photo ${i + 1} of ${photos.length}`} className="block w-full">
+                            <ListingPhoto
+                              image={img}
+                              name={i === 0 ? listing.name : ""}
+                              sizes="(min-width: 1280px) 1216px, 100vw"
+                              priority={i === 0}
+                              className="aspect-[4/3] sm:aspect-video lg:aspect-auto lg:h-[min(56vh,480px)]"
+                            />
+                          </button>
+                        ))}
+                      </Carousel>
+                    </div>
+                    {photos.length >= 5 && (
+                      <div className="hidden h-[min(56vh,480px)] grid-cols-4 grid-rows-2 gap-2 overflow-hidden rounded-2xl lg:grid">
+                        {photos.slice(0, 5).map((img, i) => (
+                          <button
+                            key={`${img.url}-${i}`}
+                            type="button"
+                            data-photo={i}
+                            aria-label={`Open photo ${i + 1} of ${photos.length}`}
+                            className={`group relative overflow-hidden ${i === 0 ? "col-span-2 row-span-2" : ""}`}
+                          >
+                            <ListingPhoto
+                              image={img}
+                              name={i === 0 ? listing.name : ""}
+                              // The large tile reuses the carousel's sizes so the browser fetches one file, not two.
+                              sizes={i === 0 ? "(min-width: 1280px) 1216px, 100vw" : "18vw"}
+                              priority={i === 0}
+                              className="h-full w-full"
+                              imgClassName="transition duration-500 group-hover:scale-[1.03] group-hover:brightness-95"
+                            />
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <ListingPhoto image={null} name={listing.name} sizes="100vw" className="aspect-video rounded-2xl lg:aspect-auto lg:h-[min(56vh,480px)]" />
+                )}
+              </PhotoTour>
+            </div>
+
+            <header className="mt-8">
               <p className="text-eyebrow uppercase text-ink-soft">
                 {PROPERTY_TYPE[listing.propertyType]} in {listing.city} · {listing.propertyName}
               </p>
