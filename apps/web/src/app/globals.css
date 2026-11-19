@@ -71,6 +71,13 @@ h3 {
   outline-offset: 2px;
 }
 
+/* Booking pages (they render the step indicator) drop sales prompts that compete with paying:
+   the header "Book now" and the footer's "Talk to us before you book". CSS, not usePathname,
+   because the host rewrite would make a pathname check mismatch on hydration. */
+body:has([data-booking-flow]) .hide-in-booking-flow {
+  display: none;
+}
+
 .no-scrollbar {
   scrollbar-width: none;
 }

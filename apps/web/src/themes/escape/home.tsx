@@ -14,27 +14,28 @@ const pill = "inline-flex items-center gap-2 rounded-full bg-brand px-7 py-3.5 t
 
 export function Hero({ site, stays }: { site: Site; stays: ListingSummary[] }) {
   return (
-    <section className="relative overflow-hidden">
-      <div className="mx-auto grid max-w-7xl lg:min-h-[calc(100svh-76px)] lg:grid-cols-[1.25fr_1fr]">
-        <div className="relative z-10 flex min-w-0 flex-col justify-center px-4 pb-12 pt-10 sm:px-6 lg:py-20 lg:pl-8 lg:pr-14">
-          <h1 className="max-w-xl text-display">{site.tagline}</h1>
-          <p className="mt-6 max-w-lg text-lg leading-relaxed text-ink-soft">{site.intro}</p>
-          <div className="mt-10">
-            <HeroSearch cities={[...new Set(stays.map((s) => s.city))].sort()} />
-          </div>
-          <ul className="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-sm text-ink-soft">
-            {["Best rate, booked direct", "Instant confirmation", "Free cancellation up to 7 days"].map((t) => (
-              <li key={t} className="flex items-center gap-2">
-                <Icon name="check" className="h-4 w-4 text-accent" strokeWidth={2} /> {t}
-              </li>
-            ))}
-          </ul>
+    // Full-bleed photo with the promise and the search on top: the place sells itself first.
+    <section className="relative isolate overflow-hidden bg-brand">
+      <div className="absolute inset-0 -z-10">
+        <ListingPhoto image={site.heroImage} name="" sizes="100vw" priority className="h-full w-full" />
+        {/* Two scrims keep white text at >= 4.5:1 over any photo: bottom (all screens) and left (wide screens). */}
+        <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/45 to-black/10" />
+        <div aria-hidden className="absolute inset-0 hidden bg-gradient-to-r from-black/50 via-black/15 to-transparent lg:block" />
+      </div>
+      <div className="mx-auto flex min-h-[calc(100svh-76px)] max-w-7xl flex-col justify-end px-4 pb-8 pt-24 sm:px-6 sm:pb-12 lg:px-8 lg:pb-16 lg:pt-32">
+        {site.location && <p className="text-eyebrow uppercase text-white/85">{site.location.label}</p>}
+        <h1 className="mt-3 max-w-3xl text-display text-white">{site.tagline}</h1>
+        <p className="mt-4 max-w-xl text-base leading-relaxed text-white/90 sm:mt-5 sm:text-lead">{site.intro}</p>
+        <div className="mt-7 sm:mt-9">
+          <HeroSearch cities={[...new Set(stays.map((s) => s.city))].sort()} />
         </div>
-        {/* Photo bleeds to the right edge on desktop; full-width under the text on mobile. */}
-        <div className="relative h-[52svh] lg:absolute lg:inset-y-0 lg:right-0 lg:h-auto lg:w-[42vw]">
-          <ListingPhoto image={site.heroImage} name="" sizes="(min-width: 1024px) 42vw, 100vw" priority className="h-full w-full" />
-          <div aria-hidden className="absolute inset-y-0 left-0 hidden w-24 bg-gradient-to-r from-white to-transparent lg:block" />
-        </div>
+        <ul className="mt-5 flex flex-wrap gap-x-6 gap-y-2 text-sm text-white/90">
+          {["Best rate, booked direct", "Instant confirmation", "Free cancellation up to 7 days"].map((t) => (
+            <li key={t} className="flex items-center gap-2">
+              <Icon name="check" className="h-4 w-4" strokeWidth={2} /> {t}
+            </li>
+          ))}
+        </ul>
       </div>
     </section>
   );
@@ -42,37 +43,43 @@ export function Hero({ site, stays }: { site: Site; stays: ListingSummary[] }) {
 
 export function Intro({ site }: { site: Site }) {
   return (
-    <section className={`${container} py-24 text-center sm:py-32`}>
+    <section className={`${container} py-20 text-center sm:py-28`}>
       <p className="mx-auto max-w-3xl text-h2 tracking-tight">{site.statement}</p>
-      <Link href="/#about" className={`${pill} mt-10`}>
-        Our story
-      </Link>
     </section>
   );
 }
 
 export function Stays({ listings, currency, addsGst }: { listings: ListingSummary[]; currency: string; addsGst?: boolean }) {
+  // A grid, not a carousel: guests see the range at a glance instead of paging to find it.
+  const shown = listings.slice(0, 6);
   return (
     <section id="stays" className={`${container} scroll-mt-24`}>
       <div className="flex items-end justify-between gap-4">
-        <h2 className="text-h1">Our homes</h2>
-        <Link href="/stays" className="mr-0 shrink-0 text-base underline decoration-1 underline-offset-4 hover:text-ink-soft sm:mr-28">
-          View all {listings.length} stays
-        </Link>
+        <div>
+          <h2 className="text-h1">Our homes</h2>
+          <p className="mt-3 text-ink-soft">Prices are per night; your exact total, with fees and GST, shows once you pick dates.</p>
+        </div>
+        {listings.length > shown.length && (
+          <Link href="/stays" className="hidden shrink-0 text-base underline decoration-1 underline-offset-4 hover:text-ink-soft sm:inline">
+            View all {listings.length} stays
+          </Link>
+        )}
       </div>
       {listings.length === 0 ? (
         <p className="mt-10 text-ink-soft">New stays are coming soon.</p>
       ) : (
-        <Carousel
-          label="Our homes"
-          arrows="header"
-          className="mt-10"
-          slideClassName="w-[85%] sm:w-[calc((100%-1.5rem)/2)] lg:w-[calc((100%-3rem)/3)]"
-        >
-          {listings.map((l, i) => (
+        <div className="mt-10 grid gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
+          {shown.map((l, i) => (
             <ListingCard key={l.id} listing={l} currency={currency} priority={i < 3} addsGst={addsGst} />
           ))}
-        </Carousel>
+        </div>
+      )}
+      {listings.length > shown.length && (
+        <div className="mt-12 text-center">
+          <Link href="/stays" className={pill}>
+            See all {listings.length} stays <Icon name="arrowRight" className="h-4 w-4" />
+          </Link>
+        </div>
       )}
     </section>
   );
@@ -80,17 +87,18 @@ export function Stays({ listings, currency, addsGst }: { listings: ListingSummar
 
 export function Highlights({ items }: { items: Site["highlights"] }) {
   if (!items.length) return null;
+  // Open editorial row (no boxed tiles): reasons to book direct, read in one pass.
   return (
-    <section className={`${container} py-24`}>
-      <div className="grid gap-px overflow-hidden rounded-3xl bg-line sm:grid-cols-2 lg:grid-cols-4">
+    <section className={`${container} py-20 sm:py-24`}>
+      <ul className="grid gap-x-10 gap-y-10 border-t border-line pt-12 sm:grid-cols-2 lg:grid-cols-4">
         {items.map((h) => (
-          <div key={h.title} className="bg-white p-8">
-            <Icon name={h.icon} className="h-7 w-7 text-ink" strokeWidth={1.3} />
-            <h3 className="mt-6 text-xl tracking-tight">{h.title}</h3>
+          <li key={h.title}>
+            <Icon name={h.icon} className="h-6 w-6 text-accent" strokeWidth={1.5} />
+            <h3 className="mt-4 text-h3">{h.title}</h3>
             <p className="mt-2 leading-relaxed text-ink-soft">{h.text}</p>
-          </div>
+          </li>
         ))}
-      </div>
+      </ul>
     </section>
   );
 }

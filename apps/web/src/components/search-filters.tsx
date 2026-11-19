@@ -63,8 +63,30 @@ export function SearchFilters({ query, facets, currency, count }: Props) {
   const chip = (on: boolean) =>
     `min-h-11 rounded-full px-4 py-2 text-sm ring-1 transition ${on ? "bg-ink text-white ring-ink" : "bg-white ring-line hover:ring-ink-soft"}`;
 
+  // Applied filters as removable chips, so guests can see and undo what narrows the list.
+  const applied: { key: string; label: string; next: SearchQuery }[] = [
+    ...(query.city ? [{ key: "city", label: query.city, next: { ...query, city: undefined } }] : []),
+    ...(query.types ?? []).map((t) => ({ key: `type-${t}`, label: TYPE_LABEL[t], next: { ...query, types: query.types!.filter((x) => x !== t) } })),
+    ...(query.bedrooms ? [{ key: "bedrooms", label: `${query.bedrooms}+ bedrooms`, next: { ...query, bedrooms: undefined } }] : []),
+    ...(query.minPrice || query.maxPrice
+      ? [
+          {
+            key: "price",
+            label: query.minPrice && query.maxPrice
+              ? `${formatMoney(query.minPrice, currency)} – ${formatMoney(query.maxPrice, currency)} / night`
+              : query.minPrice
+                ? `From ${formatMoney(query.minPrice, currency)} / night`
+                : `Up to ${formatMoney(query.maxPrice!, currency)} / night`,
+            next: { ...query, minPrice: undefined, maxPrice: undefined },
+          },
+        ]
+      : []),
+    ...(query.amenities ?? []).map((a) => ({ key: `amenity-${a}`, label: a, next: { ...query, amenities: query.amenities!.filter((x) => x !== a) } })),
+  ];
+
   return (
-    <div className="no-scrollbar -mx-4 flex items-center gap-2 overflow-x-auto px-4 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0" aria-busy={pending}>
+    <div aria-busy={pending}>
+    <div className="no-scrollbar -mx-4 flex items-center gap-2 overflow-x-auto px-4 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
       <DateRangeField
         checkIn={query.checkIn ?? null}
         checkOut={query.checkOut ?? null}
@@ -241,9 +263,32 @@ export function SearchFilters({ query, facets, currency, count }: Props) {
         </div>
       </dialog>
 
-      <p className="w-full pt-2 text-sm text-ink-soft">
-        {pending ? "Updating…" : `${count} stay${count === 1 ? "" : "s"}${query.checkIn && query.checkOut ? " available for your dates" : ""}`}
-      </p>
+    </div>
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <p className="mr-2 text-sm text-ink" aria-live="polite">
+          {pending ? "Updating…" : `${count} stay${count === 1 ? "" : "s"}${query.checkIn && query.checkOut ? " available for your dates" : ""}`}
+        </p>
+        {applied.map((f) => (
+          <button
+            key={f.key}
+            type="button"
+            onClick={() => apply(f.next)}
+            aria-label={`Remove filter: ${f.label}`}
+            className="inline-flex min-h-9 items-center gap-1.5 rounded-full bg-sand-deep py-1.5 pl-3.5 pr-2.5 text-sm text-ink transition hover:bg-line"
+          >
+            {f.label} <Icon name="close" className="h-3.5 w-3.5" />
+          </button>
+        ))}
+        {applied.length > 1 && (
+          <button
+            type="button"
+            onClick={() => apply({ checkIn: query.checkIn, checkOut: query.checkOut, guests: query.guests, sort: query.sort, flex: query.flex })}
+            className="min-h-9 px-1 text-sm underline underline-offset-4"
+          >
+            Clear filters
+          </button>
+        )}
+      </div>
     </div>
   );
 }

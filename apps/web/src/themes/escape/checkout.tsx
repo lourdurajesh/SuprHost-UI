@@ -7,7 +7,7 @@ const STEPS = ["Your details", "Payment", "Confirmed"];
 
 export function CheckoutSteps({ current }: { current: 0 | 1 | 2 }) {
   return (
-    <ol className="flex items-center gap-2 text-sm sm:gap-3">
+    <ol data-booking-flow className="flex items-center gap-2 text-sm sm:gap-3">
       {STEPS.map((label, i) => (
         <li key={label} className="flex items-center gap-2 sm:gap-3">
           <span

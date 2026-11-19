@@ -151,7 +151,7 @@ export function DateRangeField({ checkIn, checkOut, onChange, timezone, variant 
       ) : (
         <button type="button" onClick={open} className="block w-full text-left">
           <span className="block text-eyebrow uppercase text-ink-soft">{label}</span>
-          <span className={`block truncate text-sm ${checkIn && checkOut ? "text-ink" : "text-ink-soft"}`}>{summary}</span>
+          <span className={`block min-h-8 truncate text-base leading-8 ${checkIn && checkOut ? "text-ink" : "text-ink-soft"}`}>{summary}</span>
         </button>
       )}
       <DatesDialog open={isOpen} onOpenChange={setOpen} checkIn={checkIn} checkOut={checkOut} onChange={onChange} timezone={timezone} />

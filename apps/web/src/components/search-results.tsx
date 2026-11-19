@@ -6,6 +6,7 @@ import { useRef, useState, useTransition } from "react";
 import type { SearchHit, SearchQuery } from "@/lib/pms/types";
 import { formatDate, formatMoney } from "@/lib/dates";
 import { ListingPhoto } from "@/themes/escape/listing-media";
+import { listingFacts, NightlyPrice } from "@/themes/escape/listing-card";
 import { Icon } from "./icons";
 import { StaysMap } from "./stays-map";
 import { Rating } from "./rating";
@@ -69,7 +70,8 @@ export function SearchResults({ hits, query, currency, addsGst }: Props) {
       id: h.id,
       lat: h.location!.lat,
       lng: h.location!.lng,
-      label: compactPrice(h.fromPrice),
+      // Same figure the card shows: the trip total once dates are chosen, else the nightly price.
+      label: compactPrice(h.total && h.nights ? h.total : h.fromPrice),
       href: `/stays/${h.slug}${carryFor(h)}`,
       title: h.name,
     }));
@@ -128,31 +130,26 @@ export function SearchResults({ hits, query, currency, addsGst }: Props) {
               <h3 className="mt-0.5 text-xl tracking-tight group-hover:underline group-hover:decoration-1 group-hover:underline-offset-4">
                 {h.name}
               </h3>
-              <p className="mt-0.5 text-sm text-ink-soft">
-                {h.maxGuests} guests{h.bedrooms ? ` · ${h.bedrooms} bedroom${h.bedrooms === 1 ? "" : "s"}` : ""}
-                {h.bathrooms ? ` · ${h.bathrooms} bath${h.bathrooms === 1 ? "" : "s"}` : ""}
-              </p>
+              <p className="mt-0.5 text-sm text-ink-soft">{listingFacts(h)}</p>
               {h.altCheckIn && h.altCheckOut && (
                 <p className="mt-1 text-sm font-medium text-accent">
                   Available {formatDate(h.altCheckIn, { day: "numeric", month: "short" })} – {formatDate(h.altCheckOut, { day: "numeric", month: "short" })}
                 </p>
               )}
-              <p className="mt-2 text-base">
-                {h.total && h.nights ? (
-                  <>
-                    <span>{formatMoney(h.total, currency)}</span>
-                    <span className="text-ink-soft">
-                      {" "}
-                      total{addsGst ? " incl. GST" : ""} · {h.nights} night{h.nights === 1 ? "" : "s"}
-                    </span>
-                  </>
-                ) : (
-                  <>
-                    <span>{formatMoney(h.fromPrice, currency)}</span>
-                    <span className="text-ink-soft"> / night{addsGst ? " + GST" : ""}</span>
-                  </>
-                )}
-              </p>
+              {h.total && h.nights ? (
+                <p className="mt-2 text-base">
+                  <span className="font-medium">{formatMoney(h.total, currency)}</span>
+                  <span className="text-ink-soft">
+                    {" "}
+                    for {h.nights} night{h.nights === 1 ? "" : "s"}
+                  </span>
+                  <span className="block text-sm text-ink-soft">
+                    {formatMoney(Math.round(h.total / h.nights), currency)} / night avg{addsGst ? " · incl. GST and fees" : " · incl. fees"}
+                  </span>
+                </p>
+              ) : (
+                <NightlyPrice amount={h.fromPrice} currency={currency} addsGst={addsGst} />
+              )}
             </Link>
           </li>
         ))}

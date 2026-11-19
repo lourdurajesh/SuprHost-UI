@@ -9,7 +9,7 @@ import { formatDate } from "@/lib/dates";
 import { StaysMap } from "@/components/stays-map";
 import { TrackRecentView, WishlistButton } from "@/components/wishlist";
 import { getListing, getListings, getSite } from "@/lib/pms";
-import { ListingCard } from "@/themes/escape/listing-card";
+import { ListingCard, PROPERTY_TYPE } from "@/themes/escape/listing-card";
 import { ListingPhoto } from "@/themes/escape/listing-media";
 import { Suspense } from "react";
 
@@ -66,6 +66,9 @@ async function ListingPageContent({ params }: Pick<PageProps<"/[site]/stays/[lis
       : {}),
   };
   const reviews = listing.reviews ?? [];
+  // The site's own pin stands in only for a stay in the same town; elsewhere it would mislead.
+  const mapAt =
+    listing.location ?? (site.location && site.location.label.toLowerCase().includes(listing.city.toLowerCase()) ? site.location : null);
 
   return (
     <>
@@ -80,40 +83,73 @@ async function ListingPageContent({ params }: Pick<PageProps<"/[site]/stays/[lis
           ))}
         </nav>
 
-        {/* One large photo carousel with a counter; the photo tour shows them all. */}
-        <div id="photos" className="relative mt-5 scroll-mt-32">
-          {photos.length > 0 ? (
-            <Carousel label={`Photos of ${listing.name}`} slideClassName="w-full" gapClassName="gap-0" counter className="overflow-hidden rounded-2xl">
-              {photos.map((img, i) => (
-                <ListingPhoto
-                  key={`${img.url}-${i}`}
-                  image={img}
-                  name={i === 0 ? listing.name : ""}
-                  sizes="(min-width: 1280px) 1216px, 100vw"
-                  priority={i === 0}
-                  className="aspect-[4/3] sm:aspect-video lg:aspect-auto lg:h-[min(60vh,540px)]"
-                />
-              ))}
-            </Carousel>
-          ) : (
-            <ListingPhoto image={null} name={listing.name} sizes="100vw" className="aspect-video rounded-2xl lg:aspect-auto lg:h-[min(60vh,540px)]" />
-          )}
-          <div className="absolute left-4 top-4">
-            <PhotoTour images={photos} name={listing.name} />
-          </div>
+        {/* Phones and tablets: one swipeable photo with a counter. Desktop: a mosaic (large photo +
+            four) so guests read the place at a glance; any tile or "Show all" opens the photo tour. */}
+        <div id="photos" className="mt-5 scroll-mt-32">
+          <PhotoTour images={photos} name={listing.name}>
+            {photos.length > 0 ? (
+              <>
+                <div className={photos.length >= 5 ? "lg:hidden" : ""}>
+                  <Carousel label={`Photos of ${listing.name}`} slideClassName="w-full" gapClassName="gap-0" counter className="overflow-hidden rounded-2xl">
+                    {photos.map((img, i) => (
+                      <ListingPhoto
+                        key={`${img.url}-${i}`}
+                        image={img}
+                        name={i === 0 ? listing.name : ""}
+                        sizes="(min-width: 1280px) 1216px, 100vw"
+                        priority={i === 0}
+                        className="aspect-[4/3] sm:aspect-video lg:aspect-auto lg:h-[min(60vh,540px)]"
+                      />
+                    ))}
+                  </Carousel>
+                </div>
+                {photos.length >= 5 && (
+                  <div className="hidden h-[min(62vh,540px)] grid-cols-4 grid-rows-2 gap-2 overflow-hidden rounded-2xl lg:grid">
+                    {photos.slice(0, 5).map((img, i) => (
+                      <button
+                        key={`${img.url}-${i}`}
+                        type="button"
+                        data-photo={i}
+                        aria-label={`Open photo ${i + 1} of ${photos.length}`}
+                        className={`group relative overflow-hidden ${i === 0 ? "col-span-2 row-span-2" : ""}`}
+                      >
+                        <ListingPhoto
+                          image={img}
+                          name={i === 0 ? listing.name : ""}
+                          // The large tile reuses the carousel's sizes so the browser fetches one file, not two.
+                          sizes={i === 0 ? "(min-width: 1280px) 1216px, 100vw" : "25vw"}
+                          priority={i === 0}
+                          className="h-full w-full"
+                          imgClassName="transition duration-500 group-hover:scale-[1.03] group-hover:brightness-95"
+                        />
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </>
+            ) : (
+              <ListingPhoto image={null} name={listing.name} sizes="100vw" className="aspect-video rounded-2xl lg:aspect-auto lg:h-[min(60vh,540px)]" />
+            )}
+          </PhotoTour>
         </div>
 
         <div className="mt-8 grid gap-10 lg:mt-10 lg:grid-cols-[minmax(0,1fr)_380px] lg:gap-14">
           <div>
             <header>
               <p className="text-eyebrow uppercase text-ink-soft">
-                {listing.city} · {listing.propertyName}
+                {PROPERTY_TYPE[listing.propertyType]} in {listing.city} · {listing.propertyName}
               </p>
               <div className="mt-2 flex items-start justify-between gap-4">
                 <h1 className="text-h1">{listing.name}</h1>
                 <WishlistButton listingId={listing.id} name={listing.name} className="shrink-0 ring-1 ring-line" />
               </div>
-              <p className="mt-3 text-ink-soft">{specs.map((s) => s.label).join(" · ")}</p>
+              <ul className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-ink" aria-label="Key facts">
+                {specs.map((s) => (
+                  <li key={s.label} className="flex items-center gap-2">
+                    <Icon name={s.icon} className="h-5 w-5 text-ink-soft" /> {s.label}
+                  </li>
+                ))}
+              </ul>
               {listing.rating && listing.rating.count > 0 && (
                 <a href="#reviews" className="mt-2 inline-flex min-h-11 items-center underline-offset-4 hover:underline">
                   <Rating rating={listing.rating} />
@@ -214,15 +250,12 @@ async function ListingPageContent({ params }: Pick<PageProps<"/[site]/stays/[lis
               </section>
             )}
 
-            {(listing.location ?? site.location) && (
+            {mapAt && (
               <section id="location" className="mt-12 scroll-mt-36 border-t border-line pt-10">
                 <h2 className="text-h2">Where you’ll be</h2>
-                <p className="mt-2 text-ink-soft">
-                  {listing.city}
-                  {site.location ? ` · ${site.location.label}` : ""}. The exact address is shared after booking.
-                </p>
+                <p className="mt-2 text-ink-soft">{listing.city}. The circle shows the area; the exact address is shared after booking.</p>
                 <StaysMap
-                  pins={[{ id: listing.id, lat: (listing.location ?? site.location)!.lat, lng: (listing.location ?? site.location)!.lng, label: listing.name }]}
+                  pins={[{ id: listing.id, lat: mapAt.lat, lng: mapAt.lng, label: listing.name }]}
                   approximate
                   zoom={13}
                   className="mt-6 h-72 rounded-2xl sm:h-[360px]"

@@ -34,7 +34,7 @@ export function SiteHeader({ site }: { site: Site }) {
           <span className="hidden md:inline-flex">
             <AccountMenu />
           </span>
-          <Link href="/stays" className="inline-flex min-h-11 shrink-0 items-center whitespace-nowrap rounded-full bg-brand px-5 text-white transition hover:brightness-125">
+          <Link href="/stays" className="hide-in-booking-flow inline-flex min-h-11 shrink-0 items-center whitespace-nowrap rounded-full bg-brand px-5 text-white transition hover:brightness-125">
             Book now
           </Link>
           <MobileMenu brandName={site.brandName} whatsapp={site.contact.whatsapp?.replace(/\D/g, "") || null} phone={site.contact.phone} />
@@ -52,7 +52,7 @@ export function SiteFooter({ site }: { site: Site }) {
   return (
     <footer id="contact" className="mt-20 border-t border-line lg:mt-28 print:hidden">
       <div className="mx-auto grid max-w-7xl gap-12 px-4 py-16 sm:px-6 lg:grid-cols-[1.3fr_1fr] lg:px-8">
-        <div className="lg:border-r lg:border-line lg:pr-16">
+        <div className="hide-in-booking-flow lg:border-r lg:border-line lg:pr-16">
           <h2 className="text-h1">Talk to us before you book</h2>
           <p className="mt-4 max-w-md leading-relaxed text-ink-soft">
             Questions about a stay, a special occasion or getting here? We usually reply within minutes.
