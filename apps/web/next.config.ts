@@ -46,6 +46,19 @@ const securityHeaders = [
   { key: "X-DNS-Prefetch-Control", value: "on" },
 ];
 
+// Local and tunnelled testing only: photos uploaded in a local PMS are stored as
+// http://localhost:<api>/media/…, which a phone (or anyone using a tunnel) cannot reach. The site
+// serves them from its own /media path instead (see mediaSrc in themes/escape/listing-media.tsx).
+// Only when the PMS API itself is on localhost, so production (R2/CDN media) never proxies.
+const localApi = (() => {
+  try {
+    const u = new URL(process.env.PMS_API_URL ?? "");
+    return u.hostname === "localhost" || u.hostname === "127.0.0.1" ? u.origin : null;
+  } catch {
+    return null;
+  }
+})();
+
 const nextConfig: NextConfig = {
   cacheComponents: true,
   partialPrefetching: true,
@@ -55,6 +68,9 @@ const nextConfig: NextConfig = {
     formats: ["image/avif", "image/webp"],
     remotePatterns: imageOrigin ? [new URL(`${imageOrigin}/**`)] : [],
     minimumCacheTTL: 2_678_400,
+  },
+  async rewrites() {
+    return localApi ? [{ source: "/media/:path*", destination: `${localApi}/media/:path*` }] : [];
   },
   async headers() {
     return [

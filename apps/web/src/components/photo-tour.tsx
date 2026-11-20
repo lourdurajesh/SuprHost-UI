@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { ListingImage } from "@/lib/pms/types";
 import { Icon } from "./icons";
-import { skipOptimizer } from "@/themes/escape/listing-media";
+import { mediaSrc, skipOptimizer } from "@/themes/escape/listing-media";
 
 const MAX_ZOOM = 4;
 type View = { s: number; x: number; y: number };
@@ -255,7 +255,7 @@ export function PhotoTour({ images, name, children }: { images: ListingImage[]; 
               >
                 <Image
                   key={`${current.url}-${index}`}
-                  src={current.url}
+                  src={mediaSrc(current.url)}
                   alt={current.alt || `${name}, photo ${index + 1} of ${count}`}
                   fill
                   sizes="100vw"
@@ -266,7 +266,7 @@ export function PhotoTour({ images, name, children }: { images: ListingImage[]; 
                 />
               </div>
               {/* Warm the next photo so moving forward feels instant. */}
-              {count > 1 && <Image src={next.url} alt="" aria-hidden fill sizes="100vw" unoptimized={skipOptimizer(next.url)} className="invisible" />}
+              {count > 1 && <Image src={mediaSrc(next.url)} alt="" aria-hidden fill sizes="100vw" unoptimized={skipOptimizer(next.url)} className="invisible" />}
               {count > 1 && (
                 <>
                   <TapButton
@@ -309,7 +309,7 @@ export function PhotoTour({ images, name, children }: { images: ListingImage[]; 
                       i === index ? "opacity-100 ring-2 ring-white ring-offset-2 ring-offset-[#141312]" : "opacity-55 hover:opacity-90"
                     }`}
                   >
-                    <Image src={img.url} alt="" fill sizes="96px" unoptimized={skipOptimizer(img.url)} className="object-cover" />
+                    <Image src={mediaSrc(img.url)} alt="" fill sizes="96px" unoptimized={skipOptimizer(img.url)} className="object-cover" />
                   </TapButton>
                 ))}
               </div>

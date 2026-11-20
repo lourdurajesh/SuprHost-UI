@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { formatMoney } from "@/lib/dates";
 import { useRecentStays } from "./wishlist";
+import { mediaSrc } from "@/themes/escape/listing-media";
 
 /** A quiet row of the stays this browser viewed recently; nothing renders until there are some. */
 export function RecentlyViewed({ currency }: { currency: string }) {
@@ -19,7 +20,7 @@ export function RecentlyViewed({ currency }: { currency: string }) {
                 {s.image && (
                   // Small thumbnail of an already-optimised variant; next/image isn't worth it at this size.
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={s.image.url} alt="" width={80} height={56} loading="lazy" className="h-full w-full object-cover" />
+                  <img src={mediaSrc(s.image.url)} alt="" width={80} height={56} loading="lazy" className="h-full w-full object-cover" />
                 )}
               </span>
               <span className="min-w-0">

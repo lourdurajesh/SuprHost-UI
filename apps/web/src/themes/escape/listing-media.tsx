@@ -7,6 +7,13 @@ import type { ListingImage } from "@/lib/pms";
  */
 export const skipOptimizer = (url: string) => url.endsWith(".svg") || /^https?:\/\/(localhost|127\.0\.0\.1)(:|\/)/.test(url);
 
+/**
+ * Photos uploaded to a local PMS (http://localhost:<port>/media/…) load from the site's own
+ * /media path, which next.config.ts forwards to the local API. Lets phones and tunnels show them.
+ * Every other URL (the production CDN) is returned unchanged.
+ */
+export const mediaSrc = (url: string) => url.replace(/^https?:\/\/(?:localhost|127\.0\.0\.1)(?::\d+)?(?=\/media\/)/, "");
+
 // Photo, or a warm placeholder when the host has not uploaded one yet. Photos come pre-sized from
 // the CDN and go through next/image (AVIF/WebP, responsive); `sizes` keeps phones from
 // downloading desktop widths. SVG placeholders are served as-is.
@@ -30,7 +37,7 @@ export function ListingPhoto({
     return (
       <div className={`relative overflow-hidden bg-sand-deep ${className}`}>
         <Image
-          src={image.url}
+          src={mediaSrc(image.url)}
           alt={image.alt || name}
           fill
           sizes={sizes}
