@@ -19,14 +19,17 @@ export function PhotoTour({ images, name, children }: { images: ListingImage[]; 
   const dialog = useRef<HTMLDialogElement>(null);
   const strip = useRef<HTMLDivElement>(null);
   const stage = useRef<HTMLDivElement>(null);
-  const touchX = useRef<number | null>(null);
-  const drag = useRef<{ px: number; py: number; x: number; y: number } | null>(null);
+  // One pointer-event path for mouse, pen and touch: pan, pinch, swipe and double-tap.
+  const pointers = useRef(new Map<number, { x: number; y: number }>());
+  const gesture = useRef<Gesture | null>(null);
+  const lastTap = useRef<{ t: number; x: number; y: number } | null>(null);
+  const lastPointerType = useRef("mouse");
   const [index, setIndex] = useState(0);
   const [isOpen, setOpen] = useState(false);
   const [view, setView] = useState<View>(FIT);
   const [dragging, setDragging] = useState(false);
-  // The wheel handler reads the latest scale without re-binding on every zoom step.
-  const currentScale = useRef(1);
+  // Event handlers read the latest view without re-binding on every zoom step.
+  const viewRef = useRef<View>(FIT);
   const count = images.length;
 
   /** Show photo i at fit size. */
@@ -63,21 +66,101 @@ export function PhotoTour({ images, name, children }: { images: ListingImage[]; 
     function onWheel(e: WheelEvent) {
       e.preventDefault();
       const factor = Math.exp(-e.deltaY * 0.0015);
-      zoomTo(currentScale.current * factor, e.clientX, e.clientY);
+      zoomTo(viewRef.current.s * factor, e.clientX, e.clientY);
     }
     el.addEventListener("wheel", onWheel, { passive: false });
     return () => el.removeEventListener("wheel", onWheel);
   }, [isOpen, zoomTo]);
 
   useEffect(() => {
-    currentScale.current = view.s;
-  }, [view.s]);
+    viewRef.current = view;
+  }, [view]);
+
+  // Closing goes through state so buttons never touch the dialog ref during render.
+  useEffect(() => {
+    if (!isOpen) dialog.current?.close();
+  }, [isOpen]);
 
   // Keep the active thumbnail in view.
   useEffect(() => {
     if (!isOpen) return;
     strip.current?.querySelector<HTMLElement>(`[data-thumb="${index}"]`)?.scrollIntoView({ block: "nearest", inline: "center" });
   }, [index, isOpen]);
+
+  /** (Re)start the gesture for the pointers now down: two fingers pinch, one pans when zoomed, else swipes. */
+  function startGesture() {
+    const v = viewRef.current;
+    const pts = [...pointers.current.values()];
+    if (pts.length >= 2) {
+      const [a, b] = pts;
+      gesture.current = { kind: "pinch", d: Math.hypot(a.x - b.x, a.y - b.y) || 1, s: v.s, x: v.x, y: v.y, mx: (a.x + b.x) / 2, my: (a.y + b.y) / 2 };
+    } else if (pts.length === 1) {
+      gesture.current = { kind: v.s > 1 ? "pan" : "swipe", px: pts[0].x, py: pts[0].y, x: v.x, y: v.y, moved: 0 };
+    } else {
+      gesture.current = null;
+    }
+    setDragging(gesture.current?.kind === "pan");
+  }
+
+  function onPointerDown(e: React.PointerEvent<HTMLDivElement>) {
+    // Buttons (arrows) keep their own clicks: capturing here would swallow them.
+    if ((e.target as HTMLElement).closest("button")) return;
+    lastPointerType.current = e.pointerType;
+    pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    e.currentTarget.setPointerCapture(e.pointerId);
+    startGesture();
+  }
+
+  function onPointerMove(e: React.PointerEvent<HTMLDivElement>) {
+    if (!pointers.current.has(e.pointerId) || !stage.current) return;
+    pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    const g = gesture.current;
+    const r = stage.current.getBoundingClientRect();
+    if (!g) return;
+    if (g.kind === "pinch") {
+      const [a, b] = [...pointers.current.values()];
+      if (!b) return;
+      const s = Math.min(MAX_ZOOM, Math.max(1, (g.s * Math.hypot(a.x - b.x, a.y - b.y)) / g.d));
+      const cx = r.left + r.width / 2;
+      const cy = r.top + r.height / 2;
+      // The image point first under the fingers' midpoint follows the midpoint as it moves.
+      const qx = (g.mx - cx - g.x) / g.s;
+      const qy = (g.my - cy - g.y) / g.s;
+      const mx = (a.x + b.x) / 2 - cx;
+      const my = (a.y + b.y) / 2 - cy;
+      setView(s === 1 ? FIT : clamp({ s, x: mx - s * qx, y: my - s * qy }, r));
+      return;
+    }
+    const dx = e.clientX - g.px;
+    const dy = e.clientY - g.py;
+    g.moved = Math.max(g.moved, Math.hypot(dx, dy));
+    if (g.kind === "pan") setView((v) => clamp({ s: v.s, x: g.x + dx, y: g.y + dy }, r));
+  }
+
+  function onPointerUp(e: React.PointerEvent<HTMLDivElement>) {
+    if (!pointers.current.has(e.pointerId)) return;
+    const g = gesture.current;
+    pointers.current.delete(e.pointerId);
+    if (g && g.kind !== "pinch" && pointers.current.size === 0) {
+      const dx = e.clientX - g.px;
+      const dy = e.clientY - g.py;
+      if (g.kind === "swipe" && e.pointerType !== "mouse" && Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) {
+        go(dx < 0 ? 1 : -1);
+      } else if (g.moved < 10 && e.pointerType !== "mouse") {
+        // Double-tap toggles zoom on touch screens (mouse uses dblclick).
+        const now = Date.now();
+        const t = lastTap.current;
+        if (t && now - t.t < 300 && Math.hypot(e.clientX - t.x, e.clientY - t.y) < 30) {
+          if (viewRef.current.s > 1) setView(FIT);
+          else zoomTo(2.5, e.clientX, e.clientY);
+          lastTap.current = null;
+        } else {
+          lastTap.current = { t: now, x: e.clientX, y: e.clientY };
+        }
+      }
+    }
+    startGesture();
+  }
 
   function open(at = 0) {
     show(at);
@@ -139,48 +222,32 @@ export function PhotoTour({ images, name, children }: { images: ListingImage[]; 
               </p>
               <div className="flex shrink-0 items-center gap-1">
                 {zoomed && (
-                  <button type="button" onClick={() => setView(FIT)} className="min-h-11 rounded-full px-3 text-sm hover:bg-white/10">
+                  <TapButton onPress={() => setView(FIT)} className="min-h-11 rounded-full px-3 text-sm hover:bg-white/10">
                     Reset zoom
-                  </button>
+                  </TapButton>
                 )}
-                <button
-                  type="button"
-                  onClick={() => dialog.current?.close()}
+                <TapButton
+                  onPress={() => setOpen(false)}
                   className="grid h-11 w-11 place-items-center rounded-full hover:bg-white/10"
                   aria-label="Close photos"
                 >
                   <Icon name="close" />
-                </button>
+                </TapButton>
               </div>
             </div>
 
             <div
               ref={stage}
               className={`relative min-h-0 flex-1 touch-none select-none overflow-hidden ${zoomed ? (dragging ? "cursor-grabbing" : "cursor-grab") : "cursor-zoom-in"}`}
-              onDoubleClick={(e) => (zoomed ? setView(FIT) : zoomTo(2.5, e.clientX, e.clientY))}
-              onPointerDown={(e) => {
-                if (!zoomed || e.pointerType === "touch") return;
-                e.currentTarget.setPointerCapture(e.pointerId);
-                drag.current = { px: e.clientX, py: e.clientY, x: view.x, y: view.y };
-                setDragging(true);
+              onDoubleClick={(e) => {
+                if (lastPointerType.current !== "mouse" || (e.target as HTMLElement).closest("button")) return;
+                if (zoomed) setView(FIT);
+                else zoomTo(2.5, e.clientX, e.clientY);
               }}
-              onPointerMove={(e) => {
-                const d = drag.current;
-                if (!d || !stage.current) return;
-                const r = stage.current.getBoundingClientRect();
-                setView((v) => clamp({ s: v.s, x: d.x + e.clientX - d.px, y: d.y + e.clientY - d.py }, r));
-              }}
-              onPointerUp={() => {
-                drag.current = null;
-                setDragging(false);
-              }}
-              onTouchStart={(e) => (touchX.current = e.touches[0].clientX)}
-              onTouchEnd={(e) => {
-                if (touchX.current === null || zoomed) return;
-                const dx = e.changedTouches[0].clientX - touchX.current;
-                touchX.current = null;
-                if (Math.abs(dx) > 40) go(dx < 0 ? 1 : -1);
-              }}
+              onPointerDown={onPointerDown}
+              onPointerMove={onPointerMove}
+              onPointerUp={onPointerUp}
+              onPointerCancel={onPointerUp}
             >
               <div
                 className={`absolute inset-0 will-change-transform ${dragging ? "" : "transition-transform duration-150 ease-out"}`}
@@ -202,24 +269,20 @@ export function PhotoTour({ images, name, children }: { images: ListingImage[]; 
               {count > 1 && <Image src={next.url} alt="" aria-hidden fill sizes="100vw" unoptimized={skipOptimizer(next.url)} className="invisible" />}
               {count > 1 && (
                 <>
-                  <button
-                    type="button"
-                    onClick={() => go(-1)}
-                    onDoubleClick={(e) => e.stopPropagation()}
+                  <TapButton
+                    onPress={() => go(-1)}
                     aria-label="Previous photo"
                     className="absolute left-3 top-1/2 grid h-12 w-12 -translate-y-1/2 place-items-center rounded-full bg-white/90 text-ink shadow-lg transition hover:bg-white sm:left-6"
                   >
                     <Icon name="arrowLeft" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => go(1)}
-                    onDoubleClick={(e) => e.stopPropagation()}
+                  </TapButton>
+                  <TapButton
+                    onPress={() => go(1)}
                     aria-label="Next photo"
                     className="absolute right-3 top-1/2 grid h-12 w-12 -translate-y-1/2 place-items-center rounded-full bg-white/90 text-ink shadow-lg transition hover:bg-white sm:right-6"
                   >
                     <Icon name="arrowRight" />
-                  </button>
+                  </TapButton>
                 </>
               )}
             </div>
@@ -228,16 +291,18 @@ export function PhotoTour({ images, name, children }: { images: ListingImage[]; 
               {current.alt && <span className="mr-3 text-sm text-white/80">{current.alt}</span>}
               Scroll to zoom · drag to move · ← → next and previous
             </p>
-            {current.alt && <p className="px-4 pt-3 text-center text-sm text-white/80 sm:hidden">{current.alt}</p>}
+            <p className="px-4 pt-3 text-center text-xs text-white/55 sm:hidden">
+              {current.alt && <span className="block text-sm text-white/80">{current.alt}</span>}
+              Swipe for next · pinch or double-tap to zoom
+            </p>
 
             {count > 1 && (
               <div ref={strip} className="no-scrollbar flex gap-2 overflow-x-auto px-4 py-4 sm:justify-center sm:px-6" role="group" aria-label="Choose a photo">
                 {images.map((img, i) => (
-                  <button
+                  <TapButton
                     key={`${img.url}-${i}`}
-                    type="button"
                     data-thumb={i}
-                    onClick={() => show(i)}
+                    onPress={() => show(i)}
                     aria-label={`Photo ${i + 1} of ${count}`}
                     aria-current={i === index ? "true" : undefined}
                     className={`relative h-14 w-20 shrink-0 overflow-hidden rounded-lg transition sm:h-16 sm:w-24 ${
@@ -245,7 +310,7 @@ export function PhotoTour({ images, name, children }: { images: ListingImage[]; 
                     }`}
                   >
                     <Image src={img.url} alt="" fill sizes="96px" unoptimized={skipOptimizer(img.url)} className="object-cover" />
-                  </button>
+                  </TapButton>
                 ))}
               </div>
             )}
@@ -255,6 +320,39 @@ export function PhotoTour({ images, name, children }: { images: ListingImage[]; 
     </div>
   );
 }
+
+// Phones: a click right after a pinch or drag may never arrive (arrows felt dead), and acting on
+// pointer-up instead lets the late click hit whatever is underneath (a ghost tap on the page menu
+// after Close). So a touch tap waits briefly for its click and runs the action exactly once: on
+// that click, or after 350 ms if the browser dropped it. Mouse and keyboard use click alone.
+function TapButton({ onPress, ...props }: Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, "onClick" | "onPointerUp"> & { onPress: () => void }) {
+  const pending = useRef<ReturnType<typeof setTimeout> | null>(null);
+  return (
+    <button
+      type="button"
+      {...props}
+      onPointerUp={(e) => {
+        if (e.pointerType === "mouse") return;
+        if (pending.current) clearTimeout(pending.current);
+        pending.current = setTimeout(() => {
+          pending.current = null;
+          onPress();
+        }, 350);
+      }}
+      onClick={() => {
+        if (pending.current) {
+          clearTimeout(pending.current);
+          pending.current = null;
+        }
+        onPress();
+      }}
+    />
+  );
+}
+
+type Gesture =
+  | { kind: "pinch"; d: number; s: number; x: number; y: number; mx: number; my: number }
+  | { kind: "pan" | "swipe"; px: number; py: number; x: number; y: number; moved: number };
 
 /** Keep a zoomed photo covering the stage: it can move at most (s − 1)/2 of the stage each way. */
 function clamp(v: View, r: DOMRect): View {
