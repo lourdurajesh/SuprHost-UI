@@ -1,6 +1,9 @@
 import type { Quote } from "@/lib/pms/types";
 import { formatMoney } from "@/lib/dates";
 
+/** "₹4,500 × 27 nights": a block of nights at one nightly rate. */
+const NIGHTLY_LINE = /^[^\d]*[\d,]+ × \d+ nights?$/;
+
 /**
  * The one price breakdown every screen shows (listing panel, checkout, confirmation), so a guest
  * sees the same lines and the same total everywhere.
@@ -15,8 +18,9 @@ export function PriceBreakdown({ quote, className = "" }: { quote: Quote; classN
   const money = (n: number) => formatMoney(n, quote.currency);
   const taxes = quote.taxes ?? [];
   const taxTotal = taxes.reduce((sum, t) => sum + t.amount, 0);
-  // More than one "₹X × N nights" line means the rate changes within the stay.
-  const mixedRates = quote.lines.filter((l) => l.label.includes("×")).length > 1;
+  // More than one "₹X × N nights" line means the rate changes within the stay. Only lines of exactly
+  // that shape count: "Extra guest: 1 × ₹500 × 2 nights" is a fee, not a second nightly rate.
+  const mixedRates = quote.lines.filter((l) => NIGHTLY_LINE.test(l.label)).length > 1;
   const average = quote.nightsTotal && quote.nights > 0 ? Math.round(quote.nightsTotal / quote.nights) : null;
 
   return (
