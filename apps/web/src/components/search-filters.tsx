@@ -5,6 +5,7 @@ import { useRef, useState, useTransition } from "react";
 import type { PropertyType, SearchQuery, SearchResult } from "@/lib/pms/types";
 import { formatMoney } from "@/lib/dates";
 import { DateRangeField } from "./date-range-field";
+import { Dropdown } from "./dropdown";
 import { Icon } from "./icons";
 
 const TYPE_LABEL: Record<PropertyType, string> = {
@@ -95,33 +96,21 @@ export function SearchFilters({ query, facets, currency, count }: Props) {
         onChange={(ci, co) => apply({ ...query, checkIn: ci ?? undefined, checkOut: co ?? undefined, flex: ci ? query.flex : undefined })}
       />
       {query.checkIn && query.checkOut && (
-        <select
+        <Dropdown
           aria-label="Date flexibility"
-          value={query.flex ?? ""}
-          onChange={(e) => apply({ ...query, flex: e.target.value ? Number(e.target.value) : undefined })}
+          value={String(query.flex ?? "")}
+          onChange={(v) => apply({ ...query, flex: v ? Number(v) : undefined })}
+          options={[{ value: "", label: "Exact dates" }, ...[1, 2, 3].map((d) => ({ value: String(d), label: `± ${d} day${d === 1 ? "" : "s"}` }))]}
           className={dropdown}
-        >
-          <option value="">Exact dates</option>
-          {[1, 2, 3].map((d) => (
-            <option key={d} value={d}>
-              ± {d} day{d === 1 ? "" : "s"}
-            </option>
-          ))}
-        </select>
+        />
       )}
-      <select
+      <Dropdown
         aria-label="Guests"
-        value={query.guests ?? ""}
-        onChange={(e) => apply({ ...query, guests: e.target.value ? Number(e.target.value) : undefined })}
+        value={String(query.guests ?? "")}
+        onChange={(v) => apply({ ...query, guests: v ? Number(v) : undefined })}
+        options={[{ value: "", label: "Any guests" }, ...Array.from({ length: 12 }, (_, i) => ({ value: String(i + 1), label: `${i + 1}+ guest${i === 0 ? "" : "s"}` }))]}
         className={dropdown}
-      >
-        <option value="">Any guests</option>
-        {Array.from({ length: 12 }, (_, i) => i + 1).map((n) => (
-          <option key={n} value={n}>
-            {n}+ guest{n === 1 ? "" : "s"}
-          </option>
-        ))}
-      </select>
+      />
       <button
         type="button"
         onClick={() => {
@@ -133,16 +122,17 @@ export function SearchFilters({ query, facets, currency, count }: Props) {
         <Icon name="grid" className="h-4 w-4" /> Filters
         {activeFilters > 0 && <span className="rounded-full bg-ink px-2 text-xs text-white">{activeFilters}</span>}
       </button>
-      <select
+      <Dropdown
         aria-label="Sort"
         value={query.sort ?? "recommended"}
-        onChange={(e) => apply({ ...query, sort: e.target.value as SearchQuery["sort"] })}
+        onChange={(v) => apply({ ...query, sort: v as SearchQuery["sort"] })}
+        options={[
+          { value: "recommended", label: "Recommended" },
+          { value: "price_asc", label: "Price: low to high" },
+          { value: "price_desc", label: "Price: high to low" },
+        ]}
         className={`${dropdown} ml-auto`}
-      >
-        <option value="recommended">Recommended</option>
-        <option value="price_asc">Price: low to high</option>
-        <option value="price_desc">Price: high to low</option>
-      </select>
+      />
 
       <dialog
         ref={dialog}

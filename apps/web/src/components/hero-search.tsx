@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { DateRangeField } from "./date-range-field";
+import { Dropdown } from "./dropdown";
 import { Icon } from "./icons";
 import { toSearchString } from "./search-filters";
 
@@ -26,7 +27,7 @@ export function HeroSearch({ cities }: { cities: string[] }) {
   }
 
   const label = "block text-eyebrow uppercase text-ink-soft";
-  const field = "select-chevron min-h-8 w-full bg-transparent text-base text-ink outline-none";
+  const field = "select-chevron min-h-8 w-full bg-transparent pr-2 text-base text-ink outline-none";
   const divider = <span aria-hidden className="hidden h-10 w-px bg-line sm:block" />;
   return (
     <form
@@ -35,14 +36,13 @@ export function HeroSearch({ cities }: { cities: string[] }) {
     >
       <label className="col-span-2 rounded-2xl px-4 py-2 sm:min-w-0 sm:flex-[1.1] sm:px-0">
         <span className={label}>Location</span>
-        <select value={city} onChange={(e) => setCity(e.target.value)} className={field}>
-          <option value="">Anywhere</option>
-          {cities.map((c) => (
-            <option key={c} value={c}>
-              {c}
-            </option>
-          ))}
-        </select>
+        <Dropdown
+          aria-label="Location"
+          value={city}
+          onChange={setCity}
+          options={[{ value: "", label: "Anywhere" }, ...cities.map((c) => ({ value: c, label: c }))]}
+          className={field}
+        />
       </label>
       {divider}
       <div className="px-4 py-2 sm:min-w-0 sm:flex-1 sm:px-3">
@@ -51,13 +51,13 @@ export function HeroSearch({ cities }: { cities: string[] }) {
       {divider}
       <label className="px-4 py-2 sm:w-28 sm:px-4">
         <span className={label}>Guests</span>
-        <select value={guests} onChange={(e) => setGuests(Number(e.target.value))} className={field}>
-          {Array.from({ length: 12 }, (_, i) => i + 1).map((n) => (
-            <option key={n} value={n}>
-              {n}
-            </option>
-          ))}
-        </select>
+        <Dropdown
+          aria-label="Guests"
+          value={String(guests)}
+          onChange={(v) => setGuests(Number(v))}
+          options={Array.from({ length: 12 }, (_, i) => ({ value: String(i + 1), label: String(i + 1) }))}
+          className={field}
+        />
       </label>
       <button
         type="submit"

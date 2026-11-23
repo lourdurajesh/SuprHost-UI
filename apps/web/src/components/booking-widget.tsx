@@ -5,6 +5,7 @@ import { useEffect, useState, useSyncExternalStore } from "react";
 import type { Availability, Quote } from "@/lib/pms/types";
 import { addDays, formatDate, formatMoney, isIsoDate, minNightsOn, nightsBetween, todayIn } from "@/lib/dates";
 import { DatesDialog, shortRange } from "./date-range-field";
+import { Dropdown } from "./dropdown";
 import { PriceBreakdown } from "./price-breakdown";
 import { trackFunnel } from "./track";
 
@@ -163,13 +164,13 @@ export function BookingWidget({ listingId, maxGuests, minNights: listingMinNight
           </button>
           <label className={`${field} border-t border-line`}>
             <span className="text-eyebrow text-ink-soft">Guests</span>
-            <select value={guests} onChange={(e) => setGuests(Number(e.target.value))} className="select-chevron -ml-0.5 w-full bg-transparent text-sm outline-none">
-              {Array.from({ length: maxGuests }, (_, i) => i + 1).map((n) => (
-                <option key={n} value={n}>
-                  {n} guest{n === 1 ? "" : "s"}
-                </option>
-              ))}
-            </select>
+            <Dropdown
+              aria-label="Guests"
+              value={String(guests)}
+              onChange={(v) => setGuests(Number(v))}
+              options={Array.from({ length: maxGuests }, (_, i) => ({ value: String(i + 1), label: `${i + 1} guest${i === 0 ? "" : "s"}` }))}
+              className="select-chevron -ml-0.5 w-full bg-transparent text-sm outline-none"
+            />
           </label>
         </div>
 
