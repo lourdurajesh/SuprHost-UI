@@ -42,8 +42,9 @@ async function CheckoutContent({ params }: Pick<PageProps<"/[site]/checkout/[tok
     );
   }
 
+  // Phones: extra space at the bottom so the pinned Pay bar never covers the end of the page.
   return (
-    <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_420px] lg:gap-12">
+    <div className="mt-8 grid gap-8 max-lg:pb-28 lg:grid-cols-[1fr_420px] lg:gap-12">
       <section>
         <p className="text-sm text-ink-soft">
           Reservation <span className="font-mono font-medium text-ink">{booking.reference}</span> for {booking.guestName}

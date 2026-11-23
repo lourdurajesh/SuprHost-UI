@@ -4,6 +4,7 @@ import { Carousel } from "@/components/carousel";
 import { BookingWidget } from "@/components/booking-widget";
 import { amenityIcon, Icon } from "@/components/icons";
 import { PhotoTour } from "@/components/photo-tour";
+import { SectionTabs } from "@/components/section-tabs";
 import { Rating } from "@/components/rating";
 import { formatDate } from "@/lib/dates";
 import { StaysMap } from "@/components/stays-map";
@@ -72,16 +73,20 @@ async function ListingPageContent({ params }: Pick<PageProps<"/[site]/stays/[lis
 
   return (
     <>
-      <article className="mx-auto max-w-7xl px-4 pb-28 pt-6 sm:px-6 lg:px-8 lg:pb-10">
+      <article className="mx-auto max-w-7xl px-4 pb-28 sm:px-6 lg:px-8 lg:pb-10">
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
 
-        <nav aria-label="Sections" className="no-scrollbar sticky top-[76px] z-30 -mx-4 flex gap-6 overflow-x-auto border-b border-line bg-white/95 px-4 py-1 text-sm backdrop-blur sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
-          {[["photos", "Photos"], ["amenities", "Amenities"], ...(reviews.length ? [["reviews", "Reviews"]] : []), ["things", "Things to know"], ["location", "Location"], ["book", "Book"]].map(([id, label]) => (
-            <a key={id} href={`#${id}`} className="shrink-0 py-3 text-ink-soft hover:text-ink">
-              {label}
-            </a>
-          ))}
-        </nav>
+        <SectionTabs
+          tabs={[
+            { id: "photos", label: "Photos" },
+            { id: "amenities", label: "Amenities" },
+            { id: "things", label: "Things to know" },
+            ...(reviews.length ? [{ id: "reviews", label: "Reviews" }] : []),
+            { id: "location", label: "Location" },
+            // Phones book from the bar pinned to the bottom of the screen.
+            { id: "book", label: "Book", desktopOnly: true },
+          ]}
+        />
 
         {/* Desktop: photos sit in the left column so the booking card starts at the top of the page,
             fully visible on load, and stays in view while scrolling. */}

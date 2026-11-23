@@ -139,16 +139,20 @@ export function PaymentPanel({ token, total, currency, methods, holdExpiresAt, s
         </p>
       )}
 
-      <button
-        type="button"
-        onClick={pay}
-        disabled={paying || expired}
-        className="mt-6 flex w-full items-center justify-center gap-2 rounded-full bg-brand px-6 py-4 text-lg font-medium text-white shadow-lg shadow-brand/20 transition hover:brightness-110 disabled:opacity-50"
-      >
-        <Icon name="lock" className="h-4 w-4" />
-        {paying ? "Processing…" : `Pay ${formatMoney(total, currency)}`}
-      </button>
-      <p className="mt-3 text-center text-xs text-ink-soft">Payments are encrypted. We never see or store your card details.</p>
+      {/* Phones: the Pay button stays pinned to the bottom of the screen, so guests can pay without
+          scrolling past the stay summary. Desktop: it sits under the payment methods. */}
+      <div className="max-lg:fixed max-lg:inset-x-0 max-lg:bottom-0 max-lg:z-30 max-lg:border-t max-lg:border-line max-lg:bg-white/95 max-lg:px-4 max-lg:pt-3 max-lg:pb-[max(0.75rem,env(safe-area-inset-bottom))] max-lg:backdrop-blur lg:mt-6">
+        <button
+          type="button"
+          onClick={pay}
+          disabled={paying || expired}
+          className="flex w-full items-center justify-center gap-2 rounded-full bg-brand px-6 py-3.5 text-lg font-medium text-white shadow-lg shadow-brand/20 transition hover:brightness-110 disabled:opacity-50 lg:py-4"
+        >
+          <Icon name="lock" className="h-4 w-4" />
+          {paying ? "Processing…" : `Pay ${formatMoney(total, currency)}`}
+        </button>
+        <p className="mt-2 text-center text-xs text-ink-soft lg:mt-3">Payments are encrypted. We never see or store your card details.</p>
+      </div>
     </div>
   );
 }
