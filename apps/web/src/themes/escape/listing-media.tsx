@@ -1,5 +1,5 @@
-import Image from "next/image";
 import type { ListingImage } from "@/lib/pms";
+import { PhotoImage } from "@/components/photo-image";
 
 /**
  * Local media (http://localhost / 127.0.0.1 in development) bypasses the image optimiser, which
@@ -36,7 +36,7 @@ export function ListingPhoto({
   if (image) {
     return (
       <div className={`relative overflow-hidden bg-sand-deep ${className}`}>
-        <Image
+        <PhotoImage
           src={mediaSrc(image.url)}
           alt={image.alt || name}
           fill

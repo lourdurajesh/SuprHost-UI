@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { ListingImage } from "@/lib/pms/types";
 import { Icon } from "./icons";
+import { PhotoImage } from "./photo-image";
 import { mediaSrc, skipOptimizer } from "@/themes/escape/listing-media";
 
 const MAX_ZOOM = 4;
@@ -253,7 +254,7 @@ export function PhotoTour({ images, name, children }: { images: ListingImage[]; 
                 className={`absolute inset-0 will-change-transform ${dragging ? "" : "transition-transform duration-150 ease-out"}`}
                 style={{ transform: `translate(${view.x}px, ${view.y}px) scale(${view.s})` }}
               >
-                <Image
+                <PhotoImage
                   key={`${current.url}-${index}`}
                   src={mediaSrc(current.url)}
                   alt={current.alt || `${name}, photo ${index + 1} of ${count}`}

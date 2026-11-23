@@ -16,6 +16,8 @@ interface Props {
   currency: string;
   timezone: string;
   manage: ManageInfo;
+  /** Money was taken online (payment.status === "paid"); false when the host arranges payment. */
+  paid: boolean;
   minNights: number;
   maxNights: number;
 }
@@ -25,7 +27,7 @@ interface Props {
  * (`manage`); this only explains it and asks for a clear yes. Both actions need the guest signed
  * in with the booking's email; a signed-out guest is sent to sign in and brought back here.
  */
-export function ManageBooking({ token, listingId, checkIn, checkOut, guests, total, currency, timezone, manage, minNights, maxNights }: Props) {
+export function ManageBooking({ token, listingId, checkIn, checkOut, guests, total, currency, timezone, manage, paid, minNights, maxNights }: Props) {
   const router = useRouter();
   const [datesOpen, setDatesOpen] = useState(false);
   const [availability, setAvailability] = useState<Availability | null>(null);
@@ -179,10 +181,13 @@ export function ManageBooking({ token, listingId, checkIn, checkOut, guests, tot
           </div>
           <div className="flex justify-between gap-4 font-medium">
             <dt>Refund</dt>
-            <dd>{money(manage.refund)}</dd>
+            {/* Only talk about a refund when money was actually taken online. */}
+            <dd>{paid ? money(manage.refund) : "Nothing to refund"}</dd>
           </div>
         </dl>
-        <p className="mt-3 text-sm text-ink-soft">The dates are released at once. This can’t be undone.</p>
+        <p className="mt-3 text-sm text-ink-soft">
+          {!paid && "You haven’t paid online for this booking. "}The dates are released at once. This can’t be undone.
+        </p>
         <div className="mt-6 flex flex-wrap justify-end gap-3">
           <button type="button" onClick={() => cancelDialog.current?.close()} className={`${button} ring-1 ring-line hover:bg-sand`} autoFocus>
             Keep booking

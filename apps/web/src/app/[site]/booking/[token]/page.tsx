@@ -137,6 +137,7 @@ async function Confirmation({ params }: Pick<PageProps<"/[site]/booking/[token]"
                 currency={booking.quote.currency}
                 timezone={site.timezone}
                 manage={booking.manage}
+                paid={booking.payment.status === "paid"}
                 minNights={listing?.minNights ?? 1}
                 maxNights={listing?.maxNights ?? 30}
               />

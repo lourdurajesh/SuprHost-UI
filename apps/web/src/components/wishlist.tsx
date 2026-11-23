@@ -20,7 +20,12 @@ function load() {
   if (loading || state.signedIn !== null) return;
   loading = true;
   fetch("/api/wishlist", { cache: "no-store" })
-    .then(async (r) => (r.status === 401 ? emit({ ids: null, signedIn: false }) : r.ok ? emit({ ids: new Set((await r.json()).ids as string[]), signedIn: true }) : null))
+    .then(async (r) => {
+      if (r.status === 401) return emit({ ids: null, signedIn: false });
+      if (!r.ok) return;
+      const body = (await r.json()) as { signedIn?: boolean; ids: string[] };
+      emit(body.signedIn === false ? { ids: null, signedIn: false } : { ids: new Set(body.ids), signedIn: true });
+    })
     .catch(() => undefined)
     .finally(() => (loading = false));
 }

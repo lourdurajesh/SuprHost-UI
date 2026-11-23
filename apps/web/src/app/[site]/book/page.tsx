@@ -7,13 +7,13 @@ import { readSessionToken } from "@/lib/session";
 import { stayQuery } from "@/lib/validation";
 import { CheckoutSteps, StaySummary } from "@/themes/escape/checkout";
 
-export const metadata: Metadata = { title: "Confirm and pay", robots: { index: false, follow: false } };
+export const metadata: Metadata = { title: "Your details", robots: { index: false, follow: false } };
 
 export default function BookPage({ params, searchParams }: PageProps<"/[site]/book">) {
   return (
     <div className="mx-auto max-w-6xl px-4 pb-10 pt-8 sm:px-6 sm:pt-12">
       <CheckoutSteps current={0} />
-      <h1 className="mt-6 text-h1">Confirm and pay</h1>
+      <h1 className="mt-6 text-h1">Your details</h1>
       <Suspense fallback={<div className="mt-8 h-[28rem] animate-pulse rounded-2xl bg-sand-deep" />}>
         <BookContent params={params} searchParams={searchParams} />
       </Suspense>

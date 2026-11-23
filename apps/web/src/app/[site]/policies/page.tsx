@@ -39,7 +39,7 @@ async function PoliciesPageContent({ params }: Pick<PageProps<"/[site]/policies"
       <section className="mt-10">
         <h2 className="text-h2">Your information</h2>
         <p className="mt-3 text-ink-soft">
-          We collect your name, email, phone number and stay details only to respond to your booking request and manage
+          We collect your name, email, phone number and stay details only to confirm your booking and manage
           your stay. We do not sell or share them for marketing.
         </p>
       </section>

@@ -38,7 +38,6 @@ function Intro({ phone }: { phone: boolean }) {
       <ul className="mt-8 space-y-3 text-ink-soft">
         <li>· No password needed: we {phone ? "text" : "email"} you a one-time code</li>
         <li>· Every booking made with your {phone ? "mobile number or email" : "email"} appears automatically</li>
-        <li>· Hosts get a link to the property management system</li>
       </ul>
     </div>
   );

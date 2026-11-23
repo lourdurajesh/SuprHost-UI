@@ -5,6 +5,7 @@ import { useEffect, useState, useSyncExternalStore } from "react";
 import type { Availability, Quote } from "@/lib/pms/types";
 import { addDays, formatDate, formatMoney, isIsoDate, minNightsOn, nightsBetween, todayIn } from "@/lib/dates";
 import { DatesDialog, shortRange } from "./date-range-field";
+import { PriceBreakdown } from "./price-breakdown";
 
 const noSubscribe = () => () => {};
 
@@ -128,6 +129,7 @@ export function BookingWidget({ listingId, maxGuests, minNights: listingMinNight
             </>
           ) : (
             <>
+              <span className="text-ink-soft">From </span>
               <span className="text-h3">{formatMoney(fromPrice, currency)}</span>
               <span className="text-ink-soft"> / night{pricesAddGst ? " + GST" : ""}</span>
             </>
@@ -179,26 +181,7 @@ export function BookingWidget({ listingId, maxGuests, minNights: listingMinNight
           {action}
         </button>
 
-        {quote && (
-          <dl className="mt-4 space-y-1.5 text-sm">
-            {quote.lines.map((l) => (
-              <div key={l.label} className="flex justify-between gap-4 text-ink-soft">
-                <dt>{l.label}</dt>
-                <dd>{formatMoney(l.amount, quote.currency)}</dd>
-              </div>
-            ))}
-            {(quote.taxes ?? []).map((t) => (
-              <div key={t.label} className="flex justify-between gap-4 text-ink-soft">
-                <dt>{t.label}</dt>
-                <dd>{formatMoney(t.amount, quote.currency)}</dd>
-              </div>
-            ))}
-            <div className="flex justify-between gap-4 border-t border-line pt-2 font-medium">
-              <dt>Total</dt>
-              <dd>{formatMoney(quote.total, quote.currency)}</dd>
-            </div>
-          </dl>
-        )}
+        {quote && <PriceBreakdown quote={quote} className="mt-4" />}
         <p className="mt-3 text-center text-sm text-ink-soft">You won’t be charged until you confirm. Best price, booked direct.</p>
       </div>
 
@@ -207,10 +190,12 @@ export function BookingWidget({ listingId, maxGuests, minNights: listingMinNight
         <div className="mx-auto flex max-w-3xl items-center justify-between gap-4">
           <button type="button" onClick={() => setDatesOpen(true)} className="min-w-0 text-left">
             <span className="block truncate font-medium">
-              {quote ? formatMoney(quote.total, quote.currency) : `${formatMoney(fromPrice, currency)} / night${pricesAddGst ? " + GST" : ""}`}
+              {quote ? formatMoney(quote.total, quote.currency) : `From ${formatMoney(fromPrice, currency)} / night`}
             </span>
             <span className="block truncate text-sm text-ink-soft underline underline-offset-4">
-              {checkIn && checkOut ? `${shortRange(checkIn, checkOut)} · ${guests} guest${guests === 1 ? "" : "s"}` : "Add dates"}
+              {checkIn && checkOut
+                ? `${shortRange(checkIn, checkOut)} · ${guests} guest${guests === 1 ? "" : "s"}`
+                : `${pricesAddGst ? "+ GST · " : ""}Add dates`}
             </span>
           </button>
           <button
@@ -219,7 +204,7 @@ export function BookingWidget({ listingId, maxGuests, minNights: listingMinNight
             disabled={Boolean(checkIn && checkOut && !quote && !quoteError && !tooShort)}
             className="min-h-12 shrink-0 rounded-full bg-brand px-6 py-3 font-medium text-white disabled:opacity-60"
           >
-            {ready ? "Reserve" : checkIn && checkOut && !quoteError && !tooShort ? "Checking…" : "Check availability"}
+            {ready ? "Reserve" : checkIn && checkOut && !quoteError && !tooShort ? "Checking…" : "Check dates"}
           </button>
         </div>
       </div>
