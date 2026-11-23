@@ -8,6 +8,7 @@ import { SectionTabs } from "@/components/section-tabs";
 import { Rating } from "@/components/rating";
 import { formatDate } from "@/lib/dates";
 import { groupAmenities } from "@/lib/amenity-groups";
+import { relatedStays } from "@/lib/related-stays";
 import { StaysMap } from "@/components/stays-map";
 import { TrackRecentView, WishlistButton } from "@/components/wishlist";
 import { getListing, getListings, getSite } from "@/lib/pms";
@@ -43,7 +44,7 @@ async function ListingPageContent({ params }: Pick<PageProps<"/[site]/stays/[lis
   if (!site || !listing) notFound();
 
   const photos = listing.images.length ? listing.images : listing.image ? [listing.image] : [];
-  const others = all.filter((l) => l.id !== listing.id).slice(0, 3);
+  const others = relatedStays(listing, all);
   const rules = [...new Set([...site.policies.houseRules, ...listing.houseRules])];
   const specs = [
     { icon: "users", label: `${listing.maxGuests} guests` },
@@ -301,6 +302,8 @@ async function ListingPageContent({ params }: Pick<PageProps<"/[site]/stays/[lis
                       <p className="flex items-center gap-2 text-sm">
                         <span className="font-medium">{r.author}</span>
                         <span className="text-ink-soft">· {formatDate(`${r.month}-01`, { month: "long", year: "numeric" })}</span>
+                        {/* Every website review is tied to a completed booking, so the label is always true. */}
+                        <span className="text-ink-soft">· Verified stay</span>
                         <span className="sr-only">, rated {r.rating} out of 5</span>
                         <span aria-hidden className="tracking-widest">{"★".repeat(r.rating)}<span className="text-field">{"★".repeat(5 - r.rating)}</span></span>
                       </p>

@@ -4,7 +4,9 @@ import { Suspense } from "react";
 import { connection } from "next/server";
 import { SearchFilters } from "@/components/search-filters";
 import { SearchResults } from "@/components/search-results";
-import { getSite, searchListings, type SearchQuery } from "@/lib/pms";
+import { getListings, getSite, searchListings, type SearchQuery } from "@/lib/pms";
+import { GroupSuggestions } from "@/components/group-suggestions";
+import { groupSuggestions } from "@/lib/group-stays";
 import { searchParamsSchema } from "@/lib/validation";
 
 export const metadata: Metadata = {
@@ -32,6 +34,8 @@ async function StaysContent({ params, searchParams }: Pick<PageProps<"/[site]/st
   if (query.checkIn && query.checkOut && query.checkOut <= query.checkIn) query.checkOut = undefined;
   const [site, result] = await Promise.all([getSite(key), searchListings(key, query)]);
   if (!site) return null;
+  // A party bigger than any one home finds no results: offer homes that sleep them together.
+  const groups = query.guests && result.hits.length === 0 ? groupSuggestions(await getListings(key), query.guests) : [];
 
   return (
     <>
@@ -40,6 +44,9 @@ async function StaysContent({ params, searchParams }: Pick<PageProps<"/[site]/st
       </div>
       <div className="mt-6">
         <RecentlyViewed currency={site.currency} />
+        {query.guests && groups.length > 0 && (
+          <GroupSuggestions suggestions={groups} guests={query.guests} checkIn={query.checkIn} checkOut={query.checkOut} currency={site.currency} />
+        )}
         <SearchResults hits={result.hits} query={query} currency={site.currency} addsGst={site.pricesAddGst} />
       </div>
     </>
