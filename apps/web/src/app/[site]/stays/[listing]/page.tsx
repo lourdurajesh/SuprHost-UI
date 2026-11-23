@@ -75,7 +75,7 @@ async function ListingPageContent({ params }: Pick<PageProps<"/[site]/stays/[lis
 
   return (
     <>
-      <article className="mx-auto max-w-7xl px-4 pb-28 sm:px-6 lg:px-8 lg:pb-10">
+      <article className="mx-auto max-w-7xl px-4 pb-28 sm:px-6 md:pb-10 lg:px-8">
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
 
         <SectionTabs
@@ -92,7 +92,7 @@ async function ListingPageContent({ params }: Pick<PageProps<"/[site]/stays/[lis
 
         {/* Desktop: photos sit in the left column so the booking card starts at the top of the page,
             fully visible on load, and stays in view while scrolling. */}
-        <div className="mt-5 grid gap-10 lg:grid-cols-[minmax(0,1fr)_380px] lg:gap-12">
+        <div className="mt-5 grid gap-10 md:grid-cols-[minmax(0,1fr)_300px] md:gap-8 lg:grid-cols-[minmax(0,1fr)_380px] lg:gap-12">
           <div>
             {/* Phones and tablets: one swipeable photo with a counter. Desktop: a mosaic (large photo +
                 four) so guests read the place at a glance; any tile or "Show all" opens the photo tour. */}
@@ -200,7 +200,7 @@ async function ListingPageContent({ params }: Pick<PageProps<"/[site]/stays/[lis
                     {amenityGroups.map((g) => (
                       <div key={g.title}>
                         <h3 className="font-medium">{g.title}</h3>
-                        <ul className="mt-4 grid gap-x-8 gap-y-4 sm:grid-cols-2">
+                        <ul className="mt-4 grid gap-x-8 gap-y-4 sm:grid-cols-2 md:grid-cols-1 lg:grid-cols-2">
                           {g.items.map((a) => (
                             <li key={a} className="flex items-center gap-4">
                               <Icon name={amenityIcon(a)} className="h-6 w-6 text-ink-soft" /> {a}
@@ -211,7 +211,7 @@ async function ListingPageContent({ params }: Pick<PageProps<"/[site]/stays/[lis
                     ))}
                   </div>
                 ) : (
-                  <ul className="mt-6 grid gap-x-8 gap-y-4 sm:grid-cols-2">
+                  <ul className="mt-6 grid gap-x-8 gap-y-4 sm:grid-cols-2 md:grid-cols-1 lg:grid-cols-2">
                     {listing.amenities.map((a) => (
                       <li key={a} className="flex items-center gap-4">
                         <Icon name={amenityIcon(a)} className="h-6 w-6 text-ink-soft" /> {a}
@@ -224,7 +224,7 @@ async function ListingPageContent({ params }: Pick<PageProps<"/[site]/stays/[lis
 
             <section id="things" className="mt-12 scroll-mt-36 border-t border-line pt-10">
               <h2 className="text-h2">Things to know</h2>
-              <div className="mt-6 grid gap-8 sm:grid-cols-3">
+              <div className="mt-6 grid gap-8 sm:grid-cols-3 md:grid-cols-1 lg:grid-cols-3">
                 <div>
                   <h3 className="flex items-center gap-2 font-medium">
                     <Icon name="clock" className="h-5 w-5 text-accent" /> Arrival
@@ -259,7 +259,7 @@ async function ListingPageContent({ params }: Pick<PageProps<"/[site]/stays/[lis
                 <h2 id="reviews-heading" className="flex flex-wrap items-baseline gap-x-3 text-h2">
                   Guest reviews <Rating rating={listing.rating} className="text-base" />
                 </h2>
-                <ul className="mt-6 grid gap-8 md:grid-cols-2">
+                <ul className="mt-6 grid gap-8 md:grid-cols-1 lg:grid-cols-2">
                   {reviews.map((r, i) => (
                     <li key={`${r.author}-${r.month}-${i}`}>
                       <p className="flex items-center gap-2 text-sm">
@@ -294,7 +294,7 @@ async function ListingPageContent({ params }: Pick<PageProps<"/[site]/stays/[lis
             )}
           </div>
 
-          <aside id="book" className="scroll-mt-36 lg:sticky lg:top-[136px] lg:max-h-[calc(100dvh-152px)] lg:self-start lg:overflow-y-auto" aria-label="Check availability">
+          <aside id="book" className="scroll-mt-36 md:sticky md:top-[136px] md:max-h-[calc(100dvh-152px)] md:self-start md:overflow-y-auto" aria-label="Check availability">
             <BookingWidget
               listingId={listing.id}
               maxGuests={listing.maxGuests}

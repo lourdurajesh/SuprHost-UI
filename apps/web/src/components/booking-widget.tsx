@@ -194,8 +194,8 @@ export function BookingWidget({ listingId, maxGuests, minNights: listingMinNight
         <p className="mt-3 text-center text-sm text-ink-soft">You won’t be charged until you confirm. Best price, booked direct.</p>
       </div>
 
-      {/* Below lg: the next step stays on screen. */}
-      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-white/95 px-4 py-3 backdrop-blur pb-[max(0.75rem,env(safe-area-inset-bottom))] lg:hidden">
+      {/* Below md: the next step stays on screen. */}
+      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-white/95 px-4 py-3 backdrop-blur pb-[max(0.75rem,env(safe-area-inset-bottom))] md:hidden">
         <div className="mx-auto flex max-w-3xl items-center justify-between gap-4">
           <button type="button" onClick={() => setDatesOpen(true)} className="min-w-0 text-left">
             <span className="block truncate font-medium">

@@ -69,7 +69,7 @@ export function SectionTabs({ tabs }: { tabs: Tab[] }) {
               data-tab={t.id}
               aria-current={on ? "location" : undefined}
               onClick={() => setActive(t.id)}
-              className={`relative shrink-0 items-center px-3 py-3.5 text-[15px] transition-colors ${t.desktopOnly ? "hidden lg:flex" : "flex"} ${
+              className={`relative shrink-0 items-center px-3 py-3.5 text-[15px] transition-colors ${t.desktopOnly ? "hidden md:flex" : "flex"} ${
                 on ? "font-medium text-ink" : "text-ink-soft hover:text-ink"
               }`}
             >
