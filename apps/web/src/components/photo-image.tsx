@@ -4,23 +4,31 @@ import Image, { type ImageProps } from "next/image";
 import { useEffect, useRef, useState } from "react";
 
 /**
- * next/image that never shows the browser's broken-image icon: if the file fails to load (a
- * deleted upload, a CDN blip) the warm placeholder gradient is shown instead. Client component only
- * because it needs the browser. The server-rendered <img> can fail before React hydrates and
- * misses its onError, so the effect also checks images that already finished loading broken.
+ * next/image with two guest-facing behaviours:
+ * - While the file loads, a soft pulse shows instead of an empty block.
+ * - If the file fails (a deleted upload, a CDN blip) the warm placeholder gradient is shown, never
+ *   the browser's broken-image icon.
+ * Client component only because it needs the browser. The server-rendered <img> can finish (or
+ * fail) before React hydrates and miss its events, so the effect also checks images that are
+ * already complete.
  */
 export function PhotoImage(props: ImageProps) {
-  const [failed, setFailed] = useState(false);
+  const [state, setState] = useState<"loading" | "loaded" | "failed">("loading");
   const ref = useRef<HTMLImageElement>(null);
 
   useEffect(() => {
     const el = ref.current;
-    if (el && el.complete && el.naturalWidth === 0) setFailed(true);
+    if (el && el.complete) setState(el.naturalWidth === 0 ? "failed" : "loaded");
   }, []);
 
-  if (failed) {
+  if (state === "failed") {
     return <div aria-hidden className="absolute inset-0 bg-gradient-to-br from-[#d9c6a5] via-[#c7b08a] to-[#8f7a5a]" />;
   }
-  // eslint-disable-next-line jsx-a11y/alt-text -- alt is part of the props passed in
-  return <Image {...props} ref={ref} onError={() => setFailed(true)} />;
+  return (
+    <>
+      {state === "loading" && <div aria-hidden className="absolute inset-0 animate-pulse bg-white/40" />}
+      {/* eslint-disable-next-line jsx-a11y/alt-text -- alt is part of the props passed in */}
+      <Image {...props} ref={ref} onLoad={() => setState("loaded")} onError={() => setState("failed")} />
+    </>
+  );
 }

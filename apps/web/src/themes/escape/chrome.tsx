@@ -48,7 +48,8 @@ export function SiteFooter({ site }: { site: Site }) {
   const { contact } = site;
   const whatsapp = contact.whatsapp?.replace(/\D/g, "");
   const label = "text-eyebrow uppercase text-ink-soft";
-  const link = "text-ink hover:text-ink-soft";
+  // 44px-tall tap target on phones without changing how the column looks.
+  const link = "inline-flex min-h-11 items-center text-ink hover:text-ink-soft";
   return (
     <footer id="contact" className="mt-20 border-t border-line lg:mt-28 print:hidden">
       <div className="mx-auto grid max-w-7xl gap-12 px-4 py-16 sm:px-6 lg:grid-cols-[1.3fr_1fr] lg:px-8">
@@ -127,7 +128,7 @@ export function SiteFooter({ site }: { site: Site }) {
       <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 border-t border-line px-4 py-6 text-xs text-ink-soft sm:flex-row sm:px-6 lg:px-8">
         <span>
           © {site.brandName} ·{" "}
-          <Link href="/policies" className="hover:text-ink">
+          <Link href="/policies" className="inline-flex min-h-11 items-center hover:text-ink">
             Policies
           </Link>
         </span>

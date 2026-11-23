@@ -75,7 +75,7 @@ export function StaySummary({
       </details>
     )}
     <aside className={`${phoneFirst ? "max-lg:hidden" : ""} h-fit overflow-hidden rounded-2xl border border-line bg-white lg:sticky lg:top-24`}>
-      <ListingPhoto image={image} name={name} sizes="420px" className="aspect-[16/9] max-lg:hidden" />
+      <ListingPhoto image={image} name={name} sizes="420px" className="aspect-[5/2] max-lg:hidden" />
       <div className="p-5 sm:p-6">
         <div className="flex items-center gap-4">
           <ListingPhoto image={image} name="" sizes="80px" className="h-16 w-20 shrink-0 rounded-lg lg:hidden" />

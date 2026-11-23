@@ -362,6 +362,7 @@ export function CheckoutForm({ listingId, checkIn, checkOut, guests, holdMinutes
           </div>
         )}
       </div>
+      <p className="-mt-2 text-sm text-ink-soft">The host uses your mobile number to reach you about this stay.</p>
 
       <div>
         <label htmlFor="message" className="text-sm font-medium">
@@ -388,6 +389,11 @@ export function CheckoutForm({ listingId, checkIn, checkOut, guests, holdMinutes
       {needsChallenge && <div ref={widget} />}
       {formError}
 
+      {needsChallenge && !turnstileToken && (
+        <p role="status" className="text-center text-sm text-ink-soft">
+          Checking that you’re not a robot… the button turns on in a moment.
+        </p>
+      )}
       <button type="submit" disabled={Boolean(busy) || (needsChallenge && !turnstileToken)} className={primary}>
         {busy === "book" ? "Holding your dates…" : busy === "code" ? "Sending code…" : session ? "Continue to payment" : "Continue"}
         {!busy && <Icon name="arrowRight" className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />}

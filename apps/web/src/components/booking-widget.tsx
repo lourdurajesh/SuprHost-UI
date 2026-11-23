@@ -182,6 +182,15 @@ export function BookingWidget({ listingId, maxGuests, minNights: listingMinNight
         </button>
 
         {quote && <PriceBreakdown quote={quote} className="mt-4" />}
+        {/* Same height as a quote, so the panel doesn't jump when the price arrives. */}
+        {!quote && checkIn && checkOut && !quoteError && !tooShort && (
+          <div aria-hidden className="mt-4 animate-pulse space-y-2">
+            <div className="h-5 rounded bg-sand-deep" />
+            <div className="h-5 rounded bg-sand-deep" />
+            <div className="h-5 w-4/5 rounded bg-sand-deep" />
+            <div className="mt-3 h-7 rounded bg-sand-deep" />
+          </div>
+        )}
         <p className="mt-3 text-center text-sm text-ink-soft">You won’t be charged until you confirm. Best price, booked direct.</p>
       </div>
 

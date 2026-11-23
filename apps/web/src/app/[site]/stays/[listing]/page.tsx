@@ -7,6 +7,7 @@ import { PhotoTour } from "@/components/photo-tour";
 import { SectionTabs } from "@/components/section-tabs";
 import { Rating } from "@/components/rating";
 import { formatDate } from "@/lib/dates";
+import { groupAmenities } from "@/lib/amenity-groups";
 import { StaysMap } from "@/components/stays-map";
 import { TrackRecentView, WishlistButton } from "@/components/wishlist";
 import { getListing, getListings, getSite } from "@/lib/pms";
@@ -67,6 +68,7 @@ async function ListingPageContent({ params }: Pick<PageProps<"/[site]/stays/[lis
       : {}),
   };
   const reviews = listing.reviews ?? [];
+  const amenityGroups = groupAmenities(listing.amenities);
   // The site's own pin stands in only for a stay in the same town; elsewhere it would mislead.
   const mapAt =
     listing.location ?? (site.location && site.location.label.toLowerCase().includes(listing.city.toLowerCase()) ? site.location : null);
@@ -99,7 +101,8 @@ async function ListingPageContent({ params }: Pick<PageProps<"/[site]/stays/[lis
                 {photos.length > 0 ? (
                   <>
                     <div className={photos.length >= 5 ? "lg:hidden" : ""}>
-                      <Carousel label={`Photos of ${listing.name}`} slideClassName="w-full" gapClassName="gap-0" counter className="overflow-hidden rounded-2xl">
+                      {/* On phones the next photo peeks in from the right, so swiping is obvious. */}
+                      <Carousel label={`Photos of ${listing.name}`} slideClassName="w-[88%] sm:w-full" gapClassName="gap-2 sm:gap-0" counter className="overflow-hidden rounded-2xl">
                         {photos.map((img, i) => (
                           // Tapping a photo opens the slideshow at that photo.
                           <button key={`${img.url}-${i}`} type="button" data-photo={i} aria-label={`Open photo ${i + 1} of ${photos.length}`} className="block w-full">
@@ -108,7 +111,7 @@ async function ListingPageContent({ params }: Pick<PageProps<"/[site]/stays/[lis
                               name={i === 0 ? listing.name : ""}
                               sizes="(min-width: 1280px) 1216px, 100vw"
                               priority={i === 0}
-                              className="aspect-[4/3] sm:aspect-video lg:aspect-auto lg:h-[min(56vh,480px)]"
+                              className="aspect-[4/3] max-sm:rounded-2xl sm:aspect-video lg:aspect-auto lg:h-[min(56vh,480px)]"
                             />
                           </button>
                         ))}
@@ -191,13 +194,31 @@ async function ListingPageContent({ params }: Pick<PageProps<"/[site]/stays/[lis
             {listing.amenities.length > 0 && (
               <section id="amenities" className="mt-12 scroll-mt-36 border-t border-line pt-10">
                 <h2 className="text-h2">What this place offers</h2>
-                <ul className="mt-6 grid gap-x-8 gap-y-4 sm:grid-cols-2">
-                  {listing.amenities.map((a) => (
-                    <li key={a} className="flex items-center gap-4">
-                      <Icon name={amenityIcon(a)} className="h-6 w-6 text-ink-soft" /> {a}
-                    </li>
-                  ))}
-                </ul>
+                {/* A short list stays flat; a longer one gets headings so it scans. */}
+                {amenityGroups.length > 1 && listing.amenities.length >= 8 ? (
+                  <div className="mt-6 space-y-8">
+                    {amenityGroups.map((g) => (
+                      <div key={g.title}>
+                        <h3 className="font-medium">{g.title}</h3>
+                        <ul className="mt-4 grid gap-x-8 gap-y-4 sm:grid-cols-2">
+                          {g.items.map((a) => (
+                            <li key={a} className="flex items-center gap-4">
+                              <Icon name={amenityIcon(a)} className="h-6 w-6 text-ink-soft" /> {a}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <ul className="mt-6 grid gap-x-8 gap-y-4 sm:grid-cols-2">
+                    {listing.amenities.map((a) => (
+                      <li key={a} className="flex items-center gap-4">
+                        <Icon name={amenityIcon(a)} className="h-6 w-6 text-ink-soft" /> {a}
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </section>
             )}
 
