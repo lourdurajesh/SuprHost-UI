@@ -58,5 +58,6 @@ export async function pmsFetch<T>(path: string, { method = "GET", body, headers 
     }
     throw new PmsError(res.status, code, message);
   }
+  if (res.status === 204) return undefined as T; // endpoints that answer "done" with no body
   return (await res.json()) as T;
 }

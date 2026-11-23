@@ -238,5 +238,14 @@ export async function endGuestSession(key: string, sessionToken: string): Promis
   await pmsFetch<unknown>(`/sites/${site(key)}/auth/logout`, { method: "POST", headers: { "X-Guest-Session": sessionToken } });
 }
 
+/**
+ * One anonymous funnel visit (see the backend's FunnelVisit). `visitor` is a hash the caller
+ * derives with a secret that rotates daily; nothing identifying goes to the PMS. Best effort.
+ */
+export async function recordFunnelVisit(key: string, event: { step: string; listing?: string; visitor: string }, clientIp: string): Promise<void> {
+  if (useMock) return;
+  await pmsFetch<unknown>(`/sites/${site(key)}/events`, { method: "POST", body: event, headers: { "X-Client-IP": clientIp } });
+}
+
 export { PmsError } from "./types";
 export type * from "./types";

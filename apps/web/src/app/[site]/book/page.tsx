@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { CheckoutForm } from "@/components/checkout-form";
+import { Track } from "@/components/track";
 import { getGuestSession, getListings, getQuote, getSite, PmsError } from "@/lib/pms";
 import { readSessionToken } from "@/lib/session";
 import { stayQuery } from "@/lib/validation";
@@ -12,6 +13,7 @@ export const metadata: Metadata = { title: "Your details", robots: { index: fals
 export default function BookPage({ params, searchParams }: PageProps<"/[site]/book">) {
   return (
     <div className="mx-auto max-w-6xl px-4 pb-10 pt-8 sm:px-6 sm:pt-12">
+      <Track step="checkout" />
       <CheckoutSteps current={0} />
       <h1 className="mt-6 text-h1">Your details</h1>
       <Suspense fallback={<div className="mt-8 h-[28rem] animate-pulse rounded-2xl bg-sand-deep" />}>

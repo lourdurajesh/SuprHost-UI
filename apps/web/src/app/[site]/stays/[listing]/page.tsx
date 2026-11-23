@@ -9,6 +9,7 @@ import { Rating } from "@/components/rating";
 import { formatDate } from "@/lib/dates";
 import { groupAmenities } from "@/lib/amenity-groups";
 import { relatedStays } from "@/lib/related-stays";
+import { Track } from "@/components/track";
 import { StaysMap } from "@/components/stays-map";
 import { TrackRecentView, WishlistButton } from "@/components/wishlist";
 import { getListing, getListings, getSite } from "@/lib/pms";
@@ -79,6 +80,7 @@ async function ListingPageContent({ params }: Pick<PageProps<"/[site]/stays/[lis
   return (
     <>
       <article className="mx-auto max-w-7xl px-4 pb-28 sm:px-6 md:pb-10 lg:px-8">
+        <Track step="stay" listing={listing.id} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
 
         <SectionTabs

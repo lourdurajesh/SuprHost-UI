@@ -6,6 +6,7 @@ import type { Availability, Quote } from "@/lib/pms/types";
 import { addDays, formatDate, formatMoney, isIsoDate, minNightsOn, nightsBetween, todayIn } from "@/lib/dates";
 import { DatesDialog, shortRange } from "./date-range-field";
 import { PriceBreakdown } from "./price-breakdown";
+import { trackFunnel } from "./track";
 
 const noSubscribe = () => () => {};
 
@@ -100,6 +101,12 @@ export function BookingWidget({ listingId, maxGuests, minNights: listingMinNight
       });
     return () => ctrl.abort();
   }, [listingId, checkIn, checkOut, guests, tooShort]);
+
+  // A guest who is shown a price for their dates is one step from checkout.
+  const quotedKey = quote ? `${quote.checkIn}|${quote.checkOut}` : null;
+  useEffect(() => {
+    if (quotedKey) trackFunnel("quote", listingId);
+  }, [quotedKey, listingId]);
 
   function onDates(ci: string | null, co: string | null) {
     setPicked({ checkIn: ci, checkOut: co });

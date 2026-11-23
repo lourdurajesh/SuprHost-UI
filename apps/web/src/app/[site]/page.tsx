@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { getListings, getSite, type ListingImage } from "@/lib/pms";
 import { About, Destinations, Faq, Gallery, Hero, Highlights, Intro, Stays, Testimonials } from "@/themes/escape/home";
 import { Suspense } from "react";
+import { Track } from "@/components/track";
 
 async function HomePageContent({ params }: Pick<PageProps<"/[site]">, "params">) {
   const { site: key } = await params;
@@ -35,6 +36,7 @@ async function HomePageContent({ params }: Pick<PageProps<"/[site]">, "params">)
         // JSON.stringify output with "<" escaped cannot break out of the script element.
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
       />
+      <Track step="home" />
       <Hero site={site} stays={listings} />
       <Intro site={site} />
       <Stays listings={listings} currency={site.currency} addsGst={site.pricesAddGst} />
