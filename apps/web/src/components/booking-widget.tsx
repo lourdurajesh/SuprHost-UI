@@ -146,7 +146,7 @@ export function BookingWidget({ listingId, maxGuests, minNights: listingMinNight
           )}
         </p>
 
-        <div className="mt-4 overflow-hidden rounded-xl border border-line">
+        <div className="mt-4 overflow-hidden rounded-xl border border-line has-[[aria-expanded=true]]:rounded-b-none">
           <button
             type="button"
             onClick={() => setDatesOpen(true)}
@@ -162,7 +162,7 @@ export function BookingWidget({ listingId, maxGuests, minNights: listingMinNight
               <span className={checkOut ? "" : "text-ink-soft"}>{checkOut ? formatDate(checkOut) : "Add date"}</span>
             </span>
           </button>
-          <label className={`${field} border-t border-line`}>
+          <label data-dropdown-anchor className={`${field} border-t border-line`}>
             <span className="text-eyebrow text-ink-soft">Guests</span>
             <Dropdown
               aria-label="Guests"

@@ -18,14 +18,18 @@ interface Props {
   className?: string;
 }
 
-const GAP = 6;
 const EDGE = 8;
 const MAX_HEIGHT = 288;
+/** Corner radius shared by the open control and its list, so together they read as one rectangle. */
+const RADIUS = 12;
 
 /**
  * A dropdown with a styled list (the browser's own list can't be styled). With a mouse or pen it is
  * a standard select-only combobox: arrow keys, Home/End, type-ahead, Enter or Space to choose,
- * Escape to close, and the list opens below the control or above it when there is no room. On touch
+ * Escape to close. The list is attached to the control, same width, no gap, one outline, so the two
+ * look like a single rectangle; it opens below, or above when there is no room. By default the
+ * control itself is the anchor; an ancestor marked `data-dropdown-anchor` (a bordered row the control
+ * sits in) is used instead, and then that ancestor's own border is what the list continues. On touch
  * screens it renders a native <select> instead, so phones keep their own picker. The switch is pure
  * CSS (`pointer-fine`), so server and browser always render the same markup.
  */
@@ -35,9 +39,9 @@ export function Dropdown({ value, options, onChange, className = "", "aria-label
   const optionId = (i: number) => `${uid}-opt-${i}`;
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
-  const [pos, setPos] = useState<{ left: number; top: number; minWidth: number; maxHeight: number; up: boolean } | null>(null);
-  const [shift, setShift] = useState(0);
+  const [pos, setPos] = useState<{ left: number; top: number; width: number; maxHeight: number; up: boolean } | null>(null);
   const button = useRef<HTMLButtonElement>(null);
+  const anchorEl = useRef<HTMLElement | null>(null);
   const list = useRef<HTMLUListElement>(null);
   const typed = useRef({ text: "", at: 0 });
 
@@ -46,19 +50,20 @@ export function Dropdown({ value, options, onChange, className = "", "aria-label
   const place = useCallback(() => {
     const el = button.current;
     if (!el) return;
-    const r = el.getBoundingClientRect();
-    const below = window.innerHeight - r.bottom - EDGE - GAP;
-    const above = r.top - EDGE - GAP;
+    const anchor = (el.closest("[data-dropdown-anchor]") as HTMLElement | null) ?? el;
+    anchorEl.current = anchor;
+    const r = anchor.getBoundingClientRect();
+    const below = window.innerHeight - r.bottom - EDGE;
+    const above = r.top - EDGE;
     const up = below < 220 && above > below;
-    const room = up ? above : below;
+    // One pixel wider on each side so the list's border lines up with the control's outline.
     setPos({
-      left: Math.max(EDGE, Math.min(r.left, window.innerWidth - EDGE - r.width)),
-      top: up ? r.top - GAP : r.bottom + GAP,
-      minWidth: r.width,
-      maxHeight: Math.min(MAX_HEIGHT, Math.max(120, room)),
+      left: r.left - 1,
+      top: up ? r.top : r.bottom,
+      width: r.width + 2,
+      maxHeight: Math.min(MAX_HEIGHT, Math.max(120, up ? above : below)),
       up,
     });
-    setShift(0);
   }, []);
 
   function show() {
@@ -79,12 +84,23 @@ export function Dropdown({ value, options, onChange, className = "", "aria-label
     hide(true);
   }
 
-  // A wide list is nudged left if it would run off the right edge of the screen.
+  // While open, a standalone control (a pill or a plain field) squares off the edge that touches the
+  // list and gains the same outline, so control and list join. A row inside a bordered box
+  // (data-dropdown-anchor) is left alone: the box's own border does the job.
   useLayoutEffect(() => {
-    if (!open || !list.current) return;
-    const r = list.current.getBoundingClientRect();
-    const over = r.right - (window.innerWidth - EDGE);
-    if (over > 0) setShift(-over);
+    const el = anchorEl.current;
+    if (!open || !pos || !el || el !== button.current) return;
+    const saved = el.style.cssText;
+    const cs = getComputedStyle(el);
+    const r = `${Math.min(parseFloat(cs.borderTopLeftRadius) || 0, RADIUS)}px`;
+    const flat = "0px";
+    el.style.borderTopLeftRadius = el.style.borderTopRightRadius = pos.up ? flat : r;
+    el.style.borderBottomLeftRadius = el.style.borderBottomRightRadius = pos.up ? r : flat;
+    el.style.boxShadow = "0 0 0 1px var(--line)";
+    el.style.backgroundColor = "#fff";
+    return () => {
+      el.style.cssText = saved;
+    };
   }, [open, pos]);
 
   // Keep the active option in view while moving with the keyboard.
@@ -186,7 +202,16 @@ export function Dropdown({ value, options, onChange, className = "", "aria-label
         onKeyDown={onKeyDown}
         className={`hidden items-center justify-between gap-2 text-left pointer-fine:flex ${buttonClass}`}
       >
-        <span className="min-w-0 truncate">{options[selected]?.label}</span>
+        {/* The widest option is laid out invisibly under the shown one, so the control (and therefore the
+            list attached to it) is always wide enough for every option and never changes width. */}
+        <span className="grid min-w-0">
+          <span className="col-start-1 row-start-1 truncate">{options[selected]?.label}</span>
+          {options.map((o) => (
+            <span key={o.value} aria-hidden className="invisible col-start-1 row-start-1 h-0 overflow-hidden whitespace-nowrap">
+              {o.label}
+            </span>
+          ))}
+        </span>
         <svg aria-hidden viewBox="0 0 20 20" className={`h-4 w-4 shrink-0 text-ink-soft transition-transform ${open ? "rotate-180" : ""}`} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
           <path d="m5 8 5 5 5-5" />
         </svg>
@@ -211,13 +236,16 @@ export function Dropdown({ value, options, onChange, className = "", "aria-label
             tabIndex={-1}
             style={{
               position: "fixed",
-              left: pos.left + shift,
+              left: pos.left,
+              width: pos.width,
               ...(pos.up ? { bottom: window.innerHeight - pos.top } : { top: pos.top }),
-              minWidth: pos.minWidth,
               maxHeight: pos.maxHeight,
-              maxWidth: `calc(100vw - ${EDGE * 2}px)`,
+              // Radius only on the far corners; the near edge has no border and meets the control.
+              borderRadius: pos.up ? `${RADIUS}px ${RADIUS}px 0 0` : `0 0 ${RADIUS}px ${RADIUS}px`,
+              [pos.up ? "borderBottomWidth" : "borderTopWidth"]: 0,
+              filter: "drop-shadow(0 10px 14px rgba(31,27,22,0.14))",
             }}
-            className="z-[70] w-max overflow-y-auto rounded-2xl bg-white p-1.5 text-ink shadow-[0_16px_40px_-12px_rgba(31,27,22,0.35)] ring-1 ring-line"
+            className="z-[70] overflow-y-auto border border-line bg-white p-1 text-ink"
           >
             {options.map((o, i) => (
               <li
@@ -229,7 +257,7 @@ export function Dropdown({ value, options, onChange, className = "", "aria-label
                 onMouseDown={(e) => e.preventDefault()}
                 onMouseEnter={() => setActive(i)}
                 onClick={() => choose(i)}
-                className={`flex min-h-10 cursor-pointer items-center justify-between gap-6 rounded-xl px-3 py-2 text-[15px] ${i === active ? "bg-sand-deep" : ""} ${i === selected ? "font-medium" : ""}`}
+                className={`flex min-h-10 cursor-pointer items-center justify-between gap-2 whitespace-nowrap rounded-lg px-2.5 py-2 text-[15px] ${i === active ? "bg-sand-deep" : ""} ${i === selected ? "font-medium" : ""}`}
               >
                 <span>{o.label}</span>
                 {i === selected && (
