@@ -32,15 +32,16 @@ export function HeroSearch({ cities }: { cities: string[] }) {
   return (
     <form
       onSubmit={submit}
-      className="grid w-full max-w-3xl grid-cols-2 gap-1 rounded-3xl bg-white p-2 text-ink shadow-[0_18px_50px_-15px_rgba(0,0,0,0.45)] sm:flex sm:items-center sm:rounded-full sm:pl-6"
+      className="grid w-full max-w-3xl grid-cols-2 gap-1 rounded-3xl bg-white p-2 text-ink shadow-[0_18px_50px_-15px_rgba(0,0,0,0.45)] sm:flex sm:items-center sm:rounded-full sm:pl-2"
     >
-      <label className="col-span-2 rounded-2xl px-4 py-2 sm:min-w-0 sm:flex-[1.1] sm:px-0">
+      <label data-dropdown-anchor className="col-span-2 rounded-2xl px-4 py-2 transition-colors has-[[aria-expanded=true]]:bg-sand-deep has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ink sm:min-w-0 sm:flex-[1.1] sm:rounded-full sm:px-4">
         <span className={label}>Location</span>
         <Dropdown
           aria-label="Location"
           value={city}
           onChange={setCity}
           options={[{ value: "", label: "Anywhere" }, ...cities.map((c) => ({ value: c, label: c }))]}
+          variant="floating"
           className={field}
         />
       </label>
@@ -49,13 +50,14 @@ export function HeroSearch({ cities }: { cities: string[] }) {
         <DateRangeField variant="field" label="Dates" checkIn={dates.checkIn} checkOut={dates.checkOut} onChange={(ci, co) => setDates({ checkIn: ci, checkOut: co })} />
       </div>
       {divider}
-      <label className="px-4 py-2 sm:w-28 sm:px-4">
+      <label data-dropdown-anchor className="rounded-2xl px-4 py-2 transition-colors has-[[aria-expanded=true]]:bg-sand-deep has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ink sm:w-28 sm:rounded-full sm:px-4">
         <span className={label}>Guests</span>
         <Dropdown
           aria-label="Guests"
           value={String(guests)}
           onChange={(v) => setGuests(Number(v))}
           options={Array.from({ length: 12 }, (_, i) => ({ value: String(i + 1), label: String(i + 1) }))}
+          variant="floating"
           className={field}
         />
       </label>

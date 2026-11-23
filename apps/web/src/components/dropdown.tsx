@@ -16,12 +16,22 @@ interface Props {
   "aria-label": string;
   /** Layout and look of the closed control (the same classes a native select would get). */
   className?: string;
+  /**
+   * "attached" (default): the list joins the control as one rectangle, for controls that have their
+   * own outline. "floating": a separate rounded card a few pixels off the control, for borderless
+   * controls that sit inside something else (the hero search bar).
+   */
+  variant?: "attached" | "floating";
 }
 
 const EDGE = 8;
 const MAX_HEIGHT = 288;
 /** Corner radius shared by the open control and its list, so together they read as one rectangle. */
 const RADIUS = 12;
+/** Floating cards: distance from the control, corner radius, and the narrowest they get. */
+const FLOAT_GAP = 8;
+const FLOAT_RADIUS = 16;
+const FLOAT_MIN_WIDTH = 176;
 
 /**
  * A dropdown with a styled list (the browser's own list can't be styled). With a mouse or pen it is
@@ -33,7 +43,8 @@ const RADIUS = 12;
  * screens it renders a native <select> instead, so phones keep their own picker. The switch is pure
  * CSS (`pointer-fine`), so server and browser always render the same markup.
  */
-export function Dropdown({ value, options, onChange, className = "", "aria-label": label }: Props) {
+export function Dropdown({ value, options, onChange, className = "", variant = "attached", "aria-label": label }: Props) {
+  const floating = variant === "floating";
   const uid = useId();
   const listId = `${uid}-list`;
   const optionId = (i: number) => `${uid}-opt-${i}`;
@@ -53,18 +64,21 @@ export function Dropdown({ value, options, onChange, className = "", "aria-label
     const anchor = (el.closest("[data-dropdown-anchor]") as HTMLElement | null) ?? el;
     anchorEl.current = anchor;
     const r = anchor.getBoundingClientRect();
-    const below = window.innerHeight - r.bottom - EDGE;
-    const above = r.top - EDGE;
+    const gap = floating ? FLOAT_GAP : 0;
+    const below = window.innerHeight - r.bottom - EDGE - gap;
+    const above = r.top - EDGE - gap;
     const up = below < 220 && above > below;
-    // One pixel wider on each side so the list's border lines up with the control's outline.
+    // Attached: one pixel wider on each side so the list's border lines up with the control's outline.
+    // Floating: at least a comfortable width, kept inside the screen.
+    const width = floating ? Math.max(r.width, FLOAT_MIN_WIDTH) : r.width + 2;
     setPos({
-      left: r.left - 1,
-      top: up ? r.top : r.bottom,
-      width: r.width + 2,
+      left: floating ? Math.max(EDGE, Math.min(r.left, window.innerWidth - EDGE - width)) : r.left - 1,
+      top: up ? r.top - gap : r.bottom + gap,
+      width,
       maxHeight: Math.min(MAX_HEIGHT, Math.max(120, up ? above : below)),
       up,
     });
-  }, []);
+  }, [floating]);
 
   function show() {
     // Touch screens use the native select; never open an invisible list.
@@ -89,7 +103,7 @@ export function Dropdown({ value, options, onChange, className = "", "aria-label
   // (data-dropdown-anchor) is left alone: the box's own border does the job.
   useLayoutEffect(() => {
     const el = anchorEl.current;
-    if (!open || !pos || !el || el !== button.current) return;
+    if (floating || !open || !pos || !el || el !== button.current) return;
     const saved = el.style.cssText;
     const cs = getComputedStyle(el);
     const r = `${Math.min(parseFloat(cs.borderTopLeftRadius) || 0, RADIUS)}px`;
@@ -101,7 +115,7 @@ export function Dropdown({ value, options, onChange, className = "", "aria-label
     return () => {
       el.style.cssText = saved;
     };
-  }, [open, pos]);
+  }, [open, pos, floating]);
 
   // Keep the active option in view while moving with the keyboard.
   useEffect(() => {
@@ -114,7 +128,8 @@ export function Dropdown({ value, options, onChange, className = "", "aria-label
     if (!open) return;
     const outside = (e: PointerEvent) => {
       const t = e.target as Node;
-      if (!button.current?.contains(t) && !list.current?.contains(t)) setOpen(false);
+      // The anchor counts as "inside": a click on the control's label then toggles instead of closing and reopening.
+      if (!button.current?.contains(t) && !anchorEl.current?.contains(t) && !list.current?.contains(t)) setOpen(false);
     };
     const close = (e: Event) => {
       if (e.type === "scroll" && list.current?.contains(e.target as Node)) return; // scrolling the list itself
@@ -185,7 +200,8 @@ export function Dropdown({ value, options, onChange, className = "", "aria-label
 
   // The closed control keeps the caller's classes, minus the "no outline" a native select used, so
   // keyboard focus shows the site's focus ring.
-  const buttonClass = className.replace(/\boutline-none\b/g, "").replace(/\bselect-chevron\b/g, "");
+  // A floating dropdown lives inside a larger cell that shows the focus ring itself (see the hero search).
+  const buttonClass = (floating ? className : className.replace(/\boutline-none\b/g, "")).replace(/\bselect-chevron\b/g, "");
 
   return (
     <>
@@ -200,6 +216,9 @@ export function Dropdown({ value, options, onChange, className = "", "aria-label
         aria-activedescendant={open ? optionId(active) : undefined}
         onClick={() => (open ? hide() : show())}
         onKeyDown={onKeyDown}
+        // The site's global focus outline is unlayered, so it beats utility classes; a floating control
+        // hands the focus ring to its cell and drops its own with an inline style.
+        style={floating ? { outline: "none" } : undefined}
         className={`hidden items-center justify-between gap-2 text-left pointer-fine:flex ${buttonClass}`}
       >
         {/* The widest option is laid out invisibly under the shown one, so the control (and therefore the
@@ -240,12 +259,20 @@ export function Dropdown({ value, options, onChange, className = "", "aria-label
               width: pos.width,
               ...(pos.up ? { bottom: window.innerHeight - pos.top } : { top: pos.top }),
               maxHeight: pos.maxHeight,
-              // Radius only on the far corners; the near edge has no border and meets the control.
-              borderRadius: pos.up ? `${RADIUS}px ${RADIUS}px 0 0` : `0 0 ${RADIUS}px ${RADIUS}px`,
-              [pos.up ? "borderBottomWidth" : "borderTopWidth"]: 0,
-              filter: "drop-shadow(0 10px 14px rgba(31,27,22,0.14))",
+              ...(floating
+                ? {
+                    // A free-standing card: even radius, and the shadow falls away from the control.
+                    borderRadius: FLOAT_RADIUS,
+                    boxShadow: `0 ${pos.up ? -16 : 16}px 36px -12px rgba(31,27,22,0.30), 0 2px 8px rgba(31,27,22,0.08)`,
+                  }
+                : {
+                    // Radius only on the far corners; the near edge has no border and meets the control.
+                    borderRadius: pos.up ? `${RADIUS}px ${RADIUS}px 0 0` : `0 0 ${RADIUS}px ${RADIUS}px`,
+                    [pos.up ? "borderBottomWidth" : "borderTopWidth"]: 0,
+                    filter: "drop-shadow(0 10px 14px rgba(31,27,22,0.14))",
+                  }),
             }}
-            className="z-[70] overflow-y-auto border border-line bg-white p-1 text-ink"
+            className={`z-[70] overflow-y-auto border border-line bg-white text-ink [scrollbar-color:#cfc9c3_transparent] [scrollbar-width:thin] ${floating ? "p-1.5" : "p-1"}`}
           >
             {options.map((o, i) => (
               <li
