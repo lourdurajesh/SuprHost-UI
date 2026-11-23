@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { DateRangeField } from "./date-range-field";
 import { Dropdown } from "./dropdown";
+import { GuestStepper } from "./guest-stepper";
 import { Icon } from "./icons";
 import { toSearchString } from "./search-filters";
 
@@ -50,17 +51,10 @@ export function HeroSearch({ cities }: { cities: string[] }) {
         <DateRangeField variant="field" label="Dates" checkIn={dates.checkIn} checkOut={dates.checkOut} onChange={(ci, co) => setDates({ checkIn: ci, checkOut: co })} />
       </div>
       {divider}
-      <label data-dropdown-anchor className="rounded-2xl px-4 py-2 transition-colors has-[[aria-expanded=true]]:bg-sand-deep has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ink sm:w-28 sm:rounded-full sm:px-4">
+      <div className="px-4 py-2 sm:w-44 sm:px-4">
         <span className={label}>Guests</span>
-        <Dropdown
-          aria-label="Guests"
-          value={String(guests)}
-          onChange={(v) => setGuests(Number(v))}
-          options={Array.from({ length: 12 }, (_, i) => ({ value: String(i + 1), label: String(i + 1) }))}
-          variant="floating"
-          className={field}
-        />
-      </label>
+        <GuestStepper value={guests} onChange={setGuests} max={12} showUnit={false} compact className="mt-1" />
+      </div>
       <button
         type="submit"
         className="col-span-2 inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-brand px-7 py-3.5 text-base font-medium text-white transition hover:brightness-125 sm:ml-1"
