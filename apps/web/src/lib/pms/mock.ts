@@ -27,7 +27,7 @@ import { addDays, nightsBetween, overlapsBusy, toIso } from "@/lib/dates";
 
 const img = (name: string, alt: string): ListingImage => ({ url: `/demo/${name}.svg`, alt, width: 1200, height: 900 });
 // Free stock photos from Pexels (see public/stock/CREDITS.md), standing in for real property photos.
-const photo = (id: number, alt: string, width: number, height: number): ListingImage => ({ url: `/stock/pexels-${id}.jpg`, alt, width, height });
+const photo = (id: number, alt: string, width: number, height: number, category?: string): ListingImage => ({ url: `/stock/pexels-${id}.jpg`, alt, width, height, ...(category ? { category } : {}) });
 
 const site: Site = {
   key: "demo",
@@ -378,8 +378,8 @@ const listings: Listing[] = [
 ];
 
 const PHOTOS: Record<string, ListingImage[]> = {
-  "river-cottage": [photo(26743268, "Thatched cottage among palms", 1600, 1006), photo(14025910, "Bedroom with wooden furniture and a canopy bed", 1600, 1067), photo(7601101, "Garden patio with cushioned seating", 1600, 1067), photo(28975097, "The river at sunrise", 1600, 1067), photo(13036800, "Rustic kitchen", 1600, 1067)],
-  "garden-suite": [photo(37510953, "The suite in its garden", 1600, 1200), photo(11757061, "Softly lit bedroom", 1600, 1077), photo(6908370, "Bathroom with timber vanity", 1600, 1067)],
+  "river-cottage": [photo(26743268, "Thatched cottage among palms", 1600, 1006, "exterior"), photo(14025910, "Bedroom with wooden furniture and a canopy bed", 1600, 1067, "bedroom"), photo(7601101, "Garden patio with cushioned seating", 1600, 1067, "outdoors"), photo(28975097, "The river at sunrise", 1600, 1067, "view"), photo(13036800, "Rustic kitchen", 1600, 1067, "kitchen")],
+  "garden-suite": [photo(37510953, "The suite in its garden", 1600, 1200, "exterior"), photo(11757061, "Softly lit bedroom", 1600, 1077, "bedroom"), photo(6908370, "Bathroom with timber vanity", 1600, 1067, "bathroom")],
   "family-house": [photo(33536851, "Traditional house with a tiled roof and wooden balcony", 1600, 1067), photo(8584020, "Living room with brick fireplace", 1600, 1067), photo(14596477, "Kitchen with vintage stove", 1600, 900)],
   "coffee-estate-bungalow": [photo(6635618, "Wooden bungalow in lush greenery", 1600, 1067), photo(3848200, "Green valley and hills around the estate", 1600, 1067), photo(15794320, "Stone-walled living room", 1600, 1067), photo(7125409, "Coffee berries ripening on the estate", 1600, 1067)],
   "hilltop-villa": [photo(30196347, "Villa with a forest garden", 1600, 900), photo(5382032, "Cottage on a green mountainside", 1600, 1067), photo(7027771, "Living room with fireplace", 1600, 1067), photo(6957081, "Bathroom with round tub", 1600, 1068)],

@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { ListingImage } from "@/lib/pms/types";
 import { Icon } from "./icons";
 import { PhotoImage } from "./photo-image";
+import { photoChips } from "@/lib/photo-categories";
 import { mediaSrc, skipOptimizer } from "@/themes/escape/listing-media";
 
 const MAX_ZOOM = 4;
@@ -171,6 +172,7 @@ export function PhotoTour({ images, name, children }: { images: ListingImage[]; 
 
   if (count === 0) return <>{children}</>;
   const current = images[index];
+  const chips = photoChips(images);
   const next = images[(index + 1) % count];
   const zoomed = view.s > 1;
 
@@ -236,6 +238,25 @@ export function PhotoTour({ images, name, children }: { images: ListingImage[]; 
                 </TapButton>
               </div>
             </div>
+
+            {/* Jump to a room or area. Shown only when the host has filed photos under 2+ categories. */}
+            {chips.length > 0 && (
+              <div className="no-scrollbar flex gap-2 overflow-x-auto px-4 pb-3 sm:justify-center sm:px-6" role="group" aria-label="Jump to">
+                {chips.map((c) => {
+                  const on = current.category === c.slug;
+                  return (
+                    <TapButton
+                      key={c.slug}
+                      onPress={() => show(c.first)}
+                      aria-pressed={on}
+                      className={`min-h-11 shrink-0 rounded-full px-4 text-sm transition ${on ? "bg-white text-ink" : "bg-white/10 text-white hover:bg-white/20"}`}
+                    >
+                      {c.label} <span className={on ? "text-ink/60" : "text-white/60"}>{c.count}</span>
+                    </TapButton>
+                  );
+                })}
+              </div>
+            )}
 
             <div
               ref={stage}

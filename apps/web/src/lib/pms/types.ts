@@ -17,6 +17,8 @@ export interface ListingImage {
   alt: string;
   width: number;
   height: number;
+  /** Room or area the photo shows (see lib/photo-categories); absent when the host hasn't filed it. */
+  category?: string | null;
 }
 
 export interface Site {
