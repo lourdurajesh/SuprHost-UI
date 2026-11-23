@@ -40,7 +40,7 @@ export interface Site {
   faqs: { q: string; a: string }[];
   contact: { email: string | null; phone: string | null; whatsapp: string | null; address: string | null };
   location: { lat: number; lng: number; label: string } | null;
-  policies: { checkInTime: string; checkOutTime: string; cancellation: string; houseRules: string[] };
+  policies: { checkInTime: string; checkOutTime: string; cancellation: string; houseRules: string[]; notes?: { title: string; text: string }[] };
   seo: { title: string; description: string };
   currency: string;
   timezone: string;

@@ -19,12 +19,14 @@ export function Hero({ site, stays }: { site: Site; stays: ListingSummary[] }) {
     <section className="relative isolate overflow-hidden bg-brand">
       <div className="absolute inset-0 -z-10">
         <ListingPhoto image={site.heroImage} name="" sizes="100vw" priority className="h-full w-full" />
-        {/* Two scrims keep white text at >= 4.5:1 over any photo: bottom (all screens) and left (wide screens). */}
-        <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/45 to-black/10" />
-        <div aria-hidden className="absolute inset-0 hidden bg-gradient-to-r from-black/50 via-black/15 to-transparent lg:block" />
+        {/* Two scrims keep white text at >= 4.5:1 over the photo: bottom (all screens) and left (wide screens).
+            Strengths were measured against the real photo, text block by text block; phones need the heavier
+            one because the text block covers more of the picture. Re-measure when the hero photo changes. */}
+        <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/65 to-black/45 lg:from-black/80 lg:via-black/60 lg:to-black/35" />
+        <div aria-hidden className="absolute inset-0 hidden bg-gradient-to-r from-black/55 via-black/20 to-transparent lg:block" />
       </div>
       <div className="mx-auto flex min-h-[calc(100svh-76px)] max-w-7xl flex-col justify-end px-4 pb-8 pt-24 sm:px-6 sm:pb-12 lg:px-8 lg:pb-16 lg:pt-32">
-        {site.location && <p className="text-eyebrow uppercase text-white/85">{site.location.label}</p>}
+        {site.location && <p className="text-eyebrow uppercase text-white">{site.location.label}</p>}
         <h1 className="mt-3 max-w-3xl text-display text-white">{site.tagline}</h1>
         <p className="mt-4 max-w-xl text-base leading-relaxed text-white/90 sm:mt-5 sm:text-lead">{site.intro}</p>
         <div className="mt-7 sm:mt-9">
