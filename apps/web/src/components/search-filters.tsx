@@ -60,6 +60,8 @@ export function SearchFilters({ query, facets, currency, count }: Props) {
     (query.city ? 1 : 0);
 
   const field = "min-h-11 shrink-0 rounded-full bg-white px-4 py-2.5 text-sm ring-1 ring-line outline-none focus:ring-ink";
+  // Dropdown pills: same look plus a chevron inset from the rounded edge.
+  const dropdown = `${field} select-chevron [--select-inset:1rem]`;
   const chip = (on: boolean) =>
     `min-h-11 rounded-full px-4 py-2 text-sm ring-1 transition ${on ? "bg-ink text-white ring-ink" : "bg-white ring-line hover:ring-ink-soft"}`;
 
@@ -97,7 +99,7 @@ export function SearchFilters({ query, facets, currency, count }: Props) {
           aria-label="Date flexibility"
           value={query.flex ?? ""}
           onChange={(e) => apply({ ...query, flex: e.target.value ? Number(e.target.value) : undefined })}
-          className={field}
+          className={dropdown}
         >
           <option value="">Exact dates</option>
           {[1, 2, 3].map((d) => (
@@ -111,7 +113,7 @@ export function SearchFilters({ query, facets, currency, count }: Props) {
         aria-label="Guests"
         value={query.guests ?? ""}
         onChange={(e) => apply({ ...query, guests: e.target.value ? Number(e.target.value) : undefined })}
-        className={field}
+        className={dropdown}
       >
         <option value="">Any guests</option>
         {Array.from({ length: 12 }, (_, i) => i + 1).map((n) => (
@@ -135,7 +137,7 @@ export function SearchFilters({ query, facets, currency, count }: Props) {
         aria-label="Sort"
         value={query.sort ?? "recommended"}
         onChange={(e) => apply({ ...query, sort: e.target.value as SearchQuery["sort"] })}
-        className={`${field} ml-auto`}
+        className={`${dropdown} ml-auto`}
       >
         <option value="recommended">Recommended</option>
         <option value="price_asc">Price: low to high</option>

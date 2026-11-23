@@ -163,7 +163,7 @@ export function BookingWidget({ listingId, maxGuests, minNights: listingMinNight
           </button>
           <label className={`${field} border-t border-line`}>
             <span className="text-eyebrow text-ink-soft">Guests</span>
-            <select value={guests} onChange={(e) => setGuests(Number(e.target.value))} className="-ml-0.5 w-full bg-transparent text-sm outline-none">
+            <select value={guests} onChange={(e) => setGuests(Number(e.target.value))} className="select-chevron -ml-0.5 w-full bg-transparent text-sm outline-none">
               {Array.from({ length: maxGuests }, (_, i) => i + 1).map((n) => (
                 <option key={n} value={n}>
                   {n} guest{n === 1 ? "" : "s"}

@@ -71,6 +71,29 @@ h3 {
   outline-offset: 2px;
 }
 
+/* Dropdowns. The browser's own arrow sits hard against the right edge; this draws a chevron with room
+   around it. Still a native <select>, so phones keep their own picker and keyboards work unchanged.
+   --select-inset is how far the chevron sits from the right edge (a pill needs more than a plain field). */
+select.select-chevron {
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%236b6562' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'><path d='m5 8 5 5 5-5'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right var(--select-inset, 0.5rem) center;
+  background-size: 1rem 1rem;
+  padding-right: calc(var(--select-inset, 0.5rem) + 1.5rem);
+  text-overflow: ellipsis;
+}
+select.select-chevron:hover {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%233d3a3a' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'><path d='m5 8 5 5 5-5'/></svg>");
+}
+select.select-chevron option {
+  background: #fff;
+  color: var(--ink);
+  font-size: 1rem;
+}
+
 /* Booking pages (they render the step indicator) drop sales prompts that compete with paying:
    the header "Book now" and the footer's "Talk to us before you book". CSS, not usePathname,
    because the host rewrite would make a pathname check mismatch on hydration. */
