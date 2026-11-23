@@ -19,13 +19,15 @@ interface Props {
   fromPrice: number;
   currency: string;
   timezone: string;
+  /** WhatsApp digits and the stay's name: adds an "Ask the host" link that carries the guest's dates. */
+  askHost?: { whatsapp: string; stayName: string };
 }
 
 // The only interactive island on a listing page: availability and price load live, everything
 // else on the page is prerendered. Compact on purpose — dates open in a dialog — so the panel fits
 // the viewport and Reserve is always in view. Below lg the panel sits in the page and a fixed bar
 // at the bottom carries the price and the next action.
-export function BookingWidget({ listingId, maxGuests, minNights: listingMinNights, maxNights, fromPrice, currency, timezone, pricesAddGst }: Props) {
+export function BookingWidget({ listingId, maxGuests, minNights: listingMinNights, maxNights, fromPrice, currency, timezone, pricesAddGst, askHost }: Props) {
   const router = useRouter();
   const [datesOpen, setDatesOpen] = useState(false);
   // "Today" is read in the browser only (null on the server), never baked into the prerendered page.
@@ -192,6 +194,20 @@ export function BookingWidget({ listingId, maxGuests, minNights: listingMinNight
           </div>
         )}
         <p className="mt-3 text-center text-sm text-ink-soft">You won’t be charged until you confirm. Best price, booked direct.</p>
+        {askHost && (
+          <a
+            href={`https://wa.me/${askHost.whatsapp}?text=${encodeURIComponent(
+              checkIn && checkOut
+                ? `Hello! I'm looking at ${askHost.stayName} for ${formatDate(checkIn)} to ${formatDate(checkOut)}, ${guests} guest${guests === 1 ? "" : "s"}. Could you help me with a question?`
+                : `Hello! I'm looking at ${askHost.stayName}. Could you help me with a question?`,
+            )}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-1 flex min-h-11 items-center justify-center text-sm font-medium underline underline-offset-4"
+          >
+            Ask the host about {checkIn && checkOut ? "these dates" : "this stay"} on WhatsApp
+          </a>
+        )}
       </div>
 
       {/* Below md: the next step stays on screen. */}

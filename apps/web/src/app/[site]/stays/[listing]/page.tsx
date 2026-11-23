@@ -69,6 +69,8 @@ async function ListingPageContent({ params }: Pick<PageProps<"/[site]/stays/[lis
   };
   const reviews = listing.reviews ?? [];
   const amenityGroups = groupAmenities(listing.amenities);
+  const whatsapp = site.contact.whatsapp?.replace(/\D/g, "") || null;
+  const callHref = site.contact.phone ? `tel:${site.contact.phone.replace(/\s/g, "")}` : null;
   // The site's own pin stands in only for a stay in the same town; elsewhere it would mislead.
   const mapAt =
     listing.location ?? (site.location && site.location.label.toLowerCase().includes(listing.city.toLowerCase()) ? site.location : null);
@@ -191,6 +193,40 @@ async function ListingPageContent({ params }: Pick<PageProps<"/[site]/stays/[lis
               <p className="mt-5 whitespace-pre-line text-lead text-ink-soft">{listing.description}</p>
             </section>
 
+            {/* Who is behind the stay, in the host's own words, with a direct line. No avatar, no invented stats. */}
+            {(whatsapp || callHref) && (
+              <section className="mt-12 border-t border-line pt-10" aria-labelledby="host-heading">
+                <h2 id="host-heading" className="text-h2">
+                  Hosted by {site.brandName}
+                </h2>
+                <div className="mt-5 flex flex-col gap-6 sm:flex-row sm:items-start">
+                  {site.about?.image && (
+                    <ListingPhoto image={site.about.image} name="" sizes="160px" className="h-28 w-36 shrink-0 rounded-xl" />
+                  )}
+                  <div>
+                    <p className="max-w-prose text-lead text-ink-soft">{site.statement}</p>
+                    <div className="mt-5 flex flex-wrap gap-3">
+                      {whatsapp && (
+                        <a
+                          href={`https://wa.me/${whatsapp}?text=${encodeURIComponent(`Hello! I'm looking at ${listing.name}.`)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex min-h-11 items-center gap-2 rounded-full border border-line px-5 text-sm font-medium hover:bg-sand"
+                        >
+                          <Icon name="chat" className="h-4 w-4" /> Message on WhatsApp
+                        </a>
+                      )}
+                      {callHref && (
+                        <a href={callHref} className="inline-flex min-h-11 items-center gap-2 rounded-full border border-line px-5 text-sm font-medium hover:bg-sand">
+                          Call {site.contact.phone}
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </section>
+            )}
+
             {listing.amenities.length > 0 && (
               <section id="amenities" className="mt-12 scroll-mt-36 border-t border-line pt-10">
                 <h2 className="text-h2">What this place offers</h2>
@@ -304,6 +340,7 @@ async function ListingPageContent({ params }: Pick<PageProps<"/[site]/stays/[lis
               currency={site.currency}
               timezone={site.timezone}
               pricesAddGst={site.pricesAddGst}
+              askHost={whatsapp ? { whatsapp, stayName: listing.name } : undefined}
             />
           </aside>
         </div>

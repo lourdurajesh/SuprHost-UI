@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Carousel } from "@/components/carousel";
 import { HeroSearch } from "@/components/hero-search";
 import { Icon } from "@/components/icons";
+import { formatMoney } from "@/lib/dates";
 import type { ListingImage, ListingSummary, Site } from "@/lib/pms";
 import { ListingCard } from "./listing-card";
 import { ListingPhoto } from "./listing-media";
@@ -81,6 +82,57 @@ export function Stays({ listings, currency, addsGst }: { listings: ListingSummar
           </Link>
         </div>
       )}
+    </section>
+  );
+}
+
+/**
+ * Browse by place: one tile per town the host has stays in, built from the listings themselves
+ * (count, lowest price, a photo), so it needs no extra content and never goes stale. Shown only
+ * when there are at least two places; with one, "Our homes" already is the place.
+ */
+export function Destinations({ listings, currency }: { listings: ListingSummary[]; currency: string }) {
+  const byCity = new Map<string, ListingSummary[]>();
+  for (const l of listings) byCity.set(l.city, [...(byCity.get(l.city) ?? []), l]);
+  if (byCity.size < 2) return null;
+  const places = [...byCity.entries()]
+    .map(([city, stays]) => ({
+      city,
+      count: stays.length,
+      from: Math.min(...stays.map((s) => s.fromPrice)),
+      image: stays.find((s) => s.image)?.image ?? null,
+    }))
+    .sort((a, b) => b.count - a.count || a.city.localeCompare(b.city));
+
+  return (
+    <section className={`${container} mt-24 sm:mt-28`} aria-labelledby="places-heading">
+      <h2 id="places-heading" className="text-h1">
+        Choose your place
+      </h2>
+      <p className="mt-3 text-ink-soft">Each town is a different kind of stay: river, hills, city or estate.</p>
+      <ul className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-6">
+        {places.map((p) => (
+          <li key={p.city}>
+            <Link href={`/stays?city=${encodeURIComponent(p.city)}`} className="group relative block overflow-hidden rounded-2xl">
+              <ListingPhoto
+                image={p.image}
+                name=""
+                sizes="(min-width: 1024px) 16vw, (min-width: 640px) 33vw, 50vw"
+                className="aspect-[4/5]"
+                imgClassName="transition-transform duration-700 group-hover:scale-[1.04]"
+              />
+              {/* Scrim keeps the white text readable on any photo. */}
+              <span aria-hidden className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
+              <span className="absolute inset-x-0 bottom-0 p-3 text-white sm:p-4">
+                <span className="block text-lg leading-tight sm:text-xl">{p.city}</span>
+                <span className="mt-1 block text-sm text-white/90">
+                  {p.count} stay{p.count === 1 ? "" : "s"} · from {formatMoney(p.from, currency)}
+                </span>
+              </span>
+            </Link>
+          </li>
+        ))}
+      </ul>
     </section>
   );
 }

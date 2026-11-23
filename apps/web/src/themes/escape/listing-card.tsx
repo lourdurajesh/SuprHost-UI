@@ -59,6 +59,7 @@ export function ListingCard({ listing, currency, priority, addsGst }: { listing:
         <h3 className="mt-1 text-2xl leading-snug tracking-tight group-hover:underline group-hover:decoration-1 group-hover:underline-offset-4">
           {listing.name}
         </h3>
+        {listing.tagline && <p className="mt-1 line-clamp-2 text-ink">{listing.tagline}</p>}
         <p className="mt-1 text-sm text-ink-soft">{listingFacts(listing)}</p>
         <NightlyPrice amount={listing.fromPrice} currency={currency} addsGst={addsGst} />
       </Link>

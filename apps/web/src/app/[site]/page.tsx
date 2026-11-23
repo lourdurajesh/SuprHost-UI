@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { getListings, getSite, type ListingImage } from "@/lib/pms";
-import { About, Faq, Gallery, Hero, Highlights, Intro, Stays, Testimonials } from "@/themes/escape/home";
+import { About, Destinations, Faq, Gallery, Hero, Highlights, Intro, Stays, Testimonials } from "@/themes/escape/home";
 import { Suspense } from "react";
 
 async function HomePageContent({ params }: Pick<PageProps<"/[site]">, "params">) {
@@ -38,6 +38,7 @@ async function HomePageContent({ params }: Pick<PageProps<"/[site]">, "params">)
       <Hero site={site} stays={listings} />
       <Intro site={site} />
       <Stays listings={listings} currency={site.currency} addsGst={site.pricesAddGst} />
+      <Destinations listings={listings} currency={site.currency} />
       <Highlights items={site.highlights} />
       <About about={site.about} />
       <Gallery images={gallery} />

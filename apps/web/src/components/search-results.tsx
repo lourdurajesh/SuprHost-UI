@@ -130,6 +130,7 @@ export function SearchResults({ hits, query, currency, addsGst }: Props) {
               <h3 className="mt-0.5 text-xl tracking-tight group-hover:underline group-hover:decoration-1 group-hover:underline-offset-4">
                 {h.name}
               </h3>
+              {h.tagline && <p className="mt-0.5 line-clamp-2 text-ink">{h.tagline}</p>}
               <p className="mt-0.5 text-sm text-ink-soft">{listingFacts(h)}</p>
               {h.altCheckIn && h.altCheckOut && (
                 <p className="mt-1 text-sm font-medium text-accent">
