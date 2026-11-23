@@ -144,7 +144,7 @@ export function DateRangeField({ checkIn, checkOut, onChange, timezone, variant 
         <button
           type="button"
           onClick={open}
-          className={`inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full bg-white px-4 py-2.5 text-sm ring-1 outline-none ${checkIn && checkOut ? "ring-ink" : "ring-line"} hover:ring-ink-soft`}
+          className={`focus-own inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full bg-white px-4 py-2.5 text-sm ring-1 outline-none focus-visible:ring-2 focus-visible:ring-ink ${checkIn && checkOut ? "ring-ink" : "ring-line"} hover:ring-ink-soft`}
         >
           <Icon name="calendar" className="h-4 w-4" /> {summary}
         </button>

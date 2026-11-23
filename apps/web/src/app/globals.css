@@ -71,6 +71,14 @@ h3 {
   outline-offset: 2px;
 }
 
+/* Controls that draw their own focus ring with a ring utility (the filter pills) opt out of the default
+   outline: a 2px outline spaced 2px away plus a ring read as one thick double border, and a scrolling
+   row of pills clips the outline's outer edge. The Tailwind outline-none class can't do this, because
+   this rule is outside the cascade layers and so beats it. */
+.focus-own:focus-visible {
+  outline: none;
+}
+
 /* Dropdowns. The browser's own arrow sits hard against the right edge; this draws a chevron with room
    around it. Still a native <select>, so phones keep their own picker and keyboards work unchanged.
    --select-inset is how far the chevron sits from the right edge (a pill needs more than a plain field). */

@@ -60,11 +60,11 @@ export function SearchFilters({ query, facets, currency, count }: Props) {
     (query.minPrice || query.maxPrice ? 1 : 0) +
     (query.city ? 1 : 0);
 
-  const field = "min-h-11 shrink-0 rounded-full bg-white px-4 py-2.5 text-sm ring-1 ring-line outline-none focus:ring-ink";
+  const field = "focus-own min-h-11 shrink-0 rounded-full bg-white px-4 py-2.5 text-sm ring-1 ring-line outline-none focus-visible:ring-2 focus-visible:ring-ink";
   // Dropdown pills: same look plus a chevron inset from the rounded edge.
   const dropdown = `${field} select-chevron [--select-inset:1rem]`;
   const chip = (on: boolean) =>
-    `min-h-11 rounded-full px-4 py-2 text-sm ring-1 transition ${on ? "bg-ink text-white ring-ink" : "bg-white ring-line hover:ring-ink-soft"}`;
+    `focus-own min-h-11 rounded-full px-4 py-2 text-sm ring-1 transition focus-visible:ring-2 focus-visible:ring-ink ${on ? "bg-ink text-white ring-ink" : "bg-white ring-line hover:ring-ink-soft"}`;
 
   // Applied filters as removable chips, so guests can see and undo what narrows the list.
   const applied: { key: string; label: string; next: SearchQuery }[] = [

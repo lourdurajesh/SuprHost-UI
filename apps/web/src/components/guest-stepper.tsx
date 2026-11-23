@@ -118,7 +118,7 @@ export function GuestStepper({ value, onChange, max, min = 1, showUnit = true, c
               setDraft(null);
             }
           }}
-          className="w-9 rounded-md bg-transparent text-center text-base tabular-nums text-ink outline-none focus-visible:ring-2 focus-visible:ring-ink"
+          className="focus-own w-9 rounded-md bg-transparent text-center text-base tabular-nums text-ink outline-none focus-visible:ring-2 focus-visible:ring-ink"
         />
         {showUnit && (
           <span className="whitespace-nowrap text-sm text-ink-soft" aria-hidden>
