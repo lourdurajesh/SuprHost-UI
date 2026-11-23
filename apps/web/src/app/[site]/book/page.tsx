@@ -52,7 +52,7 @@ async function BookContent({ params, searchParams }: Pick<PageProps<"/[site]/boo
       <section>
         <h2 className="text-h2">Who’s staying?</h2>
         <p className="mt-1 text-ink-soft">
-          {session ? "Check your details. Your confirmation and check-in details go to this email." : "Your details become your guest account, so you can find this booking and book faster next time."}
+          {session ? "Check your details. Your confirmation and check-in details go to your email." : "Your details become your guest account, so you can find this booking and book faster next time."}
         </p>
         <div className="mt-6">
           <CheckoutForm
@@ -62,6 +62,7 @@ async function BookContent({ params, searchParams }: Pick<PageProps<"/[site]/boo
             guests={guests}
             holdMinutes={site.payments.holdMinutes}
             session={session}
+            phoneSignIn={site.features.includes("guest.phone_sign_in")}
           />
         </div>
       </section>

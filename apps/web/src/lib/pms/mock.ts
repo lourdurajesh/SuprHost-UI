@@ -650,7 +650,7 @@ export const mock = {
     return code;
   },
 
-  verifyCode: async (key: string, email: string, code: string, details: { name?: string; phone?: string } = {}): Promise<SessionGrant> => {
+  verifyCode: async (key: string, email: string, code: string, details: { name?: string; phone?: string; contactEmail?: string } = {}): Promise<SessionGrant> => {
     const entry = codes.get(email);
     if (key !== site.key || !entry || entry.expiresAt < Date.now() || entry.attempts >= 5) {
       throw new PmsError(401, "invalid_code", "That code is invalid or has expired");

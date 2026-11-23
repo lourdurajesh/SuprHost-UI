@@ -6,6 +6,8 @@ export type FeatureCode =
   | "website.public"
   | "website.instant_book"
   | "website.custom_domain"
+  /** Guests can sign in with a mobile number and an SMS code (the PMS has an SMS provider). */
+  | "guest.phone_sign_in"
   | (string & {});
 
 export type PaymentMethod = "upi" | "card" | "netbanking";
@@ -149,14 +151,20 @@ export interface SearchResult {
 // ---- guest accounts ----------------------------------------------------------------------
 
 export interface GuestSession {
-  email: string;
+  /** Null for a guest who signed in by mobile number and hasn't booked yet. */
+  email: string | null;
   name: string | null;
   phone: string | null;
   /** "host" when the email belongs to a staff user of this tenant in the PMS. */
   role: "guest" | "host";
   /** Set for hosts only: where the "Open PMS" link goes. */
   pmsUrl: string | null;
+  /** How the guest proved who they are. The PMS omits it for email sign-in in older versions. */
+  signedInWith?: "email" | "phone";
 }
+
+/** Where a sign-in code goes: an email address or a mobile number. */
+export type SignInLogin = { email: string } | { mobile: string };
 
 export interface SessionGrant {
   sessionToken: string;

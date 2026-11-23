@@ -19,14 +19,12 @@ export async function POST(request: NextRequest, ctx: RouteContext<"/[site]/api/
   if (!parsed.success) return NextResponse.json({ error: "invalid_request", message: "Enter the 6-digit code" }, { status: 400 });
 
   try {
-    const { email, code, name, phone } = parsed.data;
-    const grant = await verifySignInCode(
-      site,
-      email,
-      code,
-      { clientIp: ip, userAgent: request.headers.get("user-agent") ?? "", turnstileToken: null, idempotencyKey: crypto.randomUUID() },
-      { name, phone },
-    );
+    const body = parsed.data;
+    const ctx = { clientIp: ip, userAgent: request.headers.get("user-agent") ?? "", turnstileToken: null, idempotencyKey: crypto.randomUUID() };
+    const grant =
+      "mobile" in body
+        ? await verifySignInCode(site, { mobile: body.mobile }, body.code, ctx, { name: body.name, contactEmail: body.contactEmail })
+        : await verifySignInCode(site, { email: body.email }, body.code, ctx, { name: body.name, phone: body.phone });
     const res = NextResponse.json({ session: grant.session });
     res.cookies.set(SESSION_COOKIE, grant.sessionToken, sessionCookieOptions(new Date(grant.expiresAt)));
     return res;

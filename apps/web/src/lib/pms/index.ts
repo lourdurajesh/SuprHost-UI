@@ -19,6 +19,7 @@ import type {
   SearchQuery,
   SearchResult,
   SessionGrant,
+  SignInLogin,
   Site,
   TripSummary,
 } from "./types";
@@ -176,27 +177,29 @@ export async function searchListings(key: string, q: SearchQuery): Promise<Searc
 // ---- guest accounts: passwordless email codes; the PMS owns codes and sessions -------------
 
 /**
- * Asks the PMS to email a sign-in code. The code itself comes back only from the mock or from a
- * PMS deployment without an email provider that opts in for testing (refused in production).
+ * Asks the PMS to send a sign-in code by email or SMS. The code itself comes back only from the
+ * mock or from a PMS deployment without a provider that opts in for testing (refused in production).
  */
-export async function requestSignInCode(key: string, email: string, ctx: RequestContext): Promise<{ testModeCode: string | null }> {
-  if (useMock) return { testModeCode: await mock.requestCode(key, email) };
-  const res = await pmsFetch<{ testModeCode?: string }>(`/sites/${site(key)}/auth/code`, { method: "POST", body: { email }, headers: abuseHeaders(ctx) });
+export async function requestSignInCode(key: string, login: SignInLogin, ctx: RequestContext): Promise<{ testModeCode: string | null }> {
+  if (useMock) return { testModeCode: await mock.requestCode(key, loginKey(login)) };
+  const res = await pmsFetch<{ testModeCode?: string }>(`/sites/${site(key)}/auth/code`, { method: "POST", body: login, headers: abuseHeaders(ctx) });
   // Present only when the PMS has no email provider yet and is configured to expose codes (never in production).
   return { testModeCode: res.testModeCode ?? null };
 }
 
+const loginKey = (login: SignInLogin) => ("email" in login ? login.email : login.mobile);
+
 export async function verifySignInCode(
   key: string,
-  email: string,
+  login: SignInLogin,
   code: string,
   ctx: RequestContext,
-  details: { name?: string; phone?: string } = {},
+  details: { name?: string; phone?: string; contactEmail?: string } = {},
 ): Promise<SessionGrant> {
-  if (useMock) return mock.verifyCode(key, email, code, details);
+  if (useMock) return mock.verifyCode(key, loginKey(login), code, details);
   return pmsFetch<SessionGrant>(`/sites/${site(key)}/auth/verify`, {
     method: "POST",
-    body: { email, code, ...details },
+    body: { ...login, code, ...details },
     headers: abuseHeaders(ctx),
   });
 }

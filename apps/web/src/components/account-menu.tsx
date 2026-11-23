@@ -1,5 +1,6 @@
 "use client";
 
+import { maskMobile } from "@/lib/mobile";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import type { GuestSession } from "@/lib/pms/types";
@@ -80,13 +81,13 @@ export function AccountMenu() {
         className="flex min-h-11 min-w-11 items-center gap-2 rounded-full py-1.5 pl-2 pr-2 ring-1 ring-line hover:shadow-sm sm:pr-3"
       >
         <span className="flex h-7 w-7 items-center justify-center rounded-full bg-ink text-xs uppercase text-white">
-          {(session.name ?? session.email).charAt(0)}
+          {(session.name ?? session.email ?? "G").charAt(0)}
         </span>
         <span className="hidden text-sm sm:inline">{session.role === "host" ? "Host" : "Account"}</span>
       </button>
       {open && (
         <div role="menu" aria-label="Account" onKeyDown={onMenuKey} className="absolute right-0 mt-2 w-60 overflow-hidden rounded-2xl bg-white py-2 text-base shadow-xl ring-1 ring-line">
-          <p className="truncate px-4 pb-2 pt-1 text-xs text-ink-soft">{session.email}</p>
+          <p className="truncate px-4 pb-2 pt-1 text-xs text-ink-soft">{session.signedInWith === "phone" ? maskMobile(session.phone ?? "") : session.email}</p>
           <Link role="menuitem" href="/account" className="flex items-center gap-3 px-4 min-h-11 py-2.5 hover:bg-sand-deep focus-visible:bg-sand-deep">
             <Icon name="calendar" className="h-4 w-4" /> My trips
           </Link>

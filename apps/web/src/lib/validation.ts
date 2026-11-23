@@ -20,27 +20,43 @@ export const availabilityQuery = z
   .object({ listing: z.string().uuid(), from: isoDate, to: isoDate })
   .refine((v) => v.to > v.from && nightsBetween(v.from, v.to) <= 400, { message: "Invalid range" });
 
+// Typed with or without +91, spaces, dashes or a leading 0 ("098450 12345"); a bare 10-digit number is Indian.
 const phone = z
   .string()
   .trim()
-  .transform((s) => s.replace(/[\s()-]/g, ""))
-  .pipe(z.string().regex(/^\+?[1-9]\d{7,14}$/, "Enter a valid phone number with country code"));
+  .transform((s) => s.replace(/[\s()-]/g, "").replace(/^0(?=[6-9]\d{9}$)/, ""))
+  .pipe(z.string().regex(/^\+?[1-9]\d{7,14}$/, "Enter a valid mobile number"));
+
+/** A mobile number to send a sign-in code to: Indian, as +91XXXXXXXXXX. */
+const mobile = z
+  .string()
+  .trim()
+  .max(24)
+  .transform((s) => s.replace(/[\s()-]/g, "").replace(/^(?:\+91|0091|91(?=\d{10}$)|0)/, ""))
+  .pipe(z.string().regex(/^[6-9]\d{9}$/, "Enter a valid 10-digit mobile number"))
+  .transform((s) => `+91${s}`);
 
 const emailField = z.string().trim().toLowerCase().email("Enter a valid email").max(254);
 
-export const signInCodeBody = z
-  .object({ email: emailField, website: z.string().max(0).optional(), turnstileToken: z.string().max(2048).nullable() })
-  .strict();
+const antiSpam = { website: z.string().max(0).optional(), turnstileToken: z.string().max(2048).nullable() };
+
+/** A code by email, or by SMS to a mobile number. */
+export const signInCodeBody = z.union([
+  z.object({ email: emailField, ...antiSpam }).strict(),
+  z.object({ mobile, ...antiSpam }).strict(),
+]);
 
 /** Name and phone arrive when the code is confirmed at checkout: they create the guest's account. */
-export const signInVerifyBody = z
-  .object({
-    email: emailField,
-    code: z.string().regex(/^\d{6}$/, "Enter the 6-digit code"),
-    name: z.string().trim().min(2).max(100).optional(),
-    phone: phone.optional(),
-  })
-  .strict();
+const verifyDetails = {
+  code: z.string().regex(/^\d{6}$/, "Enter the 6-digit code"),
+  name: z.string().trim().min(2).max(100).optional(),
+};
+
+export const signInVerifyBody = z.union([
+  z.object({ email: emailField, ...verifyDetails, phone: phone.optional() }).strict(),
+  // Phone sign-in at checkout: the email typed there is where confirmations go.
+  z.object({ mobile, ...verifyDetails, contactEmail: emailField.optional() }).strict(),
+]);
 
 const csv = (v: unknown) => (typeof v === "string" && v ? v.split(",").filter(Boolean) : undefined);
 

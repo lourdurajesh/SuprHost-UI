@@ -4,6 +4,7 @@ import Script from "next/script";
 import { useEffect, useRef, useState } from "react";
 import type { GuestSession } from "@/lib/pms/types";
 import { Icon } from "./icons";
+import { MobileField, maskMobile, toMobile } from "./mobile-field";
 
 declare global {
   interface Window {
@@ -24,6 +25,8 @@ interface Props {
   holdMinutes: number;
   /** The signed-in guest, if any. Bookings always belong to one. */
   session: GuestSession | null;
+  /** The PMS can send SMS codes: new guests confirm their mobile number instead of their email. */
+  phoneSignIn?: boolean;
 }
 
 type Field = "name" | "email" | "phone" | "message" | "code" | "form";
@@ -36,9 +39,11 @@ interface Details {
 }
 
 // Step 1 of checkout. Booking needs a signed-in guest, and the details typed here are the account:
-// a new guest confirms their email with a 6-digit code, which signs them in and saves their name
-// and phone; a returning guest sees them prefilled. Then the booking holds the dates for payment.
-export function CheckoutForm({ listingId, checkIn, checkOut, guests, holdMinutes, session }: Props) {
+// a new guest confirms their mobile number (SMS code) or their email (email code), which signs them
+// in and saves their details; a returning guest sees them prefilled. Then the booking holds the
+// dates for payment.
+export function CheckoutForm({ listingId, checkIn, checkOut, guests, holdMinutes, session, phoneSignIn = false }: Props) {
+  const signedInByPhone = session?.signedInWith === "phone";
   const mountedAt = useRef(0);
   const widget = useRef<HTMLDivElement>(null);
   const widgetId = useRef<string | null>(null);
@@ -47,10 +52,14 @@ export function CheckoutForm({ listingId, checkIn, checkOut, guests, holdMinutes
   const [details, setDetails] = useState<Details>({
     name: session?.name ?? "",
     email: session?.email ?? "",
-    phone: session?.phone ?? "",
+    // A verified number shows as the 10 digits after the fixed +91.
+    phone: (signedInByPhone ? session?.phone?.replace(/^\+91/, "") : session?.phone) ?? "",
     message: "",
   });
   const [step, setStep] = useState<"details" | "code">("details");
+  // How a new guest confirms who they are. Fixed once signed in.
+  const [method, setMethod] = useState<"phone" | "email">(signedInByPhone || (!session && phoneSignIn) ? "phone" : "email");
+  const mobileMode = method === "phone";
   const [code, setCode] = useState("");
   const [testModeCode, setTestModeCode] = useState<string | null>(null);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
@@ -82,7 +91,8 @@ export function CheckoutForm({ listingId, checkIn, checkOut, guests, holdMinutes
     const found: FieldErrors = {};
     if (details.name.trim().length < 2) found.name = "Enter your full name";
     if (!/^\S+@\S+\.\S+$/.test(details.email.trim())) found.email = "Enter a valid email";
-    if (!/^\+?[1-9]\d{7,14}$/.test(details.phone.replace(/[\s()-]/g, ""))) found.phone = "Enter a valid phone number with country code";
+    if (mobileMode ? toMobile(details.phone) === null : !/^\+?[1-9]\d{7,14}$/.test(details.phone.replace(/[\s()-]/g, "").replace(/^0(?=[6-9]\d{9}$)/, "")))
+      found.phone = mobileMode ? "Enter a valid 10-digit mobile number" : "Enter a valid mobile number";
     return found;
   }
 
@@ -107,6 +117,7 @@ export function CheckoutForm({ listingId, checkIn, checkOut, guests, holdMinutes
           checkOut,
           guests,
           ...details,
+          phone: mobileMode ? (toMobile(details.phone) ?? details.phone) : details.phone,
           website,
           elapsedMs: Math.round(performance.now() - mountedAt.current),
           idempotencyKey,
@@ -123,7 +134,7 @@ export function CheckoutForm({ listingId, checkIn, checkOut, guests, holdMinutes
       if (res.status === 400 && body.fields) showErrors(body.fields);
       else if (res.status === 401) {
         setStep("details");
-        setErrors({ form: "Your sign-in has expired. Confirm your email again to continue." });
+        setErrors({ form: `Your sign-in has expired. Confirm your ${mobileMode ? "mobile number" : "email"} again to continue.` });
       } else if (res.status === 409) setErrors({ form: "Sorry, those dates were just booked. Please choose other dates." });
       else if (res.status === 422) setErrors({ form: body.message ?? "These details don't match this stay." });
       else if (res.status === 429) setErrors({ form: "Too many attempts. Please wait a few minutes and try again." });
@@ -134,25 +145,29 @@ export function CheckoutForm({ listingId, checkIn, checkOut, guests, holdMinutes
     setBusy(null);
   }
 
-  async function sendCode() {
+  async function sendCode(by: "phone" | "email" = method) {
     setBusy("code");
+    setMethod(by);
+    const login = by === "phone" ? { mobile: toMobile(details.phone) } : { email: details.email.trim() };
     const res = await fetch("/api/auth/code", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: details.email.trim(), website: "", turnstileToken }),
+      body: JSON.stringify({ ...login, website: "", turnstileToken }),
     }).catch(() => null);
     setBusy(null);
     window.turnstile?.reset(widgetId.current ?? undefined);
     setTurnstileToken(null);
 
+    const body = res ? await res.json().catch(() => ({})) : {};
     if (res?.status === 202) {
-      const body = await res.json().catch(() => ({}));
       setTestModeCode(typeof body.testModeCode === "string" ? body.testModeCode : null);
       setCode("");
+      setErrors({});
       setStep("code");
     } else if (res?.status === 429) setErrors({ form: "Too many attempts. Please wait a few minutes." });
-    else if (res?.status === 400) setErrors({ email: "Enter a valid email" });
-    else setErrors({ form: "We couldn't send a code just now. Please try again." });
+    else if (res?.status === 400) setErrors(by === "phone" ? { phone: "Enter a valid 10-digit mobile number" } : { email: "Enter a valid email" });
+    else if (res?.status === 422 && typeof body.message === "string") setErrors({ form: body.message });
+    else setErrors({ form: by === "phone" ? "We couldn't send the text message just now. Please try again." : "We couldn't send a code just now. Please try again." });
   }
 
   async function onDetails(e: React.FormEvent) {
@@ -173,7 +188,11 @@ export function CheckoutForm({ listingId, checkIn, checkOut, guests, holdMinutes
     const res = await fetch("/api/auth/verify", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: details.email.trim(), code, name: details.name.trim(), phone: details.phone }),
+      body: JSON.stringify(
+        mobileMode
+          ? { mobile: toMobile(details.phone), code, name: details.name.trim(), contactEmail: details.email.trim() }
+          : { email: details.email.trim(), code, name: details.name.trim(), phone: details.phone },
+      ),
     }).catch(() => null);
     if (!res?.ok) {
       setBusy(null);
@@ -203,15 +222,16 @@ export function CheckoutForm({ listingId, checkIn, checkOut, guests, holdMinutes
     return (
       <form onSubmit={onCode} noValidate className="space-y-5">
         <div>
-          <h3 className="text-h3">Confirm your email</h3>
+          <h3 className="text-h3">{mobileMode ? "Confirm your mobile number" : "Confirm your email"}</h3>
           <p className="mt-1 text-ink-soft">
-            We sent a 6-digit code to <span className="text-ink">{details.email}</span>. It expires in 10 minutes. Confirming creates your
-            account, so you can find this booking later.
+            We sent a 6-digit code {mobileMode ? "by SMS " : ""}to{" "}
+            <span className="text-ink">{mobileMode ? maskMobile(toMobile(details.phone) ?? "") : details.email}</span>. It expires in 10
+            minutes. Confirming creates your account, so you can find this booking later.
           </p>
         </div>
         {testModeCode && (
           <p className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-            <strong>Test mode:</strong> emails aren’t sent yet. Your code is{" "}
+            <strong>Test mode:</strong> {mobileMode ? "text messages" : "emails"} aren’t sent yet. Your code is{" "}
             <span className="font-mono text-base tracking-widest">{testModeCode}</span>
           </p>
         )}
@@ -243,10 +263,18 @@ export function CheckoutForm({ listingId, checkIn, checkOut, guests, holdMinutes
           <button type="button" onClick={() => { setStep("details"); setErrors({}); }} className="min-h-11 underline underline-offset-4">
             Edit details
           </button>
-          <button type="button" onClick={sendCode} disabled={Boolean(busy)} className="min-h-11 underline underline-offset-4">
+          <button type="button" onClick={() => sendCode()} disabled={Boolean(busy)} className="min-h-11 underline underline-offset-4">
             Resend code
           </button>
         </div>
+        {mobileMode && (
+          <p className="text-center text-sm text-ink-soft">
+            No SMS?{" "}
+            <button type="button" onClick={() => sendCode("email")} disabled={Boolean(busy)} className="min-h-11 text-ink underline underline-offset-4">
+              Get the code by email instead
+            </button>
+          </p>
+        )}
       </form>
     );
   }
@@ -259,7 +287,8 @@ export function CheckoutForm({ listingId, checkIn, checkOut, guests, holdMinutes
 
       {session && (
         <p className="flex items-center gap-2 text-sm text-ink-soft">
-          <Icon name="check" className="h-4 w-4 text-brand" /> Signed in as <span className="text-ink">{session.email}</span>
+          <Icon name="check" className="h-4 w-4 text-brand" /> Signed in as{" "}
+          <span className="text-ink">{signedInByPhone ? maskMobile(session.phone ?? "") : session.email}</span>
         </p>
       )}
 
@@ -296,32 +325,42 @@ export function CheckoutForm({ listingId, checkIn, checkOut, guests, holdMinutes
             placeholder="you@example.com"
             value={details.email}
             onChange={set("email")}
-            readOnly={Boolean(session)}
+            readOnly={Boolean(session) && !signedInByPhone}
             aria-invalid={Boolean(errors.email)}
             aria-describedby={errors.email ? "email-error" : undefined}
             className={input}
           />
           {error("email")}
         </div>
-        <div>
-          <label htmlFor="phone" className="text-sm font-medium">
-            Mobile number
-          </label>
-          <input
+        {mobileMode ? (
+          <MobileField
             id="phone"
-            type="tel"
-            autoComplete="tel"
-            required
-            maxLength={20}
-            placeholder="+91 98xxx xxxxx"
             value={details.phone}
-            onChange={set("phone")}
-            aria-invalid={Boolean(errors.phone)}
-            aria-describedby={errors.phone ? "phone-error" : undefined}
-            className={input}
+            onChange={(v) => setDetails((d) => ({ ...d, phone: v }))}
+            readOnly={signedInByPhone}
+            error={errors.phone}
           />
-          {error("phone")}
-        </div>
+        ) : (
+          <div>
+            <label htmlFor="phone" className="text-sm font-medium">
+              Mobile number
+            </label>
+            <input
+              id="phone"
+              type="tel"
+              autoComplete="tel"
+              required
+              maxLength={20}
+              placeholder="+91 98xxx xxxxx"
+              value={details.phone}
+              onChange={set("phone")}
+              aria-invalid={Boolean(errors.phone)}
+              aria-describedby={errors.phone ? "phone-error" : undefined}
+              className={input}
+            />
+            {error("phone")}
+          </div>
+        )}
       </div>
 
       <div>
@@ -357,8 +396,17 @@ export function CheckoutForm({ listingId, checkIn, checkOut, guests, holdMinutes
         <Icon name="lock" className="h-3.5 w-3.5" />
         {session
           ? `Your dates are held for ${holdMinutes} minutes while you pay.`
-          : "Next, we’ll email you a code to confirm it’s you. That creates your account."}
+          : mobileMode
+            ? "Next, we’ll text a code to your mobile to confirm it’s you. That creates your account."
+            : "Next, we’ll email you a code to confirm it’s you. That creates your account."}
       </p>
+      {!session && phoneSignIn && (
+        <p className="text-center text-sm">
+          <button type="button" onClick={() => { setMethod(mobileMode ? "email" : "phone"); setErrors({}); }} className="min-h-11 underline underline-offset-4">
+            {mobileMode ? "Confirm by email instead" : "Confirm by SMS instead"}
+          </button>
+        </p>
+      )}
     </form>
   );
 }

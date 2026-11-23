@@ -1,3 +1,4 @@
+import { maskMobile } from "@/lib/mobile";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -39,7 +40,7 @@ async function Trips({ params }: Pick<PageProps<"/[site]/account">, "params">) {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-h1">My trips</h1>
-          <p className="mt-2 text-ink-soft">Signed in as {session.email}</p>
+          <p className="mt-2 text-ink-soft">Signed in as {session.signedInWith === "phone" ? maskMobile(session.phone ?? "") : session.email}</p>
         </div>
         {session.role === "host" && session.pmsUrl && (
           <a href={session.pmsUrl} className="inline-flex items-center gap-2 rounded-full bg-brand px-6 py-3 text-white hover:brightness-125">
