@@ -602,10 +602,26 @@ export const mock = {
   search: async (key: string, q: SearchQuery): Promise<SearchResult> => {
     if (key !== site.key) return { hits: [], facets: { types: [], cities: [], amenities: [], price: { min: 0, max: 0 } } };
     const dated = q.checkIn && q.checkOut && q.checkOut > q.checkIn;
-    const nights = dated ? nightsBetween(q.checkIn!, q.checkOut!) : null;
+    // "I'm flexible": a stay length and months; each home answers with its first free window.
+    const flexNights = q.stay === "weekend" ? 2 : q.stay === "week" ? 7 : q.stay === "month" ? 28 : 0;
+    const windows: { checkIn: string; checkOut: string }[] = [];
+    if (!dated && flexNights && q.months?.length) {
+      for (const m of [...new Set(q.months)].sort().slice(0, 6)) {
+        for (let d = `${m}-01`; d.startsWith(m); d = addDays(d, 1)) {
+          if (d < today()) continue;
+          if (q.stay === "weekend" && new Date(`${d}T00:00:00Z`).getUTCDay() !== 5) continue;
+          windows.push({ checkIn: d, checkOut: addDays(d, flexNights) });
+        }
+      }
+    }
+    const nights = dated ? nightsBetween(q.checkIn!, q.checkOut!) : windows.length ? flexNights : null;
     let hits: SearchHit[] = listings.map((l) => {
       const summary = toSummary(l);
       const busy = [...seededBusy(summary.id, today()), ...heldRanges(summary.id)];
+      if (windows.length) {
+        const win = windows.find((w) => !overlapsBusy(w.checkIn, w.checkOut, busy));
+        return { ...summary, available: !!win, altCheckIn: win?.checkIn ?? null, altCheckOut: win?.checkOut ?? null, nights, total: nights! * summary.fromPrice };
+      }
       return {
         ...summary,
         available: dated ? !overlapsBusy(q.checkIn!, q.checkOut!, busy) : null,
@@ -618,6 +634,9 @@ export const mock = {
       (h) =>
         (!q.guests || h.maxGuests >= q.guests) &&
         (!q.bedrooms || (h.bedrooms ?? 0) >= q.bedrooms) &&
+        (!q.beds || (h.beds ?? 0) >= q.beds) &&
+        (!q.bathrooms || (h.bathrooms ?? 0) >= q.bathrooms) &&
+        (!q.instantBook || h.instantBook) &&
         (!q.minPrice || h.fromPrice >= q.minPrice) &&
         (!q.maxPrice || h.fromPrice <= q.maxPrice) &&
         (!q.types?.length || q.types.includes(h.propertyType)) &&

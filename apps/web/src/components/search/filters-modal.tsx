@@ -18,7 +18,7 @@ const TYPE_LABEL: Record<PropertyType, string> = {
 const TYPE_ICON: Record<PropertyType, string> = { cottage: "leaf", suite: "bed", villa: "home", home: "home", apartment: "grid" };
 
 /** Everything this modal edits; the rest of the query (dates, guests, place, sort) is left alone. */
-const FILTER_KEYS = ["minPrice", "maxPrice", "bedrooms", "types", "amenities", "city"] as const;
+const FILTER_KEYS = ["minPrice", "maxPrice", "bedrooms", "beds", "bathrooms", "instantBook", "types", "amenities", "city"] as const;
 
 interface Props {
   open: boolean;
@@ -178,7 +178,27 @@ function FiltersContent({ query, facets, prices, currency, onApply, close }: Omi
           <h3 className={h}>Rooms</h3>
           <div className="mt-2 divide-y divide-line">
             <CountRow title="Bedrooms" value={draft.bedrooms ?? 0} max={8} zeroLabel="Any" onChange={(n) => setDraft({ ...draft, bedrooms: n || undefined })} />
+            <CountRow title="Beds" value={draft.beds ?? 0} max={16} zeroLabel="Any" onChange={(n) => setDraft({ ...draft, beds: n || undefined })} />
+            <CountRow title="Bathrooms" value={draft.bathrooms ?? 0} max={8} zeroLabel="Any" onChange={(n) => setDraft({ ...draft, bathrooms: n || undefined })} />
           </div>
+        </section>
+
+        <section className={sectionClass}>
+          <h3 className={h}>Booking options</h3>
+          <label className="mt-4 flex cursor-pointer items-center justify-between gap-6">
+            <span>
+              Instant Book
+              <span className="block text-sm text-ink-soft">Homes you can book without waiting for the host to reply</span>
+            </span>
+            <input
+              type="checkbox"
+              role="switch"
+              checked={draft.instantBook ?? false}
+              onChange={(e) => setDraft({ ...draft, instantBook: e.target.checked || undefined })}
+              className="peer sr-only"
+            />
+            <span className="relative h-8 w-12 shrink-0 rounded-full bg-field transition peer-checked:bg-ink peer-focus-visible:ring-2 peer-focus-visible:ring-ink peer-focus-visible:ring-offset-2 after:absolute after:left-1 after:top-1 after:h-6 after:w-6 after:rounded-full after:bg-white after:transition peer-checked:after:translate-x-4" />
+          </label>
         </section>
 
         {others.length > 0 && (

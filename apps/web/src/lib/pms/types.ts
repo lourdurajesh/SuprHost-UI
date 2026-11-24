@@ -122,6 +122,10 @@ export interface SearchQuery {
   minPrice?: number;
   maxPrice?: number;
   bedrooms?: number;
+  beds?: number;
+  bathrooms?: number;
+  /** Only homes that confirm at once, without waiting for the host. */
+  instantBook?: boolean;
   types?: PropertyType[];
   amenities?: string[];
   city?: string;

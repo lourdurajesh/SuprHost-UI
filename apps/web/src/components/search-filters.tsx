@@ -46,6 +46,9 @@ export function SearchFilters({ query, facets, currency, count, timezone, prices
     (query.types?.length ?? 0) +
     (query.amenities?.length ?? 0) +
     (query.bedrooms ? 1 : 0) +
+    (query.beds ? 1 : 0) +
+    (query.bathrooms ? 1 : 0) +
+    (query.instantBook ? 1 : 0) +
     (query.minPrice || query.maxPrice ? 1 : 0);
 
   const pill = "focus-own min-h-11 shrink-0 rounded-full bg-white px-4 py-2.5 text-sm ring-1 ring-line outline-none focus-visible:ring-2 focus-visible:ring-ink";
@@ -55,6 +58,9 @@ export function SearchFilters({ query, facets, currency, count, timezone, prices
   const applied: { key: string; label: string; next: SearchQuery }[] = [
     ...(query.types ?? []).map((t) => ({ key: `type-${t}`, label: TYPE_LABEL[t], next: { ...query, types: query.types!.filter((x) => x !== t) } })),
     ...(query.bedrooms ? [{ key: "bedrooms", label: `${query.bedrooms}+ bedrooms`, next: { ...query, bedrooms: undefined } }] : []),
+    ...(query.beds ? [{ key: "beds", label: `${query.beds}+ beds`, next: { ...query, beds: undefined } }] : []),
+    ...(query.bathrooms ? [{ key: "bathrooms", label: `${query.bathrooms}+ bathrooms`, next: { ...query, bathrooms: undefined } }] : []),
+    ...(query.instantBook ? [{ key: "instant", label: "Instant Book", next: { ...query, instantBook: undefined } }] : []),
     ...(query.minPrice || query.maxPrice
       ? [
           {
@@ -96,7 +102,7 @@ export function SearchFilters({ query, facets, currency, count, timezone, prices
 
       <div className="mt-3 flex flex-wrap items-center gap-2">
         <p className="mr-2 text-sm text-ink" aria-live="polite">
-          {pending ? "Updating…" : `${count} stay${count === 1 ? "" : "s"}${query.checkIn && query.checkOut ? " available for your dates" : ""}`}
+          {pending ? "Updating…" : `${count} stay${count === 1 ? "" : "s"}${query.checkIn && query.checkOut ? " available for your dates" : query.stay && query.months?.length ? " with a free window" : ""}`}
         </p>
         {applied.map((f) => (
           <button
@@ -112,7 +118,7 @@ export function SearchFilters({ query, facets, currency, count, timezone, prices
         {applied.length > 1 && (
           <button
             type="button"
-            onClick={() => apply({ ...query, types: undefined, bedrooms: undefined, minPrice: undefined, maxPrice: undefined, amenities: undefined })}
+            onClick={() => apply({ ...query, types: undefined, bedrooms: undefined, beds: undefined, bathrooms: undefined, instantBook: undefined, minPrice: undefined, maxPrice: undefined, amenities: undefined })}
             className="min-h-9 px-1 text-sm underline underline-offset-4"
           >
             Clear filters
