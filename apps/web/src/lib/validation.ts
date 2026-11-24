@@ -73,6 +73,9 @@ export const searchParamsSchema = z.object({
   city: z.string().max(60).optional().catch(undefined),
   sort: z.enum(["recommended", "price_asc", "price_desc"]).optional().catch(undefined),
   flex: z.coerce.number().int().min(1).max(3).optional().catch(undefined),
+  stay: z.enum(["weekend", "week", "month"]).optional().catch(undefined),
+  months: z.preprocess(csv, z.array(z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/)).max(6)).optional().catch(undefined),
+  children: z.coerce.number().int().min(0).max(20).optional().catch(undefined),
   bounds: z
     .string()
     .regex(/^-?\d{1,3}(\.\d{1,6})?(,-?\d{1,3}(\.\d{1,6})?){3}$/)

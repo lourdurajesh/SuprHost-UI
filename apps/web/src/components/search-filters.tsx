@@ -1,12 +1,14 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { useRef, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import type { PropertyType, SearchQuery, SearchResult } from "@/lib/pms/types";
 import { formatMoney } from "@/lib/dates";
-import { DateRangeField } from "./date-range-field";
+import { toSearchString } from "@/lib/search-query";
 import { Dropdown } from "./dropdown";
 import { Icon } from "./icons";
+import { FiltersModal } from "./search/filters-modal";
+import { SearchBar } from "./search/search-bar";
 
 const TYPE_LABEL: Record<PropertyType, string> = {
   cottage: "Cottages",
@@ -16,70 +18,53 @@ const TYPE_LABEL: Record<PropertyType, string> = {
   apartment: "Apartments",
 };
 
-export function toSearchString(q: SearchQuery): string {
-  const p = new URLSearchParams();
-  for (const [k, v] of Object.entries(q)) {
-    if (v === undefined || v === "" || v === null || (Array.isArray(v) && v.length === 0)) continue;
-    p.set(k, Array.isArray(v) ? v.join(",") : String(v));
-  }
-  const s = p.toString();
-  return s ? `?${s}` : "";
-}
+export { toSearchString };
 
 interface Props {
   query: SearchQuery;
   facets: SearchResult["facets"];
   currency: string;
   count: number;
+  timezone: string;
+  /** Every home's nightly price, for the price histogram in the filters. */
+  prices: number[];
 }
 
-// Search state lives in the URL (shareable, back-button friendly). Dates, guests and sort apply
-// at once; the filter panel applies on "Show stays".
-export function SearchFilters({ query, facets, currency, count }: Props) {
+// Search state lives in the URL (shareable, back-button friendly). The search bar and the filters each
+// apply in one go ("Search" / "Show N stays"); sort applies at once.
+export function SearchFilters({ query, facets, currency, count, timezone, prices }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const [pending, startTransition] = useTransition();
-  const dialog = useRef<HTMLDialogElement>(null);
-  const [draft, setDraft] = useState<SearchQuery>(query);
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   function apply(next: SearchQuery) {
     startTransition(() => router.replace(`${pathname}${toSearchString(next)}`, { scroll: false }));
-  }
-
-  function toggle<T extends string>(list: T[] | undefined, value: T): T[] {
-    const set = new Set(list ?? []);
-    if (set.has(value)) set.delete(value);
-    else set.add(value);
-    return [...set];
   }
 
   const activeFilters =
     (query.types?.length ?? 0) +
     (query.amenities?.length ?? 0) +
     (query.bedrooms ? 1 : 0) +
-    (query.minPrice || query.maxPrice ? 1 : 0) +
-    (query.city ? 1 : 0);
+    (query.minPrice || query.maxPrice ? 1 : 0);
 
-  const field = "focus-own min-h-11 shrink-0 rounded-full bg-white px-4 py-2.5 text-sm ring-1 ring-line outline-none focus-visible:ring-2 focus-visible:ring-ink";
-  // Dropdown pills: same look plus a chevron inset from the rounded edge.
-  const dropdown = `${field} select-chevron [--select-inset:1rem]`;
-  const chip = (on: boolean) =>
-    `focus-own min-h-11 rounded-full px-4 py-2 text-sm ring-1 transition focus-visible:ring-2 focus-visible:ring-ink ${on ? "bg-ink text-white ring-ink" : "bg-white ring-line hover:ring-ink-soft"}`;
+  const pill = "focus-own min-h-11 shrink-0 rounded-full bg-white px-4 py-2.5 text-sm ring-1 ring-line outline-none focus-visible:ring-2 focus-visible:ring-ink";
+  const dropdown = `${pill} select-chevron [--select-inset:1rem]`;
 
   // Applied filters as removable chips, so guests can see and undo what narrows the list.
   const applied: { key: string; label: string; next: SearchQuery }[] = [
-    ...(query.city ? [{ key: "city", label: query.city, next: { ...query, city: undefined } }] : []),
     ...(query.types ?? []).map((t) => ({ key: `type-${t}`, label: TYPE_LABEL[t], next: { ...query, types: query.types!.filter((x) => x !== t) } })),
     ...(query.bedrooms ? [{ key: "bedrooms", label: `${query.bedrooms}+ bedrooms`, next: { ...query, bedrooms: undefined } }] : []),
     ...(query.minPrice || query.maxPrice
       ? [
           {
             key: "price",
-            label: query.minPrice && query.maxPrice
-              ? `${formatMoney(query.minPrice, currency)} – ${formatMoney(query.maxPrice, currency)} / night`
-              : query.minPrice
-                ? `From ${formatMoney(query.minPrice, currency)} / night`
-                : `Up to ${formatMoney(query.maxPrice!, currency)} / night`,
+            label:
+              query.minPrice && query.maxPrice
+                ? `${formatMoney(query.minPrice, currency)} – ${formatMoney(query.maxPrice, currency)} / night`
+                : query.minPrice
+                  ? `From ${formatMoney(query.minPrice, currency)} / night`
+                  : `Up to ${formatMoney(query.maxPrice!, currency)} / night`,
             next: { ...query, minPrice: undefined, maxPrice: undefined },
           },
         ]
@@ -89,173 +74,26 @@ export function SearchFilters({ query, facets, currency, count }: Props) {
 
   return (
     <div aria-busy={pending}>
-    <div className="no-scrollbar -mx-4 flex items-center gap-2 overflow-x-auto px-4 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
-      <DateRangeField
-        checkIn={query.checkIn ?? null}
-        checkOut={query.checkOut ?? null}
-        onChange={(ci, co) => apply({ ...query, checkIn: ci ?? undefined, checkOut: co ?? undefined, flex: ci ? query.flex : undefined })}
-      />
-      {query.checkIn && query.checkOut && (
-        <Dropdown
-          aria-label="Date flexibility"
-          value={String(query.flex ?? "")}
-          onChange={(v) => apply({ ...query, flex: v ? Number(v) : undefined })}
-          options={[{ value: "", label: "Exact dates" }, ...[1, 2, 3].map((d) => ({ value: String(d), label: `± ${d} day${d === 1 ? "" : "s"}` }))]}
-          className={dropdown}
-        />
-      )}
-      <Dropdown
-        aria-label="Guests"
-        value={String(query.guests ?? "")}
-        onChange={(v) => apply({ ...query, guests: v ? Number(v) : undefined })}
-        options={[{ value: "", label: "Any guests" }, ...Array.from({ length: 12 }, (_, i) => ({ value: String(i + 1), label: `${i + 1}+ guest${i === 0 ? "" : "s"}` }))]}
-        className={dropdown}
-      />
-      <button
-        type="button"
-        onClick={() => {
-          setDraft(query);
-          dialog.current?.showModal();
-        }}
-        className={`${field} inline-flex items-center gap-2`}
-      >
-        <Icon name="grid" className="h-4 w-4" /> Filters
-        {activeFilters > 0 && <span className="rounded-full bg-ink px-2 text-xs text-white">{activeFilters}</span>}
-      </button>
-      <Dropdown
-        aria-label="Sort"
-        value={query.sort ?? "recommended"}
-        onChange={(v) => apply({ ...query, sort: v as SearchQuery["sort"] })}
-        options={[
-          { value: "recommended", label: "Recommended" },
-          { value: "price_asc", label: "Price: low to high" },
-          { value: "price_desc", label: "Price: high to low" },
-        ]}
-        className={`${dropdown} ml-auto`}
-      />
-
-      <dialog
-        ref={dialog}
-        aria-label="Filters"
-        className="m-auto w-[min(640px,calc(100vw-2rem))] max-w-none rounded-2xl bg-white p-0 text-ink backdrop:bg-black/40 max-sm:mb-0 max-sm:w-full max-sm:rounded-b-none"
-        onClick={(e) => e.target === dialog.current && dialog.current.close()}
-      >
-        <div className="flex items-center justify-between border-b border-line px-6 py-4">
-          <p className="text-lg">Filters</p>
-          <button type="button" onClick={() => dialog.current?.close()} aria-label="Close filters" className="grid h-11 w-11 place-items-center rounded-full hover:bg-sand-deep">
-            <Icon name="close" />
-          </button>
-        </div>
-        <div className="max-h-[65vh] space-y-8 overflow-y-auto px-6 py-6">
-          <section>
-            <h3 className="text-base">Price per night</h3>
-            <p className="mt-1 text-sm text-ink-soft">
-              Our stays range from {formatMoney(facets.price.min, currency)} to {formatMoney(facets.price.max, currency)}.
-            </p>
-            <div className="mt-4 grid grid-cols-2 gap-3">
-              {(["minPrice", "maxPrice"] as const).map((k) => (
-                <label key={k} className="rounded-xl px-4 py-2 ring-1 ring-field focus-within:ring-2 focus-within:ring-ink">
-                  <span className="block text-xs text-ink-soft">{k === "minPrice" ? "Minimum" : "Maximum"}</span>
-                  <input
-                    type="number"
-                    inputMode="numeric"
-                    min={0}
-                    step={500}
-                    value={draft[k] ?? ""}
-                    placeholder={String(k === "minPrice" ? facets.price.min : facets.price.max)}
-                    onChange={(e) => setDraft({ ...draft, [k]: e.target.value ? Number(e.target.value) : undefined })}
-                    className="w-full bg-transparent outline-none"
-                  />
-                </label>
-              ))}
-            </div>
-          </section>
-
-          {facets.cities.length > 1 && (
-            <section>
-              <h3 className="text-base">Location</h3>
-              <div className="mt-3 flex flex-wrap gap-2">
-                <button type="button" aria-pressed={!draft.city} className={chip(!draft.city)} onClick={() => setDraft({ ...draft, city: undefined })}>
-                  Anywhere
-                </button>
-                {facets.cities.map((c) => (
-                  <button key={c.value} type="button" aria-pressed={draft.city === c.value} className={chip(draft.city === c.value)} onClick={() => setDraft({ ...draft, city: c.value })}>
-                    {c.value} <span className="opacity-80">· {c.count}</span>
-                  </button>
-                ))}
-              </div>
-            </section>
-          )}
-
-          <section>
-            <h3 className="text-base">Type of place</h3>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {facets.types.map((t) => (
-                <button
-                  key={t.value}
-                  type="button"
-                  aria-pressed={draft.types?.includes(t.value) ?? false}
-                  className={chip(draft.types?.includes(t.value) ?? false)}
-                  onClick={() => setDraft({ ...draft, types: toggle(draft.types, t.value) })}
-                >
-                  {TYPE_LABEL[t.value]} <span className="opacity-80">· {t.count}</span>
-                </button>
-              ))}
-            </div>
-          </section>
-
-          <section>
-            <h3 className="text-base">Bedrooms</h3>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {[undefined, 1, 2, 3, 4, 5].map((n) => (
-                <button key={n ?? "any"} type="button" aria-pressed={draft.bedrooms === n} className={chip(draft.bedrooms === n)} onClick={() => setDraft({ ...draft, bedrooms: n })}>
-                  {n ? `${n}+` : "Any"}
-                </button>
-              ))}
-            </div>
-          </section>
-
-          <section>
-            <h3 className="text-base">Amenities</h3>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {facets.amenities.map((a) => (
-                <button
-                  key={a}
-                  type="button"
-                  aria-pressed={draft.amenities?.includes(a) ?? false}
-                  className={chip(draft.amenities?.includes(a) ?? false)}
-                  onClick={() => setDraft({ ...draft, amenities: toggle(draft.amenities, a) })}
-                >
-                  {a}
-                </button>
-              ))}
-            </div>
-          </section>
-        </div>
-        <div className="flex items-center justify-between border-t border-line px-6 py-4">
+      {/* The compact search bar stays here at the top; Filters sits beside it. */}
+      <div className="flex items-center gap-3 sm:grid sm:grid-cols-[1fr_auto_1fr]">
+        <span className="hidden sm:block" />
+        <SearchBar query={query} places={facets.cities} timezone={timezone} onApply={apply} />
+        <div className="flex sm:justify-end">
           <button
             type="button"
-            className="text-sm underline underline-offset-4"
-            onClick={() =>
-              setDraft({ checkIn: query.checkIn, checkOut: query.checkOut, guests: query.guests, sort: query.sort })
-            }
+            onClick={() => setFiltersOpen(true)}
+            aria-label={activeFilters ? `Filters, ${activeFilters} applied` : "Filters"}
+            className={`${pill} inline-flex items-center gap-2 max-sm:h-11 max-sm:w-11 max-sm:justify-center max-sm:px-0`}
           >
-            Clear all
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              dialog.current?.close();
-              apply(draft);
-            }}
-            className="rounded-full bg-brand px-6 py-3 text-white hover:brightness-125"
-          >
-            Show stays
+            <Icon name="sliders" className="h-4 w-4" />
+            <span className="max-sm:hidden">Filters</span>
+            {activeFilters > 0 && <span className="rounded-full bg-ink px-2 text-xs text-white max-sm:hidden">{activeFilters}</span>}
           </button>
         </div>
-      </dialog>
+      </div>
 
-    </div>
+      <FiltersModal open={filtersOpen} onClose={() => setFiltersOpen(false)} query={query} facets={facets} prices={prices} currency={currency} onApply={apply} />
+
       <div className="mt-3 flex flex-wrap items-center gap-2">
         <p className="mr-2 text-sm text-ink" aria-live="polite">
           {pending ? "Updating…" : `${count} stay${count === 1 ? "" : "s"}${query.checkIn && query.checkOut ? " available for your dates" : ""}`}
@@ -274,12 +112,23 @@ export function SearchFilters({ query, facets, currency, count }: Props) {
         {applied.length > 1 && (
           <button
             type="button"
-            onClick={() => apply({ checkIn: query.checkIn, checkOut: query.checkOut, guests: query.guests, sort: query.sort, flex: query.flex })}
+            onClick={() => apply({ ...query, types: undefined, bedrooms: undefined, minPrice: undefined, maxPrice: undefined, amenities: undefined })}
             className="min-h-9 px-1 text-sm underline underline-offset-4"
           >
             Clear filters
           </button>
         )}
+        <Dropdown
+          aria-label="Sort"
+          value={query.sort ?? "recommended"}
+          onChange={(v) => apply({ ...query, sort: v as SearchQuery["sort"] })}
+          options={[
+            { value: "recommended", label: "Recommended" },
+            { value: "price_asc", label: "Price: low to high" },
+            { value: "price_desc", label: "Price: high to low" },
+          ]}
+          className={`${dropdown} ml-auto`}
+        />
       </div>
     </div>
   );

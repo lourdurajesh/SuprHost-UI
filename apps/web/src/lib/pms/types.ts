@@ -113,6 +113,8 @@ export interface Listing extends ListingSummary {
 
 export type SearchSort = "recommended" | "price_asc" | "price_desc";
 
+export type StayLength = "weekend" | "week" | "month";
+
 export interface SearchQuery {
   checkIn?: string;
   checkOut?: string;
@@ -126,6 +128,11 @@ export interface SearchQuery {
   sort?: SearchSort;
   /** Flexible dates: also match stays free up to this many days earlier or later (1–3). */
   flex?: number;
+  /** "I'm flexible": how long to stay and in which months (yyyy-MM); each home answers with its first free window. */
+  stay?: StayLength;
+  months?: string[];
+  /** Of the guests, how many are children (for showing the split again; the search itself uses `guests`). */
+  children?: number;
   /** "south,west,north,east": only stays with a pin inside the visible map area. */
   bounds?: string;
 }

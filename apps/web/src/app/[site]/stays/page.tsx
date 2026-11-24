@@ -35,12 +35,14 @@ async function StaysContent({ params, searchParams }: Pick<PageProps<"/[site]/st
   const [site, result] = await Promise.all([getSite(key), searchListings(key, query)]);
   if (!site) return null;
   // A party bigger than any one home finds no results: offer homes that sleep them together.
-  const groups = query.guests && result.hits.length === 0 ? groupSuggestions(await getListings(key), query.guests) : [];
+  const allListings = await getListings(key);
+  const prices = allListings.map((l) => l.fromPrice);
+  const groups = query.guests && result.hits.length === 0 ? groupSuggestions(allListings, query.guests) : [];
 
   return (
     <>
       <div className="sticky top-[76px] z-30 -mx-4 mt-4 border-b border-line bg-white/95 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
-        <SearchFilters key={JSON.stringify(query)} query={query} facets={result.facets} currency={site.currency} count={result.hits.length} />
+        <SearchFilters key={JSON.stringify(query)} query={query} facets={result.facets} currency={site.currency} count={result.hits.length} timezone={site.timezone} prices={prices} />
       </div>
       <div className="mt-6">
         <RecentlyViewed currency={site.currency} />
