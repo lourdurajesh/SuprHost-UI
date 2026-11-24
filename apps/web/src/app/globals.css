@@ -5,6 +5,7 @@
    charcoal ink, one sans-serif in a light weight, pill-shaped controls. */
 :root {
   --brand: #3d3a3a;
+  --brand-2: #2a2828;
   --accent: #3f746a;
   --sand: #ffffff;
   --sand-deep: #f5f3f0;
@@ -20,14 +21,14 @@
 @theme {
   --text-display: clamp(2.5rem, 1.6rem + 3.6vw, 4.5rem);
   --text-display--line-height: 1.05;
-  --text-h1: clamp(2rem, 1.55rem + 1.8vw, 3rem);
-  --text-h1--line-height: 1.1;
-  --text-h2: clamp(1.5rem, 1.3rem + 0.8vw, 2rem);
-  --text-h2--line-height: 1.2;
-  --text-h3: 1.25rem;
+  --text-h1: clamp(1.5rem, 1.4rem + 0.5vw, 1.75rem);
+  --text-h1--line-height: 1.2;
+  --text-h2: 1.375rem;
+  --text-h2--line-height: 1.25;
+  --text-h3: 1.125rem;
   --text-h3--line-height: 1.35;
-  --text-lead: 1.125rem;
-  --text-lead--line-height: 1.65;
+  --text-lead: 1rem;
+  --text-lead--line-height: 1.5;
   --text-eyebrow: 0.75rem;
   --text-eyebrow--line-height: 1.4;
   --text-eyebrow--letter-spacing: 0.12em;
@@ -58,12 +59,18 @@ body {
   color: var(--ink);
 }
 
-/* Headings stay light, as in the theme's editorial look. */
+/* Headings: medium weight and modest sizes; the photos do the talking. */
 h1,
 h2,
 h3 {
-  font-weight: 400;
-  letter-spacing: -0.015em;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+/* Buttons on the brand colour run into its darker neighbour. */
+a.bg-brand,
+button.bg-brand {
+  background-image: linear-gradient(90deg, var(--brand), var(--brand-2));
 }
 
 :focus-visible {
@@ -257,29 +264,9 @@ body:has([data-stays-page]:not([style*="display: none"], [style*="display: none"
 }
 
 /* The results page: list on the left, map on the right. The map fills the window under the 76px header
-   and stays there. Photos take what is left of the window after the header, the toolbar row and two
-   rows of card text, halved, so four cards always show on landing. */
-.stays-layout {
-  --bar: 76px;
-  --card-text: 6.25rem;
-  --fixed: calc(var(--bar) + 4.75rem + 1.25rem);
-}
-.stays-layout:has(.has-alt-dates) {
-  --card-text: 7.5rem;
-}
-.stay-photo {
-  height: clamp(6.5rem, calc((100dvh - var(--fixed) - 2 * var(--card-text)) / 2), 18.5rem);
-}
+   and stays there. Photos are square. */
 .stays-map {
   height: 70svh;
-}
-@media (max-width: 639.98px) {
-  .stays-layout {
-    --bar: 140px; /* brand row and search row */
-  }
-  .stay-photo {
-    max-height: 10rem;
-  }
 }
 @media (min-width: 1024px) {
   .stays-layout {
@@ -300,6 +287,11 @@ body:has([data-stays-page]:not([style*="display: none"], [style*="display: none"
     width: calc((min(var(--page), 1440px) - 4rem - 1.5rem) / 2.25);
     height: calc(100dvh - 100px);
   }
+}
+
+/* A stay page: the header scrolls away and the section bar takes its place. */
+body:has([data-listing-page]:not([style*="display: none"], [style*="display: none"] *)) .site-header {
+  position: relative;
 }
 
 .no-scrollbar {

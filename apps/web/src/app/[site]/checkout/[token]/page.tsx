@@ -79,7 +79,7 @@ function Gone({ message, href = "/#stays" }: { message: string; href?: string })
   return (
     <div className="mt-8 rounded-2xl border border-line p-6 sm:p-8">
       <p>{message}</p>
-      <Link href={href} className="mt-5 inline-flex rounded-full bg-brand px-6 py-3 font-medium text-white">
+      <Link href={href} className="mt-5 inline-flex rounded-xl bg-brand px-6 py-3 font-medium text-white">
         Choose dates again
       </Link>
     </div>

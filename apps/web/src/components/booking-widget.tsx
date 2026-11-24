@@ -2,9 +2,12 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useSyncExternalStore } from "react";
+import { createPortal } from "react-dom";
 import type { Availability, Quote } from "@/lib/pms/types";
 import { addDays, formatDate, formatMoney, isIsoDate, minNightsOn, nightsBetween, todayIn } from "@/lib/dates";
+import { useCalendarSlot } from "./calendar-slot";
 import { DatesDialog, shortRange } from "./date-range-field";
+import { DateRangePicker } from "./date-range-picker";
 import { GuestStepper } from "./guest-stepper";
 import { PriceBreakdown } from "./price-breakdown";
 import { trackFunnel } from "./track";
@@ -13,6 +16,7 @@ const noSubscribe = () => () => {};
 
 interface Props {
   listingId: string;
+  city: string;
   maxGuests: number;
   minNights: number;
   /** GST is added to the nightly price at checkout. */
@@ -29,9 +33,10 @@ interface Props {
 // else on the page is prerendered. Compact on purpose — dates open in a dialog — so the panel fits
 // the viewport and Reserve is always in view. Below lg the panel sits in the page and a fixed bar
 // at the bottom carries the price and the next action.
-export function BookingWidget({ listingId, maxGuests, minNights: listingMinNights, maxNights, fromPrice, currency, timezone, pricesAddGst, askHost }: Props) {
+export function BookingWidget({ listingId, city, maxGuests, minNights: listingMinNights, maxNights, fromPrice, currency, timezone, pricesAddGst, askHost }: Props) {
   const router = useRouter();
   const [datesOpen, setDatesOpen] = useState(false);
+  const calendarSlot = useCalendarSlot(listingId);
   // "Today" is read in the browser only (null on the server), never baked into the prerendered page.
   const today = useSyncExternalStore(
     noSubscribe,
@@ -130,27 +135,27 @@ export function BookingWidget({ listingId, maxGuests, minNights: listingMinNight
 
   return (
     <>
-      <div className="rounded-2xl border border-line bg-white p-5 shadow-[0_16px_40px_-24px_rgba(31,27,22,0.35)] sm:p-6">
+      <div className="rounded-2xl border border-line bg-white p-5 shadow-[0_6px_20px_rgba(0,0,0,0.12)] sm:p-6">
         <p>
           {quote ? (
             <>
-              <span className="text-h3">{formatMoney(quote.total, quote.currency)}</span>
+              <span className="text-h2 font-medium underline underline-offset-4">{formatMoney(quote.total, quote.currency)}</span>
               <span className="text-ink-soft"> for {nights} night{nights === 1 ? "" : "s"}</span>
             </>
           ) : (
             <>
               <span className="text-ink-soft">From </span>
-              <span className="text-h3">{formatMoney(fromPrice, currency)}</span>
+              <span className="text-h2 font-medium">{formatMoney(fromPrice, currency)}</span>
               <span className="text-ink-soft"> / night{pricesAddGst ? " + GST" : ""}</span>
             </>
           )}
         </p>
 
-        <div className="mt-4 overflow-hidden rounded-xl border border-line has-[[aria-expanded=true]]:rounded-b-none">
+        <div className="mt-5 overflow-hidden rounded-xl border border-field has-[[aria-expanded=true]]:rounded-b-none">
           <button
             type="button"
             onClick={() => setDatesOpen(true)}
-            className="grid w-full grid-cols-2 divide-x divide-line text-sm hover:bg-sand-deep/50"
+            className="grid w-full grid-cols-2 divide-x divide-field text-sm hover:bg-sand-deep/50"
             aria-label={checkIn && checkOut ? `Dates: ${formatDate(checkIn)} to ${formatDate(checkOut)}. Change dates` : "Add dates"}
           >
             <span className={field}>
@@ -162,7 +167,7 @@ export function BookingWidget({ listingId, maxGuests, minNights: listingMinNight
               <span className={checkOut ? "" : "text-ink-soft"}>{checkOut ? formatDate(checkOut) : "Add date"}</span>
             </span>
           </button>
-          <div className={`${field} border-t border-line`}>
+          <div className={`${field} border-t border-field`}>
             <span className="text-eyebrow text-ink-soft">Guests</span>
             <GuestStepper value={guests} onChange={setGuests} max={maxGuests} className="mt-1" />
           </div>
@@ -180,7 +185,7 @@ export function BookingWidget({ listingId, maxGuests, minNights: listingMinNight
           type="button"
           onClick={reserve}
           disabled={Boolean(checkIn && checkOut && !quote && !quoteError && !tooShort)}
-          className="mt-4 min-h-12 w-full rounded-full bg-brand px-6 py-3 font-medium text-white transition hover:brightness-110 disabled:opacity-60"
+          className="mt-4 min-h-12 w-full rounded-xl bg-brand px-6 py-3 font-medium text-white transition hover:brightness-110 disabled:opacity-60"
         >
           {action}
         </button>
@@ -229,12 +234,32 @@ export function BookingWidget({ listingId, maxGuests, minNights: listingMinNight
             type="button"
             onClick={reserve}
             disabled={Boolean(checkIn && checkOut && !quote && !quoteError && !tooShort)}
-            className="min-h-12 shrink-0 rounded-full bg-brand px-6 py-3 font-medium text-white disabled:opacity-60"
+            className="min-h-12 shrink-0 rounded-xl bg-brand px-6 py-3 font-medium text-white disabled:opacity-60"
           >
             {ready ? "Reserve" : checkIn && checkOut && !quoteError && !tooShort ? "Checking…" : "Check dates"}
           </button>
         </div>
       </div>
+
+      {calendarSlot &&
+        today &&
+        createPortal(
+          <>
+            <h2 className="text-h2">{nights > 0 ? `${nights} night${nights === 1 ? "" : "s"} in ${city}` : checkIn ? "Select check-out date" : "Select check-in date"}</h2>
+            <p className="mt-1 text-sm text-ink-soft">
+              {checkIn && checkOut ? `${formatDate(checkIn)} – ${formatDate(checkOut)}` : "Add your travel dates for exact prices"}
+            </p>
+            <div className="mt-6">
+              <DateRangePicker today={today} busy={busy} checkIn={checkIn} checkOut={checkOut} minNights={listingMinNights} maxNights={maxNights} rules={rules} onChange={onDates} />
+            </div>
+            <div className="mt-4 flex justify-end">
+              <button type="button" onClick={() => onDates(null, null)} disabled={!checkIn} className="min-h-11 rounded-lg px-2 text-sm font-medium underline underline-offset-4 disabled:text-field disabled:no-underline">
+                Clear dates
+              </button>
+            </div>
+          </>,
+          calendarSlot,
+        )}
 
       <DatesDialog
         open={datesOpen}

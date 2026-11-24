@@ -216,7 +216,7 @@ export function CheckoutForm({ listingId, checkIn, checkOut, guests, holdMinutes
     </p>
   );
   const primary =
-    "group flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-brand px-6 py-3.5 font-medium text-white transition hover:brightness-110 disabled:opacity-50";
+    "group flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-brand px-6 py-3.5 font-medium text-white transition hover:brightness-110 disabled:opacity-50";
 
   if (step === "code") {
     return (

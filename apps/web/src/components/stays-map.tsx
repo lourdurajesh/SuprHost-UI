@@ -87,13 +87,15 @@ export function StaysMap({ pins, activeId, onPinHover, className = "", approxima
         map.current = m;
 
         if (approximate && pins[0]) {
+          // Map layers take real colours, not CSS variables.
+          const tint = getComputedStyle(container).getPropertyValue("--brand").trim() || "#222222";
           m.on("load", () => {
             m.addSource("area", { type: "geojson", data: { type: "Point", coordinates: [pins[0].lng, pins[0].lat] } });
             m.addLayer({
               id: "area",
               type: "circle",
               source: "area",
-              paint: { "circle-radius": 60, "circle-color": "#3d3a3a", "circle-opacity": 0.15, "circle-stroke-color": "#3d3a3a", "circle-stroke-width": 1.5 },
+              paint: { "circle-radius": 60, "circle-color": tint, "circle-opacity": 0.15, "circle-stroke-color": tint, "circle-stroke-width": 1.5 },
             });
           });
           return;
@@ -103,7 +105,7 @@ export function StaysMap({ pins, activeId, onPinHover, className = "", approxima
           const node = document.createElement(p.href ? "a" : "div");
           if (p.href) (node as HTMLAnchorElement).href = p.href;
           node.className =
-            "block rounded-full bg-white px-3 py-1.5 text-sm font-medium text-[#3d3a3a] shadow-[0_2px_10px_rgba(0,0,0,0.18)] ring-1 ring-black/5 transition-transform hover:scale-110";
+            "block rounded-full bg-white px-3 py-1.5 text-sm font-medium text-ink shadow-[0_2px_10px_rgba(0,0,0,0.18)] ring-1 ring-black/5 transition-transform hover:scale-110";
           node.textContent = p.label;
           if (p.title) node.title = p.title;
           if (p.title && p.href) node.setAttribute("aria-label", `${p.title}, ${p.label}`);
@@ -144,7 +146,7 @@ export function StaysMap({ pins, activeId, onPinHover, className = "", approxima
   useEffect(() => {
     markers.current.forEach(({ node }, id) => {
       const on = id === activeId;
-      node.style.background = on ? "#3d3a3a" : "";
+      node.style.background = on ? "var(--ink)" : "";
       node.style.color = on ? "#fff" : "";
       node.style.zIndex = on ? "2" : "";
     });

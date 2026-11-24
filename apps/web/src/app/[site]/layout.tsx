@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { getListings, getSite } from "@/lib/pms";
 import { allSiteKeys } from "@/lib/sites";
-import { readable } from "@/lib/colors";
+import { lockedPalette, paletteCss, sitePalette } from "@/lib/palettes";
 import { ChatLauncher } from "@/components/chat-launcher";
 import { SiteFooter, SiteHeader } from "@/themes/escape/chrome";
 
@@ -55,13 +55,14 @@ async function Header({ params }: { params: SiteParams }) {
   const [site, listings] = await Promise.all([getSite(key), getListings(key)]);
   if (!site) notFound();
   const places = [...new Set(listings.map((l) => l.city))].sort().map((value) => ({ value, count: listings.filter((l) => l.city === value).length }));
-  // Brand colours come from the PMS (validated there); only plain hex values reach the stylesheet,
-  // darkened if needed so white text on brand and accent text on sand stay at 4.5:1 (WCAG AA).
-  const primary = readable(site.colors.primary, "#3d3a3a", "#ffffff");
-  const accent = readable(site.colors.accent, "#4e8e82", "#f5f3f0");
+  // The locked palette, else one made from the PMS's colours (see lib/palettes).
+  const palette = sitePalette(key, site.colors);
+  // Imported in development only, so its code never reaches a production build.
+  const PaletteLab = process.env.NODE_ENV === "development" ? (await import("@/components/dev/palette-lab")).PaletteLab : null;
   return (
     <>
-      <style>{`:root{--brand:${primary};--accent:${accent}}`}</style>
+      <style>{paletteCss(palette)}</style>
+      {PaletteLab && <PaletteLab locked={lockedPalette(key)?.id ?? null} />}
       <SiteHeader site={site} places={places} />
     </>
   );

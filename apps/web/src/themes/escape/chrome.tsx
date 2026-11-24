@@ -4,6 +4,7 @@ import { AccountMenu } from "@/components/account-menu";
 import { MobileMenu } from "@/components/mobile-menu";
 import { Icon } from "@/components/icons";
 import { HeaderSearch, HeaderSearchFallback, SearchHost } from "@/components/search/header-search";
+import { SignInHost } from "@/components/sign-in";
 import type { Place } from "@/components/search/where-panel";
 import type { Site } from "@/lib/pms";
 
@@ -20,7 +21,7 @@ function Wordmark({ site }: { site: Site }) {
 export function SiteHeader({ site, places }: { site: Site; places: Place[] }) {
   return (
     <>
-    <header className="site-header sticky top-0 z-40 bg-white/95 backdrop-blur-md print:hidden">
+    <header className="site-header sticky top-0 z-40 border-b border-line bg-white/95 backdrop-blur-md print:hidden">
       <div className="mx-auto flex max-w-[1440px] flex-wrap items-center justify-between gap-x-4 px-4 sm:grid sm:grid-cols-[1fr_auto_1fr] sm:px-6 lg:px-8">
         <div className="flex h-[76px] min-w-0 flex-1 items-center">
           <Wordmark site={site} />
@@ -45,6 +46,7 @@ export function SiteHeader({ site, places }: { site: Site; places: Place[] }) {
     {/* Outside the header: there the bar may be hidden, and the panel must still show. */}
     <Suspense fallback={null}>
       <SearchHost places={places} timezone={site.timezone} brandName={site.brandName} />
+      <SignInHost brandName={site.brandName} phoneSignIn={site.features.includes("guest.phone_sign_in")} />
     </Suspense>
     </>
   );
@@ -57,8 +59,8 @@ export function SiteFooter({ site }: { site: Site }) {
   // 44px-tall tap target on phones without changing how the column looks.
   const link = "inline-flex min-h-11 items-center text-ink hover:text-ink-soft";
   return (
-    <footer id="contact" className="relative z-10 mt-20 border-t border-line bg-white lg:mt-28 print:hidden">
-      <div className="mx-auto grid max-w-7xl gap-12 px-4 py-16 sm:px-6 lg:grid-cols-[1.3fr_1fr] lg:px-8">
+    <footer id="contact" className="relative z-10 mt-12 border-t border-line bg-white lg:mt-16 print:hidden">
+      <div className="mx-auto grid max-w-7xl gap-12 px-4 py-12 sm:px-6 lg:grid-cols-[1.3fr_1fr] lg:px-8">
         <div className="hide-in-booking-flow lg:border-r lg:border-line lg:pr-16">
           <h2 className="text-h1">Talk to us before you book</h2>
           <p className="mt-4 max-w-md leading-relaxed text-ink-soft">
@@ -70,13 +72,13 @@ export function SiteFooter({ site }: { site: Site }) {
                 href={`https://wa.me/${whatsapp}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-full bg-brand px-6 py-3 text-white hover:brightness-125"
+                className="inline-flex items-center gap-2 rounded-xl bg-brand px-6 py-3 text-white hover:brightness-125"
               >
                 <Icon name="chat" className="h-4 w-4" /> WhatsApp
               </a>
             )}
             {contact.phone && (
-              <a href={`tel:${contact.phone.replace(/\s/g, "")}`} className="inline-flex items-center gap-2 rounded-full px-6 py-3 ring-1 ring-line hover:bg-sand-deep">
+              <a href={`tel:${contact.phone.replace(/\s/g, "")}`} className="inline-flex items-center gap-2 rounded-xl px-6 py-3 ring-1 ring-line hover:bg-sand-deep">
                 <Icon name="phone" className="h-4 w-4" /> {contact.phone}
               </a>
             )}

@@ -26,7 +26,7 @@ async function Trips({ params }: Pick<PageProps<"/[site]/account">, "params">) {
   const { site: key } = await params;
   const token = await readSessionToken();
   const session = token ? await getGuestSession(key, token) : null;
-  if (!token || !session) redirect("/account/signin");
+  if (!token || !session) redirect("/?signin=1&next=/account");
   const [site, trips, saved] = await Promise.all([getSite(key), getTrips(key, token), getWishlist(key, token).catch(() => [])]);
   if (!site) return null;
 
@@ -43,7 +43,7 @@ async function Trips({ params }: Pick<PageProps<"/[site]/account">, "params">) {
           <p className="mt-2 text-ink-soft">Signed in as {session.signedInWith === "phone" ? maskMobile(session.phone ?? "") : session.email}</p>
         </div>
         {session.role === "host" && session.pmsUrl && (
-          <a href={session.pmsUrl} className="inline-flex items-center gap-2 rounded-full bg-brand px-6 py-3 text-white hover:brightness-125">
+          <a href={session.pmsUrl} className="inline-flex items-center gap-2 rounded-xl bg-brand px-6 py-3 text-white hover:brightness-125">
             <Icon name="key" className="h-4 w-4" /> Open PMS
           </a>
         )}
@@ -54,7 +54,7 @@ async function Trips({ params }: Pick<PageProps<"/[site]/account">, "params">) {
         {upcoming.length === 0 ? (
           <div className="mt-5 rounded-3xl bg-sand-deep p-8">
             <p>No upcoming trips yet.</p>
-            <Link href="/stays" className="mt-4 inline-flex rounded-full bg-brand px-6 py-3 text-white">
+            <Link href="/stays" className="mt-4 inline-flex rounded-xl bg-brand px-6 py-3 text-white">
               Find a stay
             </Link>
           </div>
@@ -97,7 +97,7 @@ async function Trips({ params }: Pick<PageProps<"/[site]/account">, "params">) {
           Questions about a stay? Message us on WhatsApp with your booking reference. Conversations on this site are coming soon.
         </p>
         {whatsapp && (
-          <a href={`https://wa.me/${whatsapp}`} target="_blank" rel="noopener noreferrer" className="mt-5 inline-flex items-center gap-2 rounded-full px-5 py-2.5 ring-1 ring-line hover:bg-sand-deep">
+          <a href={`https://wa.me/${whatsapp}`} target="_blank" rel="noopener noreferrer" className="mt-5 inline-flex items-center gap-2 rounded-xl px-5 py-2.5 ring-1 ring-line hover:bg-sand-deep">
             <Icon name="chat" className="h-4 w-4" /> Chat on WhatsApp
           </a>
         )}
@@ -124,12 +124,12 @@ function TripRow({ trip, whatsapp, muted = false }: { trip: TripSummary; whatsap
       </div>
       <div className="flex gap-2 sm:flex-col">
         {trip.token && (
-          <Link href={`/booking/${encodeURIComponent(trip.token)}`} className="rounded-full bg-brand px-5 py-2.5 text-center text-sm text-white">
+          <Link href={`/booking/${encodeURIComponent(trip.token)}`} className="rounded-xl bg-brand px-5 py-2.5 text-center text-sm text-white">
             View booking
           </Link>
         )}
         {trip.token && muted && trip.status === "confirmed" && (
-          <Link href={`/review/${encodeURIComponent(trip.token)}`} className="rounded-full px-5 py-2.5 text-center text-sm ring-1 ring-ink hover:bg-sand-deep">
+          <Link href={`/review/${encodeURIComponent(trip.token)}`} className="rounded-xl px-5 py-2.5 text-center text-sm ring-1 ring-ink hover:bg-sand-deep">
             Write a review
           </Link>
         )}
@@ -138,7 +138,7 @@ function TripRow({ trip, whatsapp, muted = false }: { trip: TripSummary; whatsap
             href={`https://wa.me/${whatsapp}?text=${encodeURIComponent(`Hello! About booking ${trip.reference}`)}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="rounded-full px-5 py-2.5 text-center text-sm ring-1 ring-line hover:bg-sand-deep"
+            className="rounded-xl px-5 py-2.5 text-center text-sm ring-1 ring-line hover:bg-sand-deep"
           >
             Message host
           </a>

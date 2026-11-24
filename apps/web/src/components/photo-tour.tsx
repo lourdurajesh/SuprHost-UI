@@ -189,9 +189,9 @@ export function PhotoTour({ images, name, children }: { images: ListingImage[]; 
       <button
         type="button"
         onClick={() => open(0)}
-        className="absolute left-4 top-4 inline-flex min-h-11 items-center gap-2 rounded-full bg-white/95 px-4 py-2.5 text-sm font-medium text-ink shadow-lg backdrop-blur transition hover:bg-white lg:left-auto lg:right-4 lg:top-auto lg:bottom-4"
+        className="absolute bottom-4 right-4 hidden min-h-10 items-center gap-2 rounded-xl bg-white px-4 text-sm font-medium text-ink shadow-md ring-1 ring-ink/10 transition hover:bg-sand-deep sm:inline-flex"
       >
-        <Icon name="grid" className="h-4 w-4" /> Show all {count} photos
+        <Icon name="grid" className="h-4 w-4" /> Show all photos
       </button>
 
       <dialog

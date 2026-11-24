@@ -1,5 +1,6 @@
 "use client";
 
+import { openSignIn } from "./sign-in";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import type { Availability, ManageInfo, Quote } from "@/lib/pms/types";
@@ -50,7 +51,7 @@ export function ManageBooking({ token, listingId, checkIn, checkOut, guests, tot
   }, [datesOpen, availability, listingId, timezone, checkIn, checkOut]);
 
   function signInAgain() {
-    router.push(`/account/signin?next=${encodeURIComponent(`/booking/${token}`)}`);
+    openSignIn(`/booking/${encodeURIComponent(token)}`);
   }
 
   async function quoteFor(ci: string | null, co: string | null) {
@@ -98,7 +99,7 @@ export function ManageBooking({ token, listingId, checkIn, checkOut, guests, tot
   }
 
   const difference = proposed ? proposed.quote.total - total : 0;
-  const button = "inline-flex min-h-11 items-center justify-center rounded-full px-5 text-sm font-medium";
+  const button = "inline-flex min-h-11 items-center justify-center rounded-xl px-5 text-sm font-medium";
 
   return (
     <section aria-labelledby="manage-heading" className="mt-10 border-t border-line pt-8">

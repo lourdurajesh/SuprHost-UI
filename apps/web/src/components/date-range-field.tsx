@@ -113,7 +113,7 @@ function DatesDialogContent({
           type="button"
           onClick={apply}
           disabled={Boolean(draft.checkIn) && !draft.checkOut}
-          className="min-h-11 rounded-full bg-brand px-6 py-2.5 text-white hover:brightness-125 disabled:opacity-40"
+          className="min-h-11 rounded-xl bg-brand px-6 py-2.5 text-white hover:brightness-125 disabled:opacity-40"
         >
           {draft.checkIn && draft.checkOut ? "Apply" : draft.checkIn ? "Pick check-out" : "Done"}
         </button>

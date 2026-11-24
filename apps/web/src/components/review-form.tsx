@@ -73,7 +73,7 @@ export function ReviewForm({ token, stayName }: { token: string; stayName: strin
 
       {error && <p role="alert" className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-800">{error}</p>}
 
-      <button type="submit" disabled={state === "sending"} className="min-h-12 rounded-full bg-brand px-8 font-medium text-white disabled:opacity-60">
+      <button type="submit" disabled={state === "sending"} className="min-h-12 rounded-xl bg-brand px-8 font-medium text-white disabled:opacity-60">
         {state === "sending" ? "Sending…" : "Send review"}
       </button>
     </form>

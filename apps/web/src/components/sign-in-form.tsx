@@ -2,19 +2,15 @@
 
 import Script from "next/script";
 import { useRef, useState } from "react";
-import { MobileField, maskMobile, toMobile } from "./mobile-field";
+import { maskMobile, toMobile } from "@/lib/mobile";
 
 const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 
-type Method = "phone" | "email";
-
-// Passwordless: mobile number (or email) → 6-digit code → signed in. Nothing to remember, nothing
-// to leak. Mobile comes first where the host's PMS can send SMS, as guests in India expect.
-export function SignInForm({ next = "/account", phoneSignIn = false }: { next?: string; phoneSignIn?: boolean }) {
-  const [method, setMethod] = useState<Method>(phoneSignIn ? "phone" : "email");
+// Passwordless: mobile number or email → 6-digit code → signed in. Nothing to remember, nothing to
+// leak. One field takes either; numbers only where the host's PMS can send SMS.
+export function SignInForm({ phoneSignIn = false, onSignedIn }: { phoneSignIn?: boolean; onSignedIn: () => void }) {
   const [step, setStep] = useState<"login" | "code">("login");
-  const [email, setEmail] = useState("");
-  const [mobile, setMobile] = useState("");
+  const [who, setWho] = useState("");
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -23,8 +19,10 @@ export function SignInForm({ next = "/account", phoneSignIn = false }: { next?: 
   const widget = useRef<HTMLDivElement>(null);
   const widgetId = useRef<string | null>(null);
 
-  const login = method === "phone" ? { mobile: toMobile(mobile) ?? "" } : { email: email.trim() };
-  const ready = method === "phone" ? toMobile(mobile) !== null : email.includes("@");
+  const method = phoneSignIn && who.trim() && !/[@a-z]/i.test(who) ? "phone" : "email";
+  const email = who.trim();
+  const login = method === "phone" ? { mobile: toMobile(who) ?? "" } : { email };
+  const ready = method === "phone" ? toMobile(who) !== null : /^\S+@\S+\.\S+$/.test(email);
 
   function renderTurnstile() {
     if (!TURNSTILE_SITE_KEY || !widget.current || !window.turnstile || widgetId.current) return;
@@ -39,6 +37,10 @@ export function SignInForm({ next = "/account", phoneSignIn = false }: { next?: 
 
   async function sendCode(e?: React.FormEvent) {
     e?.preventDefault();
+    if (!ready) {
+      setError(method === "phone" ? "Enter a valid 10-digit mobile number." : phoneSignIn ? "Enter a valid mobile number or email address." : "Enter a valid email address.");
+      return;
+    }
     setBusy(true);
     setError(null);
     const website = (document.getElementById("website-si") as HTMLInputElement | null)?.value ?? "";
@@ -71,28 +73,26 @@ export function SignInForm({ next = "/account", phoneSignIn = false }: { next?: 
     }).catch(() => null);
     setBusy(false);
     if (res?.ok) {
-      // Full navigation so the header's account menu picks up the new session.
-      window.location.assign(next.startsWith("/") && !next.startsWith("//") ? next : "/account");
+      onSignedIn();
       return;
     }
     setError(res?.status === 429 ? "Too many attempts. Please request a new code later." : "That code is invalid or has expired.");
   }
 
-  function switchMethod(to: Method) {
-    setMethod(to);
+  function back() {
     setStep("login");
     setCode("");
     setError(null);
   }
 
-  const input = "mt-1.5 w-full rounded-xl border border-field bg-white px-4 py-3.5 text-base outline-none focus:border-ink";
-  const button = "w-full rounded-full bg-brand px-6 py-4 text-white transition hover:brightness-125 disabled:opacity-50";
+  const input = "focus-own w-full rounded-xl border border-field bg-white px-4 text-base outline-none placeholder:text-ink-soft focus:border-ink focus:ring-1 focus:ring-ink";
+  const button = "min-h-12 w-full rounded-xl bg-brand px-6 py-3 font-medium text-white transition hover:brightness-110 disabled:opacity-50";
   const link = "min-h-11 underline underline-offset-4";
 
   if (step === "code") {
-    const sentTo = method === "phone" ? maskMobile(toMobile(mobile) ?? "") : email;
+    const sentTo = method === "phone" ? maskMobile(toMobile(who) ?? "") : email;
     return (
-      <form onSubmit={verify} className="space-y-5">
+      <form onSubmit={verify} className="space-y-4">
         <p className="text-ink-soft">
           {method === "phone" ? (
             <>We’ve sent a 6-digit code by SMS to <span className="text-ink">{sentTo}</span>. It expires in 10 minutes.</>
@@ -107,7 +107,7 @@ export function SignInForm({ next = "/account", phoneSignIn = false }: { next?: 
           </p>
         )}
         <label className="block">
-          <span className="text-sm">Code</span>
+          <span className="sr-only">6-digit code</span>
           <input
             inputMode="numeric"
             autoComplete="one-time-code"
@@ -117,15 +117,16 @@ export function SignInForm({ next = "/account", phoneSignIn = false }: { next?: 
             autoFocus
             value={code}
             onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
-            className={`${input} text-center font-mono text-2xl tracking-[0.5em]`}
+            placeholder="••••••"
+            className={`${input} min-h-15 text-center font-mono text-2xl tracking-[0.5em]`}
           />
         </label>
         {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
         <button type="submit" disabled={busy || code.length !== 6} className={button}>
-          {busy ? "Checking…" : "Sign in"}
+          {busy ? "Checking…" : "Continue"}
         </button>
         <div className="flex justify-between text-sm">
-          <button type="button" onClick={() => switchMethod(method)} className={link}>
+          <button type="button" onClick={back} className={link}>
             {method === "phone" ? "Change number" : "Use a different email"}
           </button>
           <button type="button" onClick={() => sendCode()} disabled={busy} className={link}>
@@ -137,36 +138,43 @@ export function SignInForm({ next = "/account", phoneSignIn = false }: { next?: 
   }
 
   return (
-    <form onSubmit={sendCode} className="space-y-5">
+    <form onSubmit={sendCode} noValidate className="space-y-4">
       {TURNSTILE_SITE_KEY && (
         <Script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" strategy="afterInteractive" onReady={renderTurnstile} />
       )}
-      {method === "phone" ? (
-        <MobileField id="mobile-si" value={mobile} onChange={setMobile} autoFocus />
-      ) : (
-        <label className="block">
-          <span className="text-sm">Email</span>
-          <input type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" className={input} />
-        </label>
-      )}
+      <label className="block">
+        <span className="sr-only">{phoneSignIn ? "Phone number or email" : "Email"}</span>
+        <input
+          autoFocus
+          type="text"
+          inputMode={phoneSignIn ? "text" : "email"}
+          autoComplete="username"
+          autoCapitalize="none"
+          spellCheck={false}
+          value={who}
+          onChange={(e) => {
+            setWho(e.target.value);
+            setError(null);
+          }}
+          placeholder={phoneSignIn ? "Phone number or email" : "Email"}
+          aria-invalid={Boolean(error)}
+          aria-describedby="signin-error"
+          className={`${input} min-h-15`}
+        />
+      </label>
       <div aria-hidden="true" className="absolute -left-[9999px] h-px w-px overflow-hidden">
         <input id="website-si" name="website" tabIndex={-1} autoComplete="off" />
       </div>
       <div ref={widget} />
-      {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
-      <button type="submit" disabled={busy || !ready || (Boolean(TURNSTILE_SITE_KEY) && !token)} className={button}>
-        {busy ? "Sending…" : method === "phone" ? "Send me a code by SMS" : "Email me a sign-in code"}
-      </button>
-      <p className="text-center text-xs text-ink-soft">
-        {method === "phone" ? "Use the mobile number you booked with to see your trips." : "Use the email you booked with to see your trips."}
+      <p id="signin-error" role="alert" className="text-sm text-red-700 empty:hidden">
+        {error}
       </p>
-      {phoneSignIn && (
-        <p className="text-center text-sm">
-          <button type="button" onClick={() => switchMethod(method === "phone" ? "email" : "phone")} className={link}>
-            {method === "phone" ? "Use email instead" : "Use mobile number instead"}
-          </button>
-        </p>
-      )}
+      <button type="submit" disabled={busy || !who.trim() || (Boolean(TURNSTILE_SITE_KEY) && !token)} className={button}>
+        {busy ? "Sending…" : "Continue"}
+      </button>
+      <p className="text-center text-sm text-ink-soft">
+        We’ll send a one-time code. No password needed. Use the {phoneSignIn ? "number or email" : "email"} you booked with to see your trips.
+      </p>
     </form>
   );
 }

@@ -9,7 +9,7 @@ export default function NotFound() {
       <p className="text-eyebrow font-medium uppercase text-accent">404</p>
       <h1 className="mt-3 text-h1">This page has checked out</h1>
       <p className="mt-3 text-ink-soft">The page you were looking for doesn’t exist or has moved.</p>
-      <Link href="/" className="mt-8 inline-flex min-h-12 items-center rounded-full bg-brand px-6 font-medium text-white">
+      <Link href="/" className="mt-8 inline-flex min-h-12 items-center rounded-xl bg-brand px-6 font-medium text-white">
         Back to home
       </Link>
     </main>

@@ -74,7 +74,7 @@ function ResultsSkeleton() {
         </div>
         <div className="grid grid-cols-2 gap-x-4 gap-y-5 sm:gap-x-6">
           {Array.from({ length: 4 }, (_, i) => (
-            <div key={i} className="stay-photo animate-pulse rounded-2xl bg-sand-deep" />
+            <div key={i} className="aspect-square animate-pulse rounded-2xl bg-sand-deep" />
           ))}
         </div>
       </div>

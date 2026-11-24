@@ -146,7 +146,7 @@ export function PaymentPanel({ token, total, currency, methods, holdExpiresAt, s
           type="button"
           onClick={pay}
           disabled={paying || expired}
-          className="flex w-full items-center justify-center gap-2 rounded-full bg-brand px-6 py-3.5 text-lg font-medium text-white shadow-lg shadow-brand/20 transition hover:brightness-110 disabled:opacity-50 lg:py-4"
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand px-6 py-3.5 text-lg font-medium text-white shadow-lg shadow-brand/20 transition hover:brightness-110 disabled:opacity-50 lg:py-4"
         >
           <Icon name="lock" className="h-4 w-4" />
           {paying ? "Processing…" : `Pay ${formatMoney(total, currency)}`}

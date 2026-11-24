@@ -106,7 +106,7 @@ async function Confirmation({ params }: Pick<PageProps<"/[site]/booking/[token]"
 
               <div className="mt-8 flex flex-wrap gap-3">
                 {mapsUrl && (
-                  <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-full border border-line px-5 py-2.5 text-sm font-medium hover:bg-sand">
+                  <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-xl border border-line px-5 py-2.5 text-sm font-medium hover:bg-sand">
                     <Icon name="pin" className="h-4 w-4" /> Get directions
                   </a>
                 )}
@@ -115,7 +115,7 @@ async function Confirmation({ params }: Pick<PageProps<"/[site]/booking/[token]"
                     href={`https://wa.me/${whatsapp}?text=${encodeURIComponent(`Hello! Booking ${booking.reference}`)}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 rounded-full border border-line px-5 py-2.5 text-sm font-medium hover:bg-sand"
+                    className="inline-flex items-center gap-2 rounded-xl border border-line px-5 py-2.5 text-sm font-medium hover:bg-sand"
                   >
                     <Icon name="chat" className="h-4 w-4" /> Message the host
                   </a>

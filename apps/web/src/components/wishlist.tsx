@@ -1,9 +1,9 @@
 "use client";
 
-import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useSyncExternalStore } from "react";
 import type { ListingImage } from "@/lib/pms/types";
 import { Icon } from "./icons";
+import { openSignIn } from "./sign-in";
 
 // One shared copy of the guest's saved stay ids for every heart on the page, loaded after render
 // (pages stay cacheable and identical for everyone). null = not loaded yet or signed out.
@@ -35,10 +35,8 @@ const subscribe = (l: () => void) => {
   return () => listeners.delete(l);
 };
 
-/** Heart toggle for a stay. Signed-out guests are sent to sign in and brought back. */
-export function WishlistButton({ listingId, name, className = "" }: { listingId: string; name: string; className?: string }) {
-  const router = useRouter();
-  const pathname = usePathname();
+/** Heart toggle for a stay. Signed-out guests get the sign-in popup. "text": icon and word. */
+export function WishlistButton({ listingId, name, variant = "icon", className = "" }: { listingId: string; name: string; variant?: "icon" | "text"; className?: string }) {
   const current = useSyncExternalStore(subscribe, () => state, () => state);
   const saved = current.ids?.has(listingId) ?? false;
 
@@ -46,7 +44,7 @@ export function WishlistButton({ listingId, name, className = "" }: { listingId:
 
   async function toggle() {
     if (current.signedIn === false) {
-      router.push(`/account/signin?next=${encodeURIComponent(pathname + window.location.search)}`);
+      openSignIn();
       return;
     }
     const ids = new Set(current.ids ?? []);
@@ -56,7 +54,7 @@ export function WishlistButton({ listingId, name, className = "" }: { listingId:
     const r = await fetch(`/api/wishlist/${listingId}`, { method: saved ? "DELETE" : "PUT" }).catch(() => null);
     if (r?.status === 401) {
       emit({ ids: null, signedIn: false });
-      router.push(`/account/signin?next=${encodeURIComponent(pathname + window.location.search)}`);
+      openSignIn();
     } else if (!r?.ok) emit(current);
   }
 
@@ -66,9 +64,14 @@ export function WishlistButton({ listingId, name, className = "" }: { listingId:
       onClick={toggle}
       aria-pressed={saved}
       aria-label={saved ? `Remove ${name} from saved stays` : `Save ${name}`}
-      className={`grid h-11 w-11 place-items-center rounded-full bg-white/95 shadow-sm transition hover:scale-105 ${className}`}
+      className={`${
+        variant === "icon"
+          ? "grid h-11 w-11 place-items-center rounded-full bg-white/95 shadow-sm transition hover:scale-105"
+          : "inline-flex min-h-11 items-center gap-2 rounded-lg px-3 text-sm font-medium hover:bg-sand-deep"
+      } ${className}`}
     >
-      <Icon name="heart" className={`h-5 w-5 ${saved ? "fill-brand text-brand" : "text-ink"}`} />
+      <Icon name="heart" className={`${variant === "icon" ? "h-5 w-5" : "h-4 w-4"} ${saved ? "fill-brand text-brand" : "text-ink"}`} />
+      {variant === "text" && <span className="underline underline-offset-2">{saved ? "Saved" : "Save"}</span>}
     </button>
   );
 }

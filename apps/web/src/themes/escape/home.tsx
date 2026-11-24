@@ -11,7 +11,7 @@ import { ListingPhoto } from "./listing-media";
 // and visibility owner-configurable without touching the sections themselves.
 
 const container = "mx-auto max-w-7xl px-4 sm:px-6 lg:px-8";
-const pill = "inline-flex items-center gap-2 rounded-full bg-brand px-7 py-3.5 text-white transition hover:brightness-125";
+const pill = "inline-flex items-center gap-2 rounded-xl bg-brand px-7 py-3.5 text-white transition hover:brightness-125";
 
 export function Hero({ site }: { site: Site }) {
   return (
@@ -46,7 +46,7 @@ export function Hero({ site }: { site: Site }) {
 
 export function Intro({ site }: { site: Site }) {
   return (
-    <section className={`${container} py-20 text-center sm:py-28`}>
+    <section className={`${container} py-12 text-center sm:py-16`}>
       <p className="mx-auto max-w-3xl text-h2 tracking-tight">{site.statement}</p>
     </section>
   );
@@ -54,7 +54,7 @@ export function Intro({ site }: { site: Site }) {
 
 export function Stays({ listings, currency, addsGst }: { listings: ListingSummary[]; currency: string; addsGst?: boolean }) {
   // A grid, not a carousel: guests see the range at a glance instead of paging to find it.
-  const shown = listings.slice(0, 6);
+  const shown = listings.slice(0, 8);
   return (
     <section id="stays" className={`${container} scroll-mt-24`}>
       <div className="flex items-end justify-between gap-4">
@@ -71,9 +71,9 @@ export function Stays({ listings, currency, addsGst }: { listings: ListingSummar
       {listings.length === 0 ? (
         <p className="mt-10 text-ink-soft">New stays are coming soon.</p>
       ) : (
-        <div className="mt-10 grid gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-6 grid grid-cols-2 gap-x-4 gap-y-8 sm:gap-x-6 lg:grid-cols-4">
           {shown.map((l, i) => (
-            <ListingCard key={l.id} listing={l} currency={currency} priority={i < 3} addsGst={addsGst} />
+            <ListingCard key={l.id} listing={l} currency={currency} priority={i < 2} addsGst={addsGst} />
           ))}
         </div>
       )}
@@ -107,7 +107,7 @@ export function Destinations({ listings, currency }: { listings: ListingSummary[
     .sort((a, b) => b.count - a.count || a.city.localeCompare(b.city));
 
   return (
-    <section className={`${container} mt-24 sm:mt-28`} aria-labelledby="places-heading">
+    <section className={`${container} mt-16`} aria-labelledby="places-heading">
       <h2 id="places-heading" className="text-h1">
         Choose your place
       </h2>
@@ -143,7 +143,7 @@ export function Highlights({ items }: { items: Site["highlights"] }) {
   if (!items.length) return null;
   // Open editorial row (no boxed tiles): reasons to book direct, read in one pass.
   return (
-    <section className={`${container} py-20 sm:py-24`}>
+    <section className={`${container} py-12 sm:py-14`}>
       <ul className="grid gap-x-10 gap-y-10 border-t border-line pt-12 sm:grid-cols-2 lg:grid-cols-4">
         {items.map((h) => (
           <li key={h.title}>
@@ -161,12 +161,12 @@ export function About({ about }: { about: Site["about"] }) {
   if (!about) return null;
   return (
     <section id="about" className={`${container} scroll-mt-24 py-8`}>
-      <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-24">
-        <ListingPhoto image={about.image} name="" sizes="(min-width: 1024px) 50vw, 100vw" className="aspect-[4/3] rounded-3xl lg:aspect-[4/5]" />
+      <div className="grid items-center gap-8 lg:grid-cols-2 lg:gap-16">
+        <ListingPhoto image={about.image} name="" sizes="(min-width: 1024px) 50vw, 100vw" className="aspect-[4/3] rounded-2xl" />
         <div>
           <p className="text-eyebrow uppercase text-ink-soft">Our story</p>
           <h2 className="mt-4 text-h1">{about.title}</h2>
-          <p className="mt-6 whitespace-pre-line text-lg leading-relaxed text-ink-soft">{about.body}</p>
+          <p className="mt-6 whitespace-pre-line leading-relaxed text-ink-soft">{about.body}</p>
         </div>
       </div>
     </section>
@@ -176,7 +176,7 @@ export function About({ about }: { about: Site["about"] }) {
 export function Gallery({ images }: { images: ListingImage[] }) {
   if (images.length < 3) return null;
   return (
-    <section className={`${container} py-24`}>
+    <section className={`${container} py-12`}>
       <Carousel label="Photo gallery" slideClassName="w-[80%] sm:w-[48%] lg:w-[38%]" gapClassName="gap-4">
         {images.map((img, i) => (
           <ListingPhoto key={`${img.url}-${i}`} image={img} name="" sizes="(min-width: 1024px) 38vw, 80vw" className="aspect-[4/5] rounded-2xl" />
@@ -189,7 +189,7 @@ export function Gallery({ images }: { images: ListingImage[] }) {
 export function Testimonials({ items }: { items: Site["testimonials"] }) {
   if (!items.length) return null;
   return (
-    <section className="bg-brand py-24 text-white sm:py-32">
+    <section className="bg-brand py-16 text-white sm:py-20">
       <div className="mx-auto max-w-5xl px-4 sm:px-6">
         <Carousel label="Guest reviews" slideClassName="w-full" gapClassName="gap-0" arrowTone="dark">
           {items.map((t) => (
@@ -215,7 +215,7 @@ export function Testimonials({ items }: { items: Site["testimonials"] }) {
 export function Faq({ items }: { items: Site["faqs"] }) {
   if (!items.length) return null;
   return (
-    <section id="faq" className={`${container} scroll-mt-24 py-24 sm:py-32`}>
+    <section id="faq" className={`${container} scroll-mt-24 py-12 sm:py-16`}>
       <div className="grid gap-12 lg:grid-cols-[1fr_1.6fr]">
         <div>
           <h2 className="text-h1">Questions, answered</h2>

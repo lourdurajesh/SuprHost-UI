@@ -54,17 +54,17 @@ export function MobileMenu({ brandName, whatsapp, phone }: Props) {
                 href={`https://wa.me/${whatsapp}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex min-h-12 items-center justify-center gap-2 rounded-full ring-1 ring-line"
+                className="flex min-h-12 items-center justify-center gap-2 rounded-xl ring-1 ring-line"
               >
                 <Icon name="chat" className="h-4 w-4" /> Chat on WhatsApp
               </a>
             )}
             {phone && (
-              <a href={`tel:${phone.replace(/\s/g, "")}`} className="flex min-h-12 items-center justify-center gap-2 rounded-full ring-1 ring-line">
+              <a href={`tel:${phone.replace(/\s/g, "")}`} className="flex min-h-12 items-center justify-center gap-2 rounded-xl ring-1 ring-line">
                 <Icon name="phone" className="h-4 w-4" /> {phone}
               </a>
             )}
-            <Link href="/stays" onClick={close} className="flex min-h-12 items-center justify-center rounded-full bg-brand text-white">
+            <Link href="/stays" onClick={close} className="flex min-h-12 items-center justify-center rounded-xl bg-brand text-white">
               Book now
             </Link>
           </div>

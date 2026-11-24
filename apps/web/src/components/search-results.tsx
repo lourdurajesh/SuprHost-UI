@@ -32,8 +32,8 @@ function compactPrice(amount: number) {
 }
 
 // List + map, Airbnb-style: hovering a card highlights its pin and vice versa. The map stays put under
-// the header while the list scrolls; on phones it is a toggle so the list stays fast to scroll. Card
-// photos are sized from the window (.stay-photo), so two full rows show before any scrolling.
+// the header while the list scrolls; on phones it is a toggle so the list stays fast to scroll. Photos
+// are always square.
 export function SearchResults({ hits, query, currency, addsGst, toolbar, before, after, area }: Props) {
   const router = useRouter();
   const pathname = usePathname();
@@ -88,7 +88,7 @@ export function SearchResults({ hits, query, currency, addsGst, toolbar, before,
       <div className="rounded-3xl bg-sand-deep p-10 text-center">
         <p className="text-xl">No stays in this part of the map.</p>
         <p className="mt-2 text-ink-soft">Zoom out or search the whole area.</p>
-        <Link href={`${pathname}${toSearchString({ ...query, bounds: undefined })}`} className="mt-6 inline-flex min-h-11 items-center rounded-full bg-brand px-6 text-white">
+        <Link href={`${pathname}${toSearchString({ ...query, bounds: undefined })}`} className="mt-6 inline-flex min-h-11 items-center rounded-xl bg-brand px-6 text-white">
           Search everywhere
         </Link>
       </div>
@@ -96,7 +96,7 @@ export function SearchResults({ hits, query, currency, addsGst, toolbar, before,
       <div className="rounded-3xl bg-sand-deep p-10 text-center">
         <p className="text-xl">No stays match these filters.</p>
         <p className="mt-2 text-ink-soft">Try different dates, fewer filters, or message us — we may be able to help.</p>
-        <Link href="/stays" className="mt-6 inline-flex rounded-full bg-brand px-6 py-3 text-white">
+        <Link href="/stays" className="mt-6 inline-flex rounded-xl bg-brand px-6 py-3 text-white">
           Clear search
         </Link>
       </div>
@@ -109,7 +109,7 @@ export function SearchResults({ hits, query, currency, addsGst, toolbar, before,
         <div className={showMap ? "hidden lg:block" : ""}>
           {before}
           {empty}
-          <ul className={`grid grid-cols-2 gap-x-4 gap-y-5 sm:gap-x-6 ${hits.some((h) => h.altCheckIn) ? "has-alt-dates" : ""}`}>
+          <ul className="grid grid-cols-2 gap-x-4 gap-y-7 sm:gap-x-6">
             {hits.map((h, i) => (
               <li key={h.id} className="relative min-w-0" onMouseEnter={() => setActive(h.id)} onMouseLeave={() => setActive(null)}>
                 <WishlistButton listingId={h.id} name={h.name} className="absolute right-2 top-2 z-10 sm:right-3 sm:top-3" />
@@ -120,7 +120,7 @@ export function SearchResults({ hits, query, currency, addsGst, toolbar, before,
                       name={h.name}
                       sizes="(min-width: 1024px) 28vw, 50vw"
                       priority={i < 4}
-                      className={`stay-photo rounded-2xl ring-2 transition ${active === h.id ? "ring-ink" : "ring-transparent"}`}
+                      className={`aspect-square rounded-2xl ring-2 transition ${active === h.id ? "ring-ink" : "ring-transparent"}`}
                       imgClassName="transition-transform duration-700 group-hover:scale-[1.04]"
                     />
                     {h.instantBook && (

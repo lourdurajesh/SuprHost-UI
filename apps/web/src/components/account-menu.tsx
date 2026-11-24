@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import type { GuestSession } from "@/lib/pms/types";
 import { Icon } from "./icons";
+import { openSignIn } from "./sign-in";
 
 // The one menu in the header: the account and the site's pages. Loads the session after the page
 // renders, so every page stays cacheable and identical for all visitors. Hosts (staff of this tenant in the PMS) also get an "Open PMS" link.
@@ -85,9 +86,17 @@ export function AccountMenu() {
               <Icon name="calendar" className="h-4 w-4" /> My trips
             </Link>
           ) : (
-            <Link role="menuitem" href="/account/signin" onClick={() => setOpen(false)} className="flex items-center px-4 min-h-11 py-2.5 font-medium hover:bg-sand-deep focus-visible:bg-sand-deep">
-              Sign in
-            </Link>
+            <button
+              role="menuitem"
+              type="button"
+              onClick={() => {
+                setOpen(false);
+                openSignIn();
+              }}
+              className="flex w-full items-center px-4 min-h-11 py-2.5 text-left font-medium hover:bg-sand-deep focus-visible:bg-sand-deep"
+            >
+              Log in or sign up
+            </button>
           )}
           {session?.role === "host" && session.pmsUrl && (
             <a role="menuitem" href={session.pmsUrl} className="flex items-center gap-3 px-4 min-h-11 py-2.5 hover:bg-sand-deep focus-visible:bg-sand-deep">
