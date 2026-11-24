@@ -107,12 +107,16 @@ export function SearchOverlay({ open, query, places, timezone, brandName, pendin
     // Keep the scrollbar's width while the page is locked, so nothing behind shifts sideways.
     // (Padding rather than scrollbar-gutter: the blur has to reach the edge of the screen.)
     const bar = window.innerWidth - html.clientWidth;
-    if (bar > 0) body.style.paddingRight = `${bar}px`;
+    if (bar > 0) {
+      body.style.paddingRight = `${bar}px`;
+      html.style.setProperty("--scroll-lock", `${bar}px`);
+    }
     html.style.overflow = "hidden";
     return () => {
       clearTimeout(id);
       html.style.overflow = before.overflow;
       body.style.paddingRight = before.padding;
+      html.style.removeProperty("--scroll-lock");
     };
   }, []);
 

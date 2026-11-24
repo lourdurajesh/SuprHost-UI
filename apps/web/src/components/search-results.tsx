@@ -6,7 +6,7 @@ import { useRef, useState, useTransition } from "react";
 import type { SearchHit, SearchQuery } from "@/lib/pms/types";
 import { formatDate, formatMoney } from "@/lib/dates";
 import { ListingPhoto } from "@/themes/escape/listing-media";
-import { listingFacts, NightlyPrice } from "@/themes/escape/listing-card";
+import { PROPERTY_TYPE } from "@/themes/escape/listing-card";
 import { Icon } from "./icons";
 import { StaysMap } from "./stays-map";
 import { Rating } from "./rating";
@@ -19,15 +19,22 @@ interface Props {
   currency: string;
   /** Per-night prices are before GST; trip totals already include it. */
   addsGst?: boolean;
+  /** Count, applied filters and sort. */
+  toolbar: React.ReactNode;
+  before?: React.ReactNode;
+  after?: React.ReactNode;
+  /** The whole area with homes, for the map when nothing matches: [south, west, north, east]. */
+  area: [number, number, number, number] | null;
 }
 
 function compactPrice(amount: number) {
   return amount >= 1000 ? `₹${(amount / 1000).toFixed(amount % 1000 === 0 ? 0 : 1)}k` : `₹${amount}`;
 }
 
-// List + map, Airbnb-style: hovering a card highlights its pin and vice versa. On phones the map
-// is a full-screen toggle so the list stays fast to scroll.
-export function SearchResults({ hits, query, currency, addsGst }: Props) {
+// List + map, Airbnb-style: hovering a card highlights its pin and vice versa. The map stays put under
+// the header while the list scrolls; on phones it is a toggle so the list stays fast to scroll. Card
+// photos are sized from the window (.stay-photo), so two full rows show before any scrolling.
+export function SearchResults({ hits, query, currency, addsGst, toolbar, before, after, area }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const [, startTransition] = useTransition();
@@ -76,8 +83,8 @@ export function SearchResults({ hits, query, currency, addsGst }: Props) {
       title: h.name,
     }));
 
-  if (hits.length === 0 && query.bounds) {
-    return (
+  const empty =
+    hits.length > 0 ? null : query.bounds ? (
       <div className="rounded-3xl bg-sand-deep p-10 text-center">
         <p className="text-xl">No stays in this part of the map.</p>
         <p className="mt-2 text-ink-soft">Zoom out or search the whole area.</p>
@@ -85,11 +92,7 @@ export function SearchResults({ hits, query, currency, addsGst }: Props) {
           Search everywhere
         </Link>
       </div>
-    );
-  }
-
-  if (hits.length === 0) {
-    return (
+    ) : (
       <div className="rounded-3xl bg-sand-deep p-10 text-center">
         <p className="text-xl">No stays match these filters.</p>
         <p className="mt-2 text-ink-soft">Try different dates, fewer filters, or message us — we may be able to help.</p>
@@ -98,69 +101,92 @@ export function SearchResults({ hits, query, currency, addsGst }: Props) {
         </Link>
       </div>
     );
-  }
 
   return (
-    <div className="grid gap-8 lg:grid-cols-[1fr_minmax(0,0.85fr)]">
-      <ul className={`grid gap-x-6 gap-y-10 sm:grid-cols-2 ${showMap ? "hidden lg:grid" : ""}`}>
-        {hits.map((h) => (
-          <li key={h.id} className="relative" onMouseEnter={() => setActive(h.id)} onMouseLeave={() => setActive(null)}>
-            <WishlistButton listingId={h.id} name={h.name} className="absolute right-3 top-3 z-10" />
-            <Link href={`/stays/${h.slug}${carryFor(h)}`} className="group block">
-              <div className="relative">
-                <ListingPhoto
-                  image={h.image}
-                  name={h.name}
-                  sizes="(min-width: 1024px) 28vw, (min-width: 640px) 50vw, 100vw"
-                  className={`aspect-[4/3] rounded-2xl ring-2 transition ${active === h.id ? "ring-ink" : "ring-transparent"}`}
-                  imgClassName="transition-transform duration-700 group-hover:scale-[1.04]"
-                />
-                {h.instantBook && (
-                  <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-white/95 px-3 py-1 text-xs shadow-sm">
-                    <Icon name="bolt" className="h-3.5 w-3.5" /> Instant book
-                  </span>
-                )}
-              </div>
-              <p className="mt-3 flex items-center justify-between gap-3 text-sm text-ink-soft">
-                <span>
-                  {h.city} · {h.propertyName}
-                </span>
-                <Rating rating={h.rating} className="shrink-0 text-ink" />
-              </p>
-              <h3 className="mt-0.5 text-xl tracking-tight group-hover:underline group-hover:decoration-1 group-hover:underline-offset-4">
-                {h.name}
-              </h3>
-              {h.tagline && <p className="mt-0.5 line-clamp-2 text-ink">{h.tagline}</p>}
-              <p className="mt-0.5 text-sm text-ink-soft">{listingFacts(h)}</p>
-              {h.altCheckIn && h.altCheckOut && (
-                <p className="mt-1 text-sm font-medium text-accent">
-                  Available {formatDate(h.altCheckIn, { day: "numeric", month: "short" })} – {formatDate(h.altCheckOut, { day: "numeric", month: "short" })}
-                </p>
-              )}
-              {h.total && h.nights ? (
-                <p className="mt-2 text-base">
-                  <span className="font-medium">{formatMoney(h.total, currency)}</span>
-                  <span className="text-ink-soft">
-                    {" "}
-                    for {h.nights} night{h.nights === 1 ? "" : "s"}
-                  </span>
-                  <span className="block text-sm text-ink-soft">
-                    {formatMoney(Math.round(h.total / h.nights), currency)} / night avg{addsGst ? " · incl. GST and fees" : " · incl. fees"}
-                  </span>
-                </p>
-              ) : (
-                <NightlyPrice amount={h.fromPrice} currency={currency} addsGst={addsGst} />
-              )}
-            </Link>
-          </li>
-        ))}
-      </ul>
+    <div className="stays-layout">
+      <div className="min-w-0">
+        <div className="flex min-h-14 flex-col justify-center py-1">{toolbar}</div>
+        <div className={showMap ? "hidden lg:block" : ""}>
+          {before}
+          {empty}
+          <ul className={`grid grid-cols-2 gap-x-4 gap-y-5 sm:gap-x-6 ${hits.some((h) => h.altCheckIn) ? "has-alt-dates" : ""}`}>
+            {hits.map((h, i) => (
+              <li key={h.id} className="relative min-w-0" onMouseEnter={() => setActive(h.id)} onMouseLeave={() => setActive(null)}>
+                <WishlistButton listingId={h.id} name={h.name} className="absolute right-2 top-2 z-10 sm:right-3 sm:top-3" />
+                <Link href={`/stays/${h.slug}${carryFor(h)}`} className="group block">
+                  <div className="relative">
+                    <ListingPhoto
+                      image={h.image}
+                      name={h.name}
+                      sizes="(min-width: 1024px) 28vw, 50vw"
+                      priority={i < 4}
+                      className={`stay-photo rounded-2xl ring-2 transition ${active === h.id ? "ring-ink" : "ring-transparent"}`}
+                      imgClassName="transition-transform duration-700 group-hover:scale-[1.04]"
+                    />
+                    {h.instantBook && (
+                      <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-white/95 px-2 py-1 text-xs shadow-sm sm:left-3 sm:top-3 sm:px-3">
+                        <Icon name="bolt" className="h-3.5 w-3.5" /> <span className="max-sm:sr-only">Instant book</span>
+                      </span>
+                    )}
+                  </div>
+                  <h2 className="mt-2 flex items-center justify-between gap-2 text-base leading-6">
+                    <span className="truncate font-medium group-hover:underline group-hover:decoration-1 group-hover:underline-offset-4" title={h.name}>
+                      {h.name}
+                    </span>
+                    <Rating rating={h.rating} className="shrink-0 text-sm text-ink" />
+                  </h2>
+                  <p className="truncate text-sm leading-5 text-ink-soft">
+                    {h.city} · {h.propertyName}
+                  </p>
+                  <p className="truncate text-sm leading-5 text-ink-soft">
+                    <span className="max-sm:hidden">{PROPERTY_TYPE[h.propertyType]} · </span>
+                    {[
+                      `${h.maxGuests} guest${h.maxGuests === 1 ? "" : "s"}`,
+                      h.bedrooms && `${h.bedrooms} bedroom${h.bedrooms === 1 ? "" : "s"}`,
+                      h.bathrooms && `${h.bathrooms} bath${h.bathrooms === 1 ? "" : "s"}`,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </p>
+                  {h.altCheckIn && h.altCheckOut && (
+                    <p className="truncate text-sm font-medium leading-5 text-accent">
+                      <span className="max-sm:hidden">Available </span>
+                      {formatDate(h.altCheckIn, { day: "numeric", month: "short" })} – {formatDate(h.altCheckOut, { day: "numeric", month: "short" })}
+                    </p>
+                  )}
+                  <p className="truncate text-base leading-6">
+                    {h.total && h.nights ? (
+                      <>
+                        <span className="font-medium">{formatMoney(h.total, currency)}</span>
+                        <span className="text-sm text-ink-soft">
+                          {" "}
+                          for {h.nights} night{h.nights === 1 ? "" : "s"}
+                          <span className="max-sm:hidden">{addsGst ? " · incl. GST and fees" : " · incl. fees"}</span>
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="font-medium">{formatMoney(h.fromPrice, currency)}</span>
+                        <span className="text-sm text-ink-soft">
+                          {" "}
+                          / night{addsGst && " + GST"}
+                        </span>
+                      </>
+                    )}
+                  </p>
+                </Link>
+              </li>
+            ))}
+          </ul>
+          <div className="mt-10 empty:hidden">{after}</div>
+        </div>
+      </div>
 
-      {/* Sticky on the wrapper: MapLibre forces position:relative on its own container. */}
+      {/* Fixed on the wrapper: MapLibre forces position:relative on its own container. */}
       <div className={`${showMap ? "block" : "hidden"} lg:block`}>
-        <div className="lg:sticky lg:top-[100px]">
-          <label className="mb-3 flex min-h-11 items-center gap-3 text-sm">
-            <input type="checkbox" checked={followMap} onChange={(e) => toggleFollow(e.target.checked)} className="h-5 w-5 accent-[var(--brand)]" />
+        <div className="stays-map relative">
+          <label className="absolute left-3 top-3 z-10 flex min-h-11 cursor-pointer items-center gap-3 rounded-full bg-white px-4 text-sm shadow-md ring-1 ring-line has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ink">
+            <input type="checkbox" checked={followMap} onChange={(e) => toggleFollow(e.target.checked)} className="focus-own h-5 w-5 accent-[var(--brand)]" />
             Search as I move the map
           </label>
           <StaysMap
@@ -168,9 +194,9 @@ export function SearchResults({ hits, query, currency, addsGst }: Props) {
             pins={pins}
             activeId={active}
             onPinHover={setActive}
-            initialBounds={initialBounds}
+            initialBounds={initialBounds ?? (pins.length ? null : area)}
             onMoveEnd={onMapMove}
-            className="h-[70svh] rounded-3xl lg:h-[calc(100svh-244px)]"
+            className="h-full rounded-3xl"
           />
         </div>
       </div>

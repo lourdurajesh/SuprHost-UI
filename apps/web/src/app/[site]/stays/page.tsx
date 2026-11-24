@@ -18,8 +18,7 @@ export const metadata: Metadata = {
 export default function StaysPage({ params, searchParams }: PageProps<"/[site]/stays">) {
   return (
     // data-stays-page: on phones the header shows its search bar here (globals.css).
-    <div data-stays-page className="mx-auto max-w-[1440px] px-4 pb-16 pt-6 sm:px-6 lg:px-8">
-      <h1 className="text-h1">All stays</h1>
+    <div data-stays-page className="mx-auto max-w-[1440px] px-4 pb-10 pt-2 sm:px-6 lg:px-8">
       <Suspense fallback={<ResultsSkeleton />}>
         <StaysContent params={params} searchParams={searchParams} />
       </Suspense>
@@ -40,31 +39,46 @@ async function StaysContent({ params, searchParams }: Pick<PageProps<"/[site]/st
   const prices = allListings.map((l) => l.fromPrice);
   const groups = query.guests && result.hits.length === 0 ? groupSuggestions(allListings, query.guests) : [];
 
+  // Where the map opens when nothing matches: around every home there is.
+  const spots = allListings.flatMap((l) => (l.location ? [l.location] : []));
+  const lats = spots.map((s) => s.lat);
+  const lngs = spots.map((s) => s.lng);
+  const area: [number, number, number, number] | null = spots.length
+    ? [Math.min(...lats) - 0.3, Math.min(...lngs) - 0.3, Math.max(...lats) + 0.3, Math.max(...lngs) + 0.3]
+    : null;
+
   return (
-    <>
-      <div className="mt-4">
-        <SearchFilters key={JSON.stringify(query)} query={query} facets={result.facets} currency={site.currency} count={result.hits.length} prices={prices} />
-      </div>
-      <div className="mt-6">
-        <RecentlyViewed currency={site.currency} offered={allListings.map((l) => l.slug)} />
-        {query.guests && groups.length > 0 && (
+    <SearchResults
+      hits={result.hits}
+      query={query}
+      currency={site.currency}
+      addsGst={site.pricesAddGst}
+      area={area}
+      toolbar={<SearchFilters key={JSON.stringify(query)} query={query} facets={result.facets} currency={site.currency} count={result.hits.length} prices={prices} />}
+      before={
+        query.guests && groups.length > 0 ? (
           <GroupSuggestions suggestions={groups} guests={query.guests} checkIn={query.checkIn} checkOut={query.checkOut} currency={site.currency} />
-        )}
-        <SearchResults hits={result.hits} query={query} currency={site.currency} addsGst={site.pricesAddGst} />
-      </div>
-    </>
+        ) : null
+      }
+      after={<RecentlyViewed currency={site.currency} offered={allListings.map((l) => l.slug)} />}
+    />
   );
 }
 
 function ResultsSkeleton() {
   return (
-    <div className="mt-6 grid gap-8 lg:grid-cols-[1fr_minmax(0,0.85fr)]">
-      <div className="grid gap-6 sm:grid-cols-2">
-        {Array.from({ length: 4 }, (_, i) => (
-          <div key={i} className="aspect-[4/3] animate-pulse rounded-2xl bg-sand-deep" />
-        ))}
+    <div className="stays-layout">
+      <div>
+        <div className="flex min-h-14 items-center">
+          <h1 className="text-lg">All stays</h1>
+        </div>
+        <div className="grid grid-cols-2 gap-x-4 gap-y-5 sm:gap-x-6">
+          {Array.from({ length: 4 }, (_, i) => (
+            <div key={i} className="stay-photo animate-pulse rounded-2xl bg-sand-deep" />
+          ))}
+        </div>
       </div>
-      <div className="hidden h-[70svh] animate-pulse rounded-2xl bg-sand-deep lg:block" />
+      <div className="stays-map hidden animate-pulse rounded-2xl bg-sand-deep lg:block" />
     </div>
   );
 }

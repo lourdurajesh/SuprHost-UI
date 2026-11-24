@@ -57,7 +57,7 @@ export function SiteFooter({ site }: { site: Site }) {
   // 44px-tall tap target on phones without changing how the column looks.
   const link = "inline-flex min-h-11 items-center text-ink hover:text-ink-soft";
   return (
-    <footer id="contact" className="mt-20 border-t border-line lg:mt-28 print:hidden">
+    <footer id="contact" className="relative z-10 mt-20 border-t border-line bg-white lg:mt-28 print:hidden">
       <div className="mx-auto grid max-w-7xl gap-12 px-4 py-16 sm:px-6 lg:grid-cols-[1.3fr_1fr] lg:px-8">
         <div className="hide-in-booking-flow lg:border-r lg:border-line lg:pr-16">
           <h2 className="text-h1">Talk to us before you book</h2>

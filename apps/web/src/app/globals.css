@@ -256,6 +256,52 @@ body:has([data-stays-page]:not([style*="display: none"], [style*="display: none"
   }
 }
 
+/* The results page: list on the left, map on the right. The map fills the window under the 76px header
+   and stays there. Photos take what is left of the window after the header, the toolbar row and two
+   rows of card text, halved, so four cards always show on landing. */
+.stays-layout {
+  --bar: 76px;
+  --card-text: 6.25rem;
+  --fixed: calc(var(--bar) + 4.75rem + 1.25rem);
+}
+.stays-layout:has(.has-alt-dates) {
+  --card-text: 7.5rem;
+}
+.stay-photo {
+  height: clamp(6.5rem, calc((100dvh - var(--fixed) - 2 * var(--card-text)) / 2), 18.5rem);
+}
+.stays-map {
+  height: 70svh;
+}
+@media (max-width: 639.98px) {
+  .stays-layout {
+    --bar: 140px; /* brand row and search row */
+  }
+  .stay-photo {
+    max-height: 10rem;
+  }
+}
+@media (min-width: 1024px) {
+  .stays-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+    gap: 1.5rem;
+    min-height: calc(100dvh - 84px);
+  }
+  /* Fixed for good, over the empty right-hand column (same sums as the grid above, in a page of at most
+     1440px with 2rem gutters); the footer slides over it. --scroll-lock is the scrollbar's width while the
+     search panel locks the page, so the map doesn't shift. */
+  .stays-map {
+    --page: calc(100% - var(--scroll-lock, 0px));
+    position: fixed;
+    z-index: 0;
+    top: 84px;
+    right: calc(max(0px, (var(--page) - 1440px) / 2) + 2rem + var(--scroll-lock, 0px));
+    width: calc((min(var(--page), 1440px) - 4rem - 1.5rem) / 2.25);
+    height: calc(100dvh - 100px);
+  }
+}
+
 .no-scrollbar {
   scrollbar-width: none;
 }

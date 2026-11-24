@@ -101,9 +101,13 @@ export function SearchFilters({ query, facets, currency, count, prices }: Props)
       <FiltersModal open={filtersOpen} onClose={() => setFiltersOpen(false)} query={query} facets={facets} prices={prices} currency={currency} onApply={apply} />
 
       <div className="flex flex-wrap items-center gap-2">
-        <p className="mr-2 text-sm text-ink" aria-live="polite">
-          {pending ? "Updating…" : `${count} stay${count === 1 ? "" : "s"}${query.checkIn && query.checkOut ? " available for your dates" : query.stay || query.months?.length ? ` free for a ${query.stay ?? "weekend"}` : ""}`}
-        </p>
+        <h1 className="mr-2 min-w-0 truncate text-lg max-sm:flex-1">
+          <span aria-live="polite">
+            {pending
+              ? "Updating…"
+              : `${count} stay${count === 1 ? "" : "s"}${query.city ? ` in ${query.city}` : ""}${query.checkIn && query.checkOut ? " for your dates" : query.stay || query.months?.length ? ` free for a ${query.stay ?? "weekend"}` : ""}`}
+          </span>
+        </h1>
         {applied.map((f) => (
           <button
             key={f.key}

@@ -10,7 +10,7 @@ export function RecentlyViewed({ currency, offered }: { currency: string; offere
   const recent = useRecentStays().filter((s) => offered.includes(s.slug));
   if (recent.length === 0) return null;
   return (
-    <section aria-labelledby="recent-heading" className="mb-8">
+    <section aria-labelledby="recent-heading" className="border-t border-line pt-6">
       <h2 id="recent-heading" className="text-sm font-medium text-ink-soft">Recently viewed</h2>
       <ul className="no-scrollbar -mx-4 mt-3 flex gap-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
         {recent.map((s) => (
