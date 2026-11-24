@@ -63,8 +63,17 @@ export function CheckoutForm({ listingId, checkIn, checkOut, guests, holdMinutes
 
   const check = useTurnstile(!session);
 
-  const set = (field: keyof Details) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
-    setDetails((d) => ({ ...d, [field]: e.target.value }));
+  // A message goes away as soon as its field is edited; the field is checked again on Next.
+  const clearError = (field: keyof FieldErrors) => setErrors((found) => ({ ...found, [field]: undefined }));
+  const change = (field: keyof Details, value: string) => {
+    setDetails((d) => ({ ...d, [field]: value }));
+    clearError(field);
+  };
+  const changeCode = (value: string) => {
+    setCode(value);
+    clearError("code");
+  };
+  const set = (field: keyof Details) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => change(field, e.target.value);
 
   function checkDetails(): FieldErrors {
     const found: FieldErrors = {};
@@ -196,7 +205,7 @@ export function CheckoutForm({ listingId, checkIn, checkOut, guests, holdMinutes
           </p>
         </div>
         <TestModeCode code={testModeCode} byPhone={mobileMode} />
-        <CodeInput id="code" value={code} onChange={setCode} error={errors.code} />
+        <CodeInput id="code" value={code} onChange={changeCode} error={errors.code} />
         {formError}
         <div className="flex justify-end">
           <button type="submit" disabled={Boolean(busy) || code.length !== 6} className={next}>
@@ -277,7 +286,7 @@ export function CheckoutForm({ listingId, checkIn, checkOut, guests, holdMinutes
           <MobileField
             id="phone"
             value={details.phone}
-            onChange={(v) => setDetails((d) => ({ ...d, phone: v }))}
+            onChange={(v) => change("phone", v)}
             readOnly={signedInByPhone}
             error={errors.phone}
           />
