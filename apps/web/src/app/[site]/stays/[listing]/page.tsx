@@ -238,7 +238,7 @@ async function ListingPageContent({ params }: Pick<PageProps<"/[site]/stays/[lis
               {listing.amenities.length > 10 && (
                 <div className="mt-8">
                   <MoreDialog label={`Show all ${listing.amenities.length} amenities`} title="What this place offers">
-                    <div className="space-y-8">
+                    <div className="gap-x-10 sm:columns-2 [&>div]:mb-8 [&>div]:break-inside-avoid">
                       {amenityGroups.map((g) => (
                         <div key={g.title}>
                           <h3 className="text-h3">{g.title}</h3>

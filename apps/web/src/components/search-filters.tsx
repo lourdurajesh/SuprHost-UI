@@ -13,7 +13,7 @@ import { Dropdown } from "./dropdown";
 import { Icon } from "./icons";
 import { useFiltersSlot } from "./search/filters-slot";
 import { pillClass } from "./ui/button";
-import { Dialog } from "./ui/dialog";
+import { Dialog, DialogHeader } from "./ui/dialog";
 
 // ssr: false gives it its own Suspense boundary; without one, the first opening blanks the whole page.
 const FiltersPanel = dynamic(() => import("./search/filters-panel").then((m) => m.FiltersPanel), { ssr: false });
@@ -90,7 +90,8 @@ export function SearchFilters({ query, facets, currency, count, prices }: Props)
           slot,
         )}
 
-      <Dialog open={filtersOpen} onClose={() => setFiltersOpen(false)} label="Filters" layout="panel" width="40rem" height="54rem" phone="full">
+      <Dialog open={filtersOpen} onClose={() => setFiltersOpen(false)} size="lg" phone="full">
+        <DialogHeader title="Filters" />
         <FiltersPanel onClose={() => setFiltersOpen(false)} query={query} facets={facets} prices={prices} currency={currency} onApply={apply} />
       </Dialog>
 

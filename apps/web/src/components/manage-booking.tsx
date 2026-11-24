@@ -8,8 +8,8 @@ import { bookingUrl } from "@/lib/links";
 import { useAvailability } from "@/lib/use-availability";
 import { DatesDialog } from "./dates-dialog";
 import { openSignIn } from "./sign-in";
-import { buttonClass } from "./ui/button";
-import { Dialog } from "./ui/dialog";
+import { buttonClass, textButton } from "./ui/button";
+import { Dialog, DialogBody, DialogFooter, DialogHeader } from "./ui/dialog";
 
 interface Props {
   token: string;
@@ -162,30 +162,32 @@ export function ManageBooking({ token, listingId, checkIn, checkOut, guests, tot
         maxNights={maxNights}
       />
 
-      <Dialog open={cancelOpen} onClose={() => setCancelOpen(false)} labelledBy="cancel-heading">
-        <h3 id="cancel-heading" className="text-h3">Cancel this booking?</h3>
-        <dl className="mt-4 space-y-2 text-sm">
-          <div className="flex justify-between gap-4">
-            <dt className="text-ink-soft">Cancellation charge</dt>
-            <dd>{money(manage.cancellationCharge)}</dd>
-          </div>
-          <div className="flex justify-between gap-4 font-medium">
-            <dt>Refund</dt>
-            {/* Only talk about a refund when money was actually taken online. */}
-            <dd>{paid ? money(manage.refund) : "Nothing to refund"}</dd>
-          </div>
-        </dl>
-        <p className="mt-3 text-sm text-ink-soft">
-          {!paid && "You haven’t paid online for this booking. "}The dates are released at once. This can’t be undone.
-        </p>
-        <div className="mt-6 flex flex-wrap justify-end gap-3">
-          <button type="button" onClick={() => setCancelOpen(false)} data-autofocus className={buttonClass("outline", "sm")}>
+      <Dialog open={cancelOpen} onClose={() => setCancelOpen(false)}>
+        <DialogHeader title="Cancel this booking?" />
+        <DialogBody>
+          <dl className="space-y-2">
+            <div className="flex justify-between gap-4">
+              <dt className="text-ink-soft">Cancellation charge</dt>
+              <dd>{money(manage.cancellationCharge)}</dd>
+            </div>
+            <div className="flex justify-between gap-4 font-medium">
+              <dt>Refund</dt>
+              {/* Only talk about a refund when money was actually taken online. */}
+              <dd>{paid ? money(manage.refund) : "Nothing to refund"}</dd>
+            </div>
+          </dl>
+          <p className="mt-4 text-sm text-ink-soft">
+            {!paid && "You haven’t paid online for this booking. "}The dates are released at once. This can’t be undone.
+          </p>
+        </DialogBody>
+        <DialogFooter>
+          <button type="button" onClick={() => setCancelOpen(false)} data-autofocus className={textButton}>
             Keep booking
           </button>
-          <button type="button" onClick={cancel} disabled={busy === "cancel"} className={buttonClass("danger", "sm")}>
+          <button type="button" onClick={cancel} disabled={busy === "cancel"} className={buttonClass("danger")}>
             {busy === "cancel" ? "Cancelling…" : "Yes, cancel"}
           </button>
-        </div>
+        </DialogFooter>
       </Dialog>
     </section>
   );

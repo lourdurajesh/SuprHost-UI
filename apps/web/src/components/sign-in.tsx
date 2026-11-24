@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 import { safePath } from "@/lib/links";
 import { createStore } from "@/lib/store";
-import { Dialog, DialogClose } from "./ui/dialog";
+import { Dialog, DialogBody, DialogHeader } from "./ui/dialog";
 
 const SignInForm = dynamic(() => import("./sign-in-form").then((m) => m.SignInForm), { loading: () => <div className="h-52" /> });
 
@@ -43,19 +43,11 @@ export function SignInHost({ brandName, phoneSignIn }: { brandName: string; phon
   }, [asked, askedNext]);
 
   return (
-    <Dialog open={open !== null} onClose={close} labelledBy="signin-title" phone="sheet">
-      <DialogClose onClose={close} className="absolute right-4 top-4" />
-      <div className="pt-9 text-center">
-        <span aria-hidden className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-brand text-xl font-medium text-white">
-          {brandName.charAt(0)}
-        </span>
-        <h2 id="signin-title" className="mt-4 text-[1.625rem] leading-tight">
-          Log in or sign up
-        </h2>
-      </div>
-      <div className="mt-8 pb-4">
+    <Dialog open={open !== null} onClose={close}>
+      <DialogHeader title="Log in or sign up" subtitle={brandName} />
+      <DialogBody>
         <SignInForm phoneSignIn={phoneSignIn} onSignedIn={() => signedIn(open?.next ?? null)} />
-      </div>
+      </DialogBody>
     </Dialog>
   );
 }

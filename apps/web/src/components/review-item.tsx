@@ -9,17 +9,19 @@ export function ReviewItem({ review: r, brandName, clamp = false }: { review: Pu
         <span aria-hidden className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-sand-deep font-medium">
           {r.author.charAt(0)}
         </span>
-        <p className="font-medium">{r.author}</p>
+        <div>
+          <p className="font-medium">{r.author}</p>
+          <p className="text-sm">
+            <span aria-hidden className="tracking-widest">
+              {"★".repeat(r.rating)}
+              <span className="text-field">{"★".repeat(5 - r.rating)}</span>
+            </span>
+            <span className="sr-only">Rated {r.rating} out of 5</span>
+            <span className="text-ink-soft"> · {formatDate(`${r.month}-01`, { month: "long", year: "numeric" })}</span>
+          </p>
+        </div>
       </div>
-      <p className="mt-3 text-sm">
-        <span aria-hidden className="tracking-widest">
-          {"★".repeat(r.rating)}
-          <span className="text-field">{"★".repeat(5 - r.rating)}</span>
-        </span>
-        <span className="sr-only">Rated {r.rating} out of 5</span>
-        <span className="text-ink-soft"> · {formatDate(`${r.month}-01`, { month: "long", year: "numeric" })}</span>
-      </p>
-      <p className={`mt-2 whitespace-pre-line ${clamp ? "line-clamp-4" : ""}`}>{r.text}</p>
+      <p className={`mt-3 whitespace-pre-line ${clamp ? "line-clamp-4" : ""}`}>{r.text}</p>
       {r.reply && !clamp && (
         <p className="mt-3 border-l-2 border-line pl-4 text-sm text-ink-soft">
           <span className="font-medium text-ink">Reply from {brandName}:</span> {r.reply}

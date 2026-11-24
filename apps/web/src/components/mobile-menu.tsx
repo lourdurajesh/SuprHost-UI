@@ -40,13 +40,13 @@ export function MobileMenu({ brandName, whatsapp, phone }: Props) {
         onClick={(e) => e.target === dialog.current && close()}
         className="ml-auto mr-0 h-dvh max-h-none w-[min(22rem,100vw)] max-w-none flex-col bg-white p-0 text-ink backdrop:bg-black/40 open:flex"
       >
-        <div className="flex h-[76px] items-center justify-between px-5">
-          <span className="text-h3">{brandName}</span>
+        <div className="flex min-h-[4.25rem] shrink-0 items-center justify-between gap-4 border-b border-line py-3 pl-6 pr-4">
+          <span className="text-lg font-medium">{brandName}</span>
           <button type="button" onClick={close} aria-label="Close menu" className={iconButton}>
-            <Icon name="close" />
+            <Icon name="close" className="h-5 w-5" />
           </button>
         </div>
-        <nav aria-label="Menu" className="relative flex flex-1 flex-col overflow-y-auto px-5">
+        <nav aria-label="Menu" className="relative flex flex-1 flex-col overflow-y-auto px-6">
           <Link href="/stays" onClick={close} className={item}>Stays</Link>
           <Link href="/#about" onClick={close} className={item}>Our story</Link>
           <Link href="/faq" onClick={close} className={item}>FAQ</Link>

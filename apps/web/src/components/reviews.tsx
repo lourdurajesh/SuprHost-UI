@@ -7,10 +7,13 @@ import { formatScore, MIN_REVIEWS_FOR_SCORE } from "@/lib/reviews";
 import { plural } from "@/lib/text";
 import { Icon } from "./icons";
 import { buttonClass } from "./ui/button";
-import { Dialog, DialogClose } from "./ui/dialog";
+import { Dialog, DialogBody, DialogHeader } from "./ui/dialog";
 
 // ssr: false gives it its own Suspense boundary; without one, the first opening blanks the whole page.
 const ReviewsPanel = dynamic(() => import("./reviews-panel").then((m) => m.ReviewsPanel), { ssr: false });
+
+/** From here on the list outgrows the popup, so it keeps one height while being searched. */
+const MANY = 6;
 
 /** "4.6 · 14 reviews" (or a "Show all" button) that opens every review of a home in a popup. */
 export function ReviewsDialog({ slug, rating, brandName, trigger }: { slug: string; rating: RatingSummary; brandName: string; trigger: "link" | "button" }) {
@@ -36,11 +39,11 @@ export function ReviewsDialog({ slug, rating, brandName, trigger }: { slug: stri
         </button>
       )}
 
-      <Dialog open={open} onClose={close} label="Guest reviews" layout="fixed" width="64.5rem" height="52rem" phone="full">
-        <div className="flex shrink-0 border-b border-line px-4 py-3">
-          <DialogClose onClose={close} />
-        </div>
-        <ReviewsPanel slug={slug} rating={rating} brandName={brandName} />
+      <Dialog open={open} onClose={close} size="lg" phone="full" steady={rating.count > MANY}>
+        <DialogHeader title="Guest reviews" />
+        <DialogBody>
+          <ReviewsPanel slug={slug} rating={rating} brandName={brandName} />
+        </DialogBody>
       </Dialog>
     </>
   );

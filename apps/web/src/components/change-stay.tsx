@@ -8,7 +8,7 @@ import { DatesDialog } from "./dates-dialog";
 import { CountRow } from "./search/count-row";
 import { changeButton } from "./step-card";
 import { buttonClass, textButton } from "./ui/button";
-import { Dialog, DialogClose } from "./ui/dialog";
+import { Dialog, DialogBody, DialogFooter, DialogHeader } from "./ui/dialog";
 
 interface Stay {
   listingId: string;
@@ -71,18 +71,12 @@ export function ChangeGuests({ stay, maxGuests }: { stay: Stay; maxGuests: numbe
       >
         {pending ? "…" : "Change"}
       </button>
-      <Dialog open={open} onClose={close} labelledBy="change-guests">
-        <div className="flex items-center justify-between">
-          <h2 id="change-guests" className="text-h2">
-            Change guests
-          </h2>
-          <DialogClose onClose={close} className="-mr-2" />
-        </div>
-        <p className="mt-1 text-sm text-ink-soft">This home sleeps up to {maxGuests}.</p>
-        <div className="mt-2">
+      <Dialog open={open} onClose={close}>
+        <DialogHeader title="Change guests" subtitle={`This home sleeps up to ${maxGuests}.`} />
+        <DialogBody>
           <CountRow title="Guests" value={guests} min={1} max={maxGuests} onChange={setGuests} />
-        </div>
-        <div className="mt-4 flex items-center justify-between">
+        </DialogBody>
+        <DialogFooter>
           <button type="button" onClick={close} className={textButton}>
             Cancel
           </button>
@@ -92,11 +86,11 @@ export function ChangeGuests({ stay, maxGuests }: { stay: Stay; maxGuests: numbe
               close();
               if (guests !== stay.guests) change({ guests });
             }}
-            className={buttonClass("dark")}
+            className={buttonClass()}
           >
             Save
           </button>
-        </div>
+        </DialogFooter>
       </Dialog>
     </>
   );

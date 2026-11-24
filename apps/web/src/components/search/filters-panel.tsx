@@ -7,7 +7,7 @@ import { toSearchString } from "@/lib/search-query";
 import { plural } from "@/lib/text";
 import { amenityIcon, Icon } from "../icons";
 import { buttonClass, textButton } from "../ui/button";
-import { DialogClose } from "../ui/dialog";
+import { DialogBody, DialogFooter } from "../ui/dialog";
 import { CountRow } from "./count-row";
 import { PriceSlider } from "./price-slider";
 
@@ -29,7 +29,7 @@ const sectionClass = "border-t border-line py-8 first:border-t-0 first:pt-2";
 const h = "text-lg";
 
 /**
- * The filters popup's content: a title bar, sections separated by lines, and a footer with "Clear all" and
+ * The filters popup's content: sections separated by lines, and a footer with "Clear all" and
  * a button that says how many homes the choices leave. The count is live: it asks the server about the
  * draft a moment after each change. Nothing reaches the address until that button.
  */
@@ -79,12 +79,7 @@ export function FiltersPanel({ query, facets, prices, currency, onApply, onClose
 
   return (
     <>
-      <div className="relative flex shrink-0 items-center justify-center border-b border-line px-6 py-4">
-        <h2 className="text-base font-medium">Filters</h2>
-        <DialogClose onClose={close} className="absolute right-3 top-1/2 -translate-y-1/2" />
-      </div>
-
-      <div className="relative min-h-0 flex-1 overflow-y-auto px-6 py-6 sm:px-8">
+      <DialogBody>
         {recommended.length > 0 && (
           <section className={sectionClass}>
             <h3 className={h}>Recommended for you</h3>
@@ -190,9 +185,9 @@ export function FiltersPanel({ query, facets, prices, currency, onApply, onClose
             </div>
           </section>
         )}
-      </div>
+      </DialogBody>
 
-      <div className="flex shrink-0 items-center justify-between gap-4 border-t border-line px-6 py-4 sm:px-8">
+      <DialogFooter>
         <button
           type="button"
           disabled={untouched}
@@ -212,7 +207,7 @@ export function FiltersPanel({ query, facets, prices, currency, onApply, onClose
         >
           {count === null ? "Show stays" : count === 0 ? "No stays match" : `Show ${plural(count, "stay")}`}
         </button>
-      </div>
+      </DialogFooter>
     </>
   );
 }

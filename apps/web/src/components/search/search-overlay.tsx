@@ -6,6 +6,7 @@ import type { SearchQuery } from "@/lib/pms/types";
 import { describeWhen } from "@/lib/search-query";
 import { plural } from "@/lib/text";
 import { Icon } from "../icons";
+import { iconButton } from "../ui/button";
 import { applyDraft, draftFrom, EMPTY_DRAFT, type Draft } from "./draft";
 import { SearchFace } from "./search-bar";
 import type { SearchOpen, SearchVariant, Section } from "./search-store";
@@ -456,12 +457,11 @@ function Mobile({ open, phase, target, active, setActive, close, search, clear, 
       <div aria-hidden className={`absolute inset-0 bg-black/30 backdrop-blur-sm transition-opacity duration-300 ${full ? "opacity-100" : "opacity-0"}`} />
       <div className="absolute inset-0 bg-sand-deep" style={{ clipPath: clip, transition: `clip-path ${MOVE_MS}ms ${EASE}` }}>
         <div className={`flex h-full flex-col ${content}`} inert={phase !== "open"}>
-          <div className="flex items-center justify-between px-4 pt-4">
-            <button type="button" onClick={close} aria-label="Close search" className="focus-own grid h-11 w-11 place-items-center rounded-full bg-white ring-1 ring-line focus-visible:ring-2 focus-visible:ring-ink">
-              <Icon name="close" className="h-4 w-4" />
+          <div className="flex min-h-[4.25rem] items-center justify-between gap-4 border-b border-line bg-white py-3 pl-6 pr-4">
+            <p className="text-lg font-medium">Search stays</p>
+            <button type="button" onClick={close} aria-label="Close search" className={iconButton}>
+              <Icon name="close" className="h-5 w-5" />
             </button>
-            <p className="text-base">Search stays</p>
-            <span className="w-11" />
           </div>
 
           <div className="relative flex-1 space-y-3 overflow-y-auto px-4 py-4">
