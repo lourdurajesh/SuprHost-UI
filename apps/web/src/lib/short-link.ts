@@ -16,7 +16,7 @@ export function shortCode(id: string): string {
   return h.toString(36).padStart(7, "0");
 }
 
-export interface SharedStay {
+interface SharedStay {
   checkIn?: string | null;
   checkOut?: string | null;
   guests?: number | null;

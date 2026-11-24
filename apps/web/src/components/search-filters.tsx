@@ -1,25 +1,22 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
 import { useState, useTransition } from "react";
 import { createPortal } from "react-dom";
-import type { PropertyType, SearchQuery, SearchResult } from "@/lib/pms/types";
+import type { SearchQuery, SearchResult } from "@/lib/pms/types";
 import { formatMoney } from "@/lib/dates";
 import { toSearchString } from "@/lib/search-query";
+import { PROPERTY_TYPE } from "@/lib/listing-facts";
+import { plural } from "@/lib/text";
 import { Dropdown } from "./dropdown";
 import { Icon } from "./icons";
-import { FiltersModal } from "./search/filters-modal";
 import { useFiltersSlot } from "./search/filters-slot";
+import { pillClass } from "./ui/button";
+import { Dialog } from "./ui/dialog";
 
-const TYPE_LABEL: Record<PropertyType, string> = {
-  cottage: "Cottages",
-  suite: "Suites",
-  villa: "Villas",
-  home: "Homes",
-  apartment: "Apartments",
-};
-
-export { toSearchString };
+// ssr: false gives it its own Suspense boundary; without one, the first opening blanks the whole page.
+const FiltersPanel = dynamic(() => import("./search/filters-panel").then((m) => m.FiltersPanel), { ssr: false });
 
 interface Props {
   query: SearchQuery;
@@ -52,12 +49,9 @@ export function SearchFilters({ query, facets, currency, count, prices }: Props)
     (query.instantBook ? 1 : 0) +
     (query.minPrice || query.maxPrice ? 1 : 0);
 
-  const pill = "focus-own min-h-11 shrink-0 rounded-full bg-white px-4 py-2.5 text-sm ring-1 ring-line outline-none focus-visible:ring-2 focus-visible:ring-ink";
-  const dropdown = `${pill} select-chevron [--select-inset:1rem]`;
-
   // Applied filters as removable chips, so guests can see and undo what narrows the list.
   const applied: { key: string; label: string; next: SearchQuery }[] = [
-    ...(query.types ?? []).map((t) => ({ key: `type-${t}`, label: TYPE_LABEL[t], next: { ...query, types: query.types!.filter((x) => x !== t) } })),
+    ...(query.types ?? []).map((t) => ({ key: `type-${t}`, label: `${PROPERTY_TYPE[t]}s`, next: { ...query, types: query.types!.filter((x) => x !== t) } })),
     ...(query.bedrooms ? [{ key: "bedrooms", label: `${query.bedrooms}+ bedrooms`, next: { ...query, bedrooms: undefined } }] : []),
     ...(query.beds ? [{ key: "beds", label: `${query.beds}+ beds`, next: { ...query, beds: undefined } }] : []),
     ...(query.bathrooms ? [{ key: "bathrooms", label: `${query.bathrooms}+ bathrooms`, next: { ...query, bathrooms: undefined } }] : []),
@@ -87,7 +81,7 @@ export function SearchFilters({ query, facets, currency, count, prices }: Props)
             type="button"
             onClick={() => setFiltersOpen(true)}
             aria-label={activeFilters ? `Filters, ${activeFilters} applied` : "Filters"}
-            className={`${pill} relative inline-flex h-12 items-center gap-2 max-lg:w-12 max-lg:justify-center max-lg:px-0`}
+            className={`${pillClass} relative inline-flex h-12 items-center gap-2 max-lg:w-12 max-lg:justify-center max-lg:px-0`}
           >
             <Icon name="sliders" className="h-4 w-4" />
             <span className="max-lg:hidden">Filters</span>
@@ -98,14 +92,16 @@ export function SearchFilters({ query, facets, currency, count, prices }: Props)
           slot,
         )}
 
-      <FiltersModal open={filtersOpen} onClose={() => setFiltersOpen(false)} query={query} facets={facets} prices={prices} currency={currency} onApply={apply} />
+      <Dialog open={filtersOpen} onClose={() => setFiltersOpen(false)} label="Filters" layout="panel" width="40rem" height="54rem" phone="full">
+        <FiltersPanel onClose={() => setFiltersOpen(false)} query={query} facets={facets} prices={prices} currency={currency} onApply={apply} />
+      </Dialog>
 
       <div className="flex flex-wrap items-center gap-2">
         <h1 className="mr-2 min-w-0 truncate text-lg max-sm:flex-1">
           <span aria-live="polite">
             {pending
               ? "Updating…"
-              : `${count} stay${count === 1 ? "" : "s"}${query.city ? ` in ${query.city}` : ""}${query.checkIn && query.checkOut ? " for your dates" : query.stay || query.months?.length ? ` free for a ${query.stay ?? "weekend"}` : ""}`}
+              : `${plural(count, "stay")}${query.city ? ` in ${query.city}` : ""}${query.checkIn && query.checkOut ? " for your dates" : query.stay || query.months?.length ? ` free for a ${query.stay ?? "weekend"}` : ""}`}
           </span>
         </h1>
         {applied.map((f) => (
@@ -137,7 +133,7 @@ export function SearchFilters({ query, facets, currency, count, prices }: Props)
             { value: "price_asc", label: "Price: low to high" },
             { value: "price_desc", label: "Price: high to low" },
           ]}
-          className={`${dropdown} ml-auto`}
+          className={`${pillClass} ml-auto`}
         />
       </div>
     </div>

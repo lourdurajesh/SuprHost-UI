@@ -35,7 +35,7 @@ export const PALETTES: Palette[] = [
 ];
 
 /** A locked choice: a palette by id, or the host's own two colours. */
-export type PaletteLock = { id: string } | { id: "custom"; brand: string; accent: string };
+type PaletteLock = { id: string } | { id: "custom"; brand: string; accent: string };
 
 export function customPalette(brand: string, accent: string): Palette {
   return {
@@ -49,7 +49,7 @@ export function customPalette(brand: string, accent: string): Palette {
   };
 }
 
-export function paletteFrom(lock: PaletteLock | undefined): Palette | null {
+function paletteFrom(lock: PaletteLock | undefined): Palette | null {
   if (!lock) return null;
   if (lock.id === "custom" && "brand" in lock) return customPalette(lock.brand, lock.accent);
   return PALETTES.find((p) => p.id === lock.id) ?? null;

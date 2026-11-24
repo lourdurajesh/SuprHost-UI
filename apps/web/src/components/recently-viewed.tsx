@@ -1,5 +1,6 @@
 "use client";
 
+import { stayUrl } from "@/lib/links";
 import Link from "next/link";
 import { formatMoney } from "@/lib/dates";
 import { useRecentStays } from "./wishlist";
@@ -15,7 +16,7 @@ export function RecentlyViewed({ currency, offered }: { currency: string; offere
       <ul className="no-scrollbar -mx-4 mt-3 flex gap-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
         {recent.map((s) => (
           <li key={s.slug} className="w-56 shrink-0">
-            <Link href={`/stays/${s.slug}`} className="group flex min-h-11 items-center gap-3">
+            <Link href={stayUrl(s.slug)} className="group flex min-h-11 items-center gap-3">
               <span className="h-14 w-20 shrink-0 overflow-hidden rounded-lg bg-sand-deep">
                 {s.image && (
                   // Small thumbnail of an already-optimised variant; next/image isn't worth it at this size.

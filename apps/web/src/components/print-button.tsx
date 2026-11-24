@@ -1,11 +1,13 @@
 "use client";
 
+import { buttonClass } from "./ui/button";
+
 export function PrintButton({ label = "Print or save as PDF" }: { label?: string }) {
   return (
     <button
       type="button"
       onClick={() => window.print()}
-      className="inline-flex min-h-11 items-center rounded-xl bg-brand px-5 text-sm font-medium text-white print:hidden"
+      className={`${buttonClass("primary", "sm")} print:hidden`}
     >
       {label}
     </button>

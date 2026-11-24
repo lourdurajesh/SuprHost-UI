@@ -1,19 +1,15 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import type { PropertyType, SearchQuery, SearchResult } from "@/lib/pms/types";
+import { PROPERTY_TYPE } from "@/lib/listing-facts";
 import { toSearchString } from "@/lib/search-query";
+import { plural } from "@/lib/text";
 import { amenityIcon, Icon } from "../icons";
+import { buttonClass, textButton } from "../ui/button";
+import { DialogClose } from "../ui/dialog";
 import { CountRow } from "./count-row";
 import { PriceSlider } from "./price-slider";
-
-const TYPE_LABEL: Record<PropertyType, string> = {
-  cottage: "Cottage",
-  suite: "Suite",
-  villa: "Villa",
-  home: "Home",
-  apartment: "Apartment",
-};
 
 const TYPE_ICON: Record<PropertyType, string> = { cottage: "leaf", suite: "bed", villa: "home", home: "home", apartment: "grid" };
 
@@ -21,7 +17,6 @@ const TYPE_ICON: Record<PropertyType, string> = { cottage: "leaf", suite: "bed",
 const FILTER_KEYS = ["minPrice", "maxPrice", "bedrooms", "beds", "bathrooms", "instantBook", "types", "amenities", "city"] as const;
 
 interface Props {
-  open: boolean;
   onClose: () => void;
   query: SearchQuery;
   facets: SearchResult["facets"];
@@ -30,38 +25,15 @@ interface Props {
   onApply: (next: SearchQuery) => void;
 }
 
-/**
- * The filters, as a modal in the Airbnb manner: a title bar, sections separated by lines, and a
- * footer with "Clear all" and a button that says how many homes the choices leave. The count is
- * live: it asks the server about the draft a moment after each change.
- */
-export function FiltersModal({ open, onClose, ...rest }: Props) {
-  const ref = useRef<HTMLDialogElement>(null);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    if (open && !el.open) el.showModal();
-    if (!open && el.open) el.close();
-  }, [open]);
-
-  return (
-    <dialog
-      ref={ref}
-      aria-label="Filters"
-      onClose={onClose}
-      onClick={(e) => e.target === ref.current && onClose()}
-      className="modal-in m-auto max-h-[min(54rem,calc(100dvh-3rem))] w-[min(40rem,calc(100vw-2rem))] max-w-none flex-col overflow-hidden rounded-[28px] bg-white p-0 text-ink shadow-[0_24px_80px_-20px_rgba(0,0,0,0.5)] backdrop:bg-black/40 open:flex max-sm:m-0 max-sm:h-dvh max-sm:max-h-none max-sm:w-full max-sm:rounded-none"
-    >
-      {open && <FiltersContent {...rest} close={onClose} />}
-    </dialog>
-  );
-}
-
 const sectionClass = "border-t border-line py-8 first:border-t-0 first:pt-2";
 const h = "text-lg";
 
-function FiltersContent({ query, facets, prices, currency, onApply, close }: Omit<Props, "open" | "onClose"> & { close: () => void }) {
+/**
+ * The filters popup's content: a title bar, sections separated by lines, and a footer with "Clear all" and
+ * a button that says how many homes the choices leave. The count is live: it asks the server about the
+ * draft a moment after each change. Nothing reaches the address until that button.
+ */
+export function FiltersPanel({ query, facets, prices, currency, onApply, onClose: close }: Props) {
   const [draft, setDraft] = useState<SearchQuery>(query);
   const [count, setCount] = useState<number | null>(null);
   const [moreAmenities, setMoreAmenities] = useState(false);
@@ -109,17 +81,10 @@ function FiltersContent({ query, facets, prices, currency, onApply, close }: Omi
     <>
       <div className="relative flex shrink-0 items-center justify-center border-b border-line px-6 py-4">
         <h2 className="text-base font-medium">Filters</h2>
-        <button
-          type="button"
-          onClick={close}
-          aria-label="Close filters"
-          className="focus-own absolute right-4 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full hover:bg-sand-deep focus-visible:ring-2 focus-visible:ring-ink"
-        >
-          <Icon name="close" className="h-4 w-4" />
-        </button>
+        <DialogClose onClose={close} className="absolute right-3 top-1/2 -translate-y-1/2" />
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-6 py-6 sm:px-8">
+      <div className="relative min-h-0 flex-1 overflow-y-auto px-6 py-6 sm:px-8">
         {recommended.length > 0 && (
           <section className={sectionClass}>
             <h3 className={h}>Recommended for you</h3>
@@ -152,7 +117,7 @@ function FiltersContent({ query, facets, prices, currency, onApply, close }: Omi
                 <button key={t.value} type="button" aria-pressed={on} onClick={() => setDraft({ ...draft, types: toggle(draft.types, t.value) })} className={tile(on)}>
                   <Icon name={TYPE_ICON[t.value]} className="h-7 w-7" strokeWidth={1.4} />
                   <span>
-                    {TYPE_LABEL[t.value]} <span className="text-ink-soft">· {t.count}</span>
+                    {PROPERTY_TYPE[t.value]} <span className="text-ink-soft">· {t.count}</span>
                   </span>
                 </button>
               );
@@ -221,7 +186,7 @@ function FiltersContent({ query, facets, prices, currency, onApply, close }: Omi
               })}
             </ul>
             {others.length > 6 && (
-              <button type="button" onClick={() => setMoreAmenities(!moreAmenities)} className="focus-own mt-5 min-h-11 rounded-lg px-1 text-base font-medium underline underline-offset-4 focus-visible:ring-2 focus-visible:ring-ink">
+              <button type="button" onClick={() => setMoreAmenities(!moreAmenities)} className={`${textButton} mt-5`}>
                 {moreAmenities ? "Show less" : `Show ${others.length - 6} more`}
               </button>
             )}
@@ -250,7 +215,7 @@ function FiltersContent({ query, facets, prices, currency, onApply, close }: Omi
           type="button"
           disabled={untouched}
           onClick={() => setDraft({ ...draft, ...Object.fromEntries(FILTER_KEYS.map((k) => [k, undefined])) })}
-          className="focus-own min-h-11 rounded-lg px-1 text-base font-medium underline underline-offset-4 focus-visible:ring-2 focus-visible:ring-ink disabled:text-field disabled:no-underline"
+          className={textButton}
         >
           Clear all
         </button>
@@ -261,9 +226,9 @@ function FiltersContent({ query, facets, prices, currency, onApply, close }: Omi
             close();
           }}
           disabled={count === 0}
-          className="min-h-12 rounded-lg bg-brand px-7 text-base font-medium text-white transition hover:brightness-125 disabled:cursor-not-allowed disabled:opacity-50"
+          className={buttonClass()}
         >
-          {count === null ? "Show stays" : count === 0 ? "No stays match" : `Show ${count} stay${count === 1 ? "" : "s"}`}
+          {count === null ? "Show stays" : count === 0 ? "No stays match" : `Show ${plural(count, "stay")}`}
         </button>
       </div>
     </>

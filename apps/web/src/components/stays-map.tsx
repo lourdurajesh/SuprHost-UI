@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import type { Map as MapLibreMap, Marker } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 
-export interface MapPin {
+interface MapPin {
   id: string;
   lat: number;
   lng: number;
@@ -50,15 +50,22 @@ function mapStyle() {
 
 // MapLibre (~220 KB gzip) is only downloaded when the map scrolls into view.
 export function StaysMap({ pins, activeId, onPinHover, className = "", approximate = false, zoom = 12, initialBounds = null, onMoveEnd }: Props) {
+  // The latest handlers, without rebuilding the map or its pins when they change.
   const moveEnd = useRef(onMoveEnd);
+  const pinHover = useRef(onPinHover);
   useEffect(() => {
     moveEnd.current = onMoveEnd;
-  }, [onMoveEnd]);
+    pinHover.current = onPinHover;
+  }, [onMoveEnd, onPinHover]);
+  const keepView = initialBounds !== null;
   const el = useRef<HTMLDivElement>(null);
-  const map = useRef<MapLibreMap | null>(null);
   const markers = useRef(new Map<string, { marker: Marker; node: HTMLElement }>());
   const [visible, setVisible] = useState(false);
+  // The map that is on screen now: a new object each time one is made, so its pins are drawn on it.
+  const [made, setMade] = useState<{ map: MapLibreMap; lib: typeof import("maplibre-gl") } | null>(null);
   const [failed, setFailed] = useState(false);
+  // Pins are compared by value, so a new but equal list (a re-render) changes nothing.
+  const pinsKey = JSON.stringify(pins);
 
   useEffect(() => {
     if (!el.current) return;
@@ -68,8 +75,9 @@ export function StaysMap({ pins, activeId, onPinHover, className = "", approxima
   }, []);
 
   useEffect(() => {
-    if (!visible || !el.current || map.current) return;
+    if (!visible || !el.current) return;
     let cancelled = false;
+    let shown: MapLibreMap | null = null;
     const container = el.current;
     const registry = markers.current;
     import("maplibre-gl")
@@ -78,13 +86,14 @@ export function StaysMap({ pins, activeId, onPinHover, className = "", approxima
         const m = new maplibregl.Map({
           container,
           style: mapStyle(),
-          center: pins[0] ? [pins[0].lng, pins[0].lat] : [76.65, 12.3],
+          center: pins[0] ? [pins[0].lng, pins[0].lat] : [78.96, 22.59], // the middle of India, until pins or bounds place it
           zoom,
           attributionControl: { compact: true },
           cooperativeGestures: true,
         });
         m.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
-        map.current = m;
+        shown = m;
+        setMade({ map: m, lib: maplibregl });
 
         if (approximate && pins[0]) {
           // Map layers take real colours, not CSS variables.
@@ -101,26 +110,9 @@ export function StaysMap({ pins, activeId, onPinHover, className = "", approxima
           return;
         }
 
-        for (const p of pins) {
-          const node = document.createElement(p.href ? "a" : "div");
-          if (p.href) (node as HTMLAnchorElement).href = p.href;
-          node.className =
-            "block rounded-full bg-white px-3 py-1.5 text-sm font-medium text-ink shadow-[0_2px_10px_rgba(0,0,0,0.18)] ring-1 ring-black/5 transition-transform hover:scale-110";
-          node.textContent = p.label;
-          if (p.title) node.title = p.title;
-          if (p.title && p.href) node.setAttribute("aria-label", `${p.title}, ${p.label}`);
-          node.addEventListener("mouseenter", () => onPinHover?.(p.id));
-          node.addEventListener("mouseleave", () => onPinHover?.(null));
-          const marker = new maplibregl.Marker({ element: node }).setLngLat([p.lng, p.lat]).addTo(m);
-          registry.set(p.id, { marker, node });
-        }
         if (initialBounds) {
           const [s, w, n, e] = initialBounds;
           m.fitBounds([[w, s], [e, n]], { padding: 0, duration: 0 });
-        } else if (pins.length > 1) {
-          const bounds = new maplibregl.LngLatBounds();
-          pins.forEach((p) => bounds.extend([p.lng, p.lat]));
-          m.fitBounds(bounds, { padding: 60, maxZoom: 13, duration: 0 });
         }
         // Only moves the guest makes count (they carry an originalEvent); fitting above doesn't.
         m.on("moveend", (ev) => {
@@ -133,14 +125,40 @@ export function StaysMap({ pins, activeId, onPinHover, className = "", approxima
       .catch(() => setFailed(true));
     return () => {
       cancelled = true;
-      registry.forEach(({ marker }) => marker.remove());
       registry.clear();
-      map.current?.remove();
-      map.current = null;
+      shown?.remove();
+      setMade(null);
     };
-    // Pins are rebuilt by remounting (key on the parent) when results change.
+    // The map is made once; pins and highlights change it in place below.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible]);
+
+  // Pins for the homes shown. A map the guest has positioned (initialBounds) keeps its place.
+  useEffect(() => {
+    if (!made || approximate) return;
+    const { map: m, lib: maplibregl } = made;
+    const list = JSON.parse(pinsKey) as MapPin[];
+    const registry = markers.current;
+    registry.forEach(({ marker }) => marker.remove());
+    registry.clear();
+    for (const p of list) {
+      const node = document.createElement(p.href ? "a" : "div");
+      if (p.href) (node as HTMLAnchorElement).href = p.href;
+      node.className =
+        "block rounded-full bg-white px-3 py-1.5 text-sm font-medium text-ink shadow-[0_2px_10px_rgba(0,0,0,0.18)] ring-1 ring-black/5 transition-transform hover:scale-110";
+      node.textContent = p.label;
+      if (p.title) node.title = p.title;
+      if (p.title && p.href) node.setAttribute("aria-label", `${p.title}, ${p.label}`);
+      node.addEventListener("mouseenter", () => pinHover.current?.(p.id));
+      node.addEventListener("mouseleave", () => pinHover.current?.(null));
+      registry.set(p.id, { marker: new maplibregl.Marker({ element: node }).setLngLat([p.lng, p.lat]).addTo(m), node });
+    }
+    if (list.length > 0 && !keepView) {
+      const bounds = new maplibregl.LngLatBounds();
+      list.forEach((p) => bounds.extend([p.lng, p.lat]));
+      m.fitBounds(bounds, { padding: 60, maxZoom: 13, duration: 0 });
+    }
+  }, [made, pinsKey, approximate, keepView]);
 
   // Highlight the pin of the card under the pointer.
   useEffect(() => {
@@ -150,7 +168,7 @@ export function StaysMap({ pins, activeId, onPinHover, className = "", approxima
       node.style.color = on ? "#fff" : "";
       node.style.zIndex = on ? "2" : "";
     });
-  }, [activeId]);
+  }, [activeId, pinsKey, made]);
 
   return (
     <div ref={el} role="region" aria-label="Map" className={`relative overflow-hidden bg-sand-deep ${className}`}>

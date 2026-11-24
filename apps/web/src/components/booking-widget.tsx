@@ -1,18 +1,22 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
-import type { Availability, Quote } from "@/lib/pms/types";
-import { addDays, formatDate, formatMoney, isIsoDate, minNightsOn, nightsBetween, todayIn } from "@/lib/dates";
+import type { Quote } from "@/lib/pms/types";
+import { useBrowserValue } from "@/lib/browser";
+import { formatDate, formatMoney, minNightsOn, nightsBetween, shortRange } from "@/lib/dates";
+import { bookUrl, whatsappUrl } from "@/lib/links";
+import { queryFromParams } from "@/lib/search-query";
+import { plural } from "@/lib/text";
+import { useAvailability } from "@/lib/use-availability";
 import { useCalendarSlot } from "./calendar-slot";
-import { DatesDialog, shortRange } from "./date-range-field";
+import { DatesDialog } from "./dates-dialog";
 import { DateRangePicker } from "./date-range-picker";
 import { GuestStepper } from "./guest-stepper";
 import { PriceBreakdown } from "./price-breakdown";
 import { trackFunnel } from "./track";
-
-const noSubscribe = () => () => {};
+import { buttonClass, textButton } from "./ui/button";
 
 interface Props {
   listingId: string;
@@ -25,7 +29,7 @@ interface Props {
   fromPrice: number;
   currency: string;
   timezone: string;
-  /** WhatsApp digits and the stay's name: adds an "Ask the host" link that carries the guest's dates. */
+  /** The host's WhatsApp and the stay's name: adds an "Ask the host" link that carries the guest's dates. */
   askHost?: { whatsapp: string; stayName: string };
 }
 
@@ -37,53 +41,17 @@ export function BookingWidget({ listingId, city, maxGuests, minNights: listingMi
   const router = useRouter();
   const [datesOpen, setDatesOpen] = useState(false);
   const calendarSlot = useCalendarSlot(listingId);
-  // "Today" is read in the browser only (null on the server), never baked into the prerendered page.
-  const today = useSyncExternalStore(
-    noSubscribe,
-    () => todayIn(timezone),
-    () => null,
-  );
-  const [busy, setBusy] = useState<Availability["busy"]>([]);
-  const [rules, setRules] = useState<Availability["rules"]>([]);
-  const [availabilityError, setAvailabilityError] = useState(false);
+  const { busy, rules, today, failed: availabilityFailed } = useAvailability(listingId, timezone);
   // Dates and party size carried over from search (?checkIn&checkOut&guests), read in the browser
   // so the page itself stays static. The guest's own picks override them.
-  const urlDates = useSyncExternalStore(
-    noSubscribe,
-    () => {
-      const p = new URLSearchParams(window.location.search);
-      const ci = p.get("checkIn"), co = p.get("checkOut");
-      return ci && co && isIsoDate(ci) && isIsoDate(co) && co > ci ? `${ci}|${co}` : null;
-    },
-    () => null,
-  );
+  const search = useBrowserValue(() => window.location.search, "");
+  const fromUrl = useMemo(() => queryFromParams(new URLSearchParams(search)), [search]);
   const [picked, setPicked] = useState<{ checkIn: string | null; checkOut: string | null } | null>(null);
-  const checkIn = picked ? picked.checkIn : (urlDates?.split("|")[0] ?? null);
-  const checkOut = picked ? picked.checkOut : (urlDates?.split("|")[1] ?? null);
-  const urlGuests = useSyncExternalStore(
-    noSubscribe,
-    () => Number(new URLSearchParams(window.location.search).get("guests")) || null,
-    () => null,
-  );
+  const { checkIn = null, checkOut = null } = picked ?? fromUrl;
   const [guestsChoice, setGuests] = useState<number | null>(null);
-  const guests = Math.min(Math.max(guestsChoice ?? urlGuests ?? 2, 1), maxGuests);
+  const guests = Math.min(Math.max(guestsChoice ?? fromUrl.guests ?? 2, 1), maxGuests);
   const [quote, setQuote] = useState<Quote | null>(null);
   const [quoteError, setQuoteError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!today) return;
-    const ctrl = new AbortController();
-    fetch(`/api/availability?listing=${listingId}&from=${today}&to=${addDays(today, 400)}`, { signal: ctrl.signal })
-      .then((r) => (r.ok ? r.json() : Promise.reject(r)))
-      .then((a: Availability) => {
-        setBusy(a.busy);
-        setRules(a.rules ?? []);
-      })
-      .catch((e) => {
-        if (e?.name !== "AbortError") setAvailabilityError(true);
-      });
-    return () => ctrl.abort();
-  }, [listingId, today]);
 
   const nights = checkIn && checkOut ? nightsBetween(checkIn, checkOut) : 0;
   const minNights = checkIn ? minNightsOn(checkIn, rules, listingMinNights) : listingMinNights;
@@ -125,8 +93,7 @@ export function BookingWidget({ listingId, city, maxGuests, minNights: listingMi
       setDatesOpen(true);
       return;
     }
-    const q = new URLSearchParams({ listing: listingId, checkIn, checkOut, guests: String(guests) });
-    router.push(`/book?${q}`);
+    router.push(bookUrl(listingId, { checkIn, checkOut, guests }));
   }
 
   const ready = Boolean(checkIn && checkOut && quote);
@@ -140,7 +107,7 @@ export function BookingWidget({ listingId, city, maxGuests, minNights: listingMi
           {quote ? (
             <>
               <span className="text-h2 font-medium underline underline-offset-4">{formatMoney(quote.total, quote.currency)}</span>
-              <span className="text-ink-soft"> for {nights} night{nights === 1 ? "" : "s"}</span>
+              <span className="text-ink-soft"> for {plural(nights, "night")}</span>
             </>
           ) : (
             <>
@@ -173,7 +140,7 @@ export function BookingWidget({ listingId, city, maxGuests, minNights: listingMi
           </div>
         </div>
 
-        {availabilityError && <p className="mt-3 text-sm text-red-700">Could not load availability. Your dates will still be checked.</p>}
+        {availabilityFailed && <p className="mt-3 text-sm text-red-700">Could not load availability. Your dates will still be checked.</p>}
         {tooShort && (
           <p className="mt-3 text-sm text-red-700">
             Minimum stay is {minNights} nights{minNights !== listingMinNights ? " for this check-in date" : ""}.
@@ -185,7 +152,7 @@ export function BookingWidget({ listingId, city, maxGuests, minNights: listingMi
           type="button"
           onClick={reserve}
           disabled={Boolean(checkIn && checkOut && !quote && !quoteError && !tooShort)}
-          className="mt-4 min-h-12 w-full rounded-xl bg-brand px-6 py-3 font-medium text-white transition hover:brightness-110 disabled:opacity-60"
+          className={`${buttonClass()} mt-4 w-full`}
         >
           {action}
         </button>
@@ -203,11 +170,12 @@ export function BookingWidget({ listingId, city, maxGuests, minNights: listingMi
         <p className="mt-3 text-center text-sm text-ink-soft">You won’t be charged until you confirm. Best price, booked direct.</p>
         {askHost && (
           <a
-            href={`https://wa.me/${askHost.whatsapp}?text=${encodeURIComponent(
-              checkIn && checkOut
-                ? `Hello! I'm looking at ${askHost.stayName} for ${formatDate(checkIn)} to ${formatDate(checkOut)}, ${guests} guest${guests === 1 ? "" : "s"}. Could you help me with a question?`
-                : `Hello! I'm looking at ${askHost.stayName}. Could you help me with a question?`,
-            )}`}
+            href={
+              whatsappUrl(
+                askHost.whatsapp,
+                `Hello! I'm looking at ${askHost.stayName}${checkIn && checkOut ? ` for ${formatDate(checkIn)} to ${formatDate(checkOut)}, ${plural(guests, "guest")}` : ""}. Could you help me with a question?`,
+              ) ?? undefined
+            }
             target="_blank"
             rel="noopener noreferrer"
             className="mt-1 flex min-h-11 items-center justify-center text-sm font-medium underline underline-offset-4"
@@ -226,7 +194,7 @@ export function BookingWidget({ listingId, city, maxGuests, minNights: listingMi
             </span>
             <span className="block truncate text-sm text-ink-soft underline underline-offset-4">
               {checkIn && checkOut
-                ? `${shortRange(checkIn, checkOut)} · ${guests} guest${guests === 1 ? "" : "s"}`
+                ? `${shortRange(checkIn, checkOut)} · ${plural(guests, "guest")}`
                 : `${pricesAddGst ? "+ GST · " : ""}Add dates`}
             </span>
           </button>
@@ -234,7 +202,7 @@ export function BookingWidget({ listingId, city, maxGuests, minNights: listingMi
             type="button"
             onClick={reserve}
             disabled={Boolean(checkIn && checkOut && !quote && !quoteError && !tooShort)}
-            className="min-h-12 shrink-0 rounded-xl bg-brand px-6 py-3 font-medium text-white disabled:opacity-60"
+            className={`${buttonClass()} shrink-0`}
           >
             {ready ? "Reserve" : checkIn && checkOut && !quoteError && !tooShort ? "Checking…" : "Check dates"}
           </button>
@@ -245,7 +213,7 @@ export function BookingWidget({ listingId, city, maxGuests, minNights: listingMi
         today &&
         createPortal(
           <>
-            <h2 className="text-h2">{nights > 0 ? `${nights} night${nights === 1 ? "" : "s"} in ${city}` : checkIn ? "Select check-out date" : "Select check-in date"}</h2>
+            <h2 className="text-h2">{nights > 0 ? `${plural(nights, "night")} in ${city}` : checkIn ? "Select check-out date" : "Select check-in date"}</h2>
             <p className="mt-1 text-sm text-ink-soft">
               {checkIn && checkOut ? `${formatDate(checkIn)} – ${formatDate(checkOut)}` : "Add your travel dates for exact prices"}
             </p>
@@ -253,7 +221,7 @@ export function BookingWidget({ listingId, city, maxGuests, minNights: listingMi
               <DateRangePicker today={today} busy={busy} checkIn={checkIn} checkOut={checkOut} minNights={listingMinNights} maxNights={maxNights} rules={rules} onChange={onDates} />
             </div>
             <div className="mt-4 flex justify-end">
-              <button type="button" onClick={() => onDates(null, null)} disabled={!checkIn} className="min-h-11 rounded-lg px-2 text-sm font-medium underline underline-offset-4 disabled:text-field disabled:no-underline">
+              <button type="button" onClick={() => onDates(null, null)} disabled={!checkIn} className={`${textButton} text-sm`}>
                 Clear dates
               </button>
             </div>

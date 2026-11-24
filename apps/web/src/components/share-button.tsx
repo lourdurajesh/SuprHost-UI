@@ -1,13 +1,13 @@
 "use client";
 
-import { useRef, useState, useSyncExternalStore } from "react";
+import { useRef, useState } from "react";
 import type { ListingImage } from "@/lib/pms/types";
+import { useBrowserValue } from "@/lib/browser";
 import { isIsoDate } from "@/lib/dates";
 import { shortPath } from "@/lib/short-link";
 import { mediaSrc } from "@/themes/escape/listing-media";
 import { Icon } from "./icons";
-
-const noSubscribe = () => () => {};
+import { Dialog, DialogClose } from "./ui/dialog";
 
 interface Props {
   listingId: string;
@@ -22,14 +22,11 @@ interface Props {
 
 /** Share a home with a short link on this site, carrying the dates and guests the visitor has chosen. */
 export function ShareButton({ listingId, name, facts, image, variant = "text", className = "" }: Props) {
-  const dialog = useRef<HTMLDialogElement>(null);
-  const [url, setUrl] = useState("");
+  const [url, setUrl] = useState<string | null>(null);
+  const field = useRef<HTMLInputElement>(null);
+  const close = () => setUrl(null);
   const [copied, setCopied] = useState(false);
-  const canShare = useSyncExternalStore(
-    noSubscribe,
-    () => typeof navigator.share === "function",
-    () => false,
-  );
+  const canShare = useBrowserValue(() => typeof navigator.share === "function", false);
 
   function open() {
     const p = new URLSearchParams(window.location.search);
@@ -38,15 +35,14 @@ export function ShareButton({ listingId, name, facts, image, variant = "text", c
     const dated = ci && co && isIsoDate(ci) && isIsoDate(co);
     setUrl(window.location.origin + shortPath(listingId, dated ? { checkIn: ci, checkOut: co, guests: Number(p.get("guests")) || null } : {}));
     setCopied(false);
-    dialog.current?.showModal();
   }
 
   async function copy() {
     try {
-      await navigator.clipboard.writeText(url);
+      await navigator.clipboard.writeText(url ?? "");
     } catch {
       // Clipboard blocked: select the address so it can be copied by hand.
-      dialog.current?.querySelector<HTMLInputElement>("input")?.select();
+      field.current?.select();
       return;
     }
     setCopied(true);
@@ -71,17 +67,10 @@ export function ShareButton({ listingId, name, facts, image, variant = "text", c
         {variant === "text" && <span className="underline underline-offset-2">Share</span>}
       </button>
 
-      <dialog
-        ref={dialog}
-        aria-label="Share this place"
-        onClick={(e) => e.target === dialog.current && dialog.current.close()}
-        className="modal-in m-auto w-[min(34rem,calc(100vw-2rem))] max-w-none rounded-[28px] bg-white p-6 text-ink shadow-[0_24px_80px_-20px_rgba(0,0,0,0.5)] backdrop:bg-black/40 sm:p-8"
-      >
+      <Dialog open={url !== null} onClose={close} label="Share this place" width="34rem">
         <div className="flex items-start justify-between gap-4">
           <h2 className="text-h2">Share this place</h2>
-          <button type="button" onClick={() => dialog.current?.close()} aria-label="Close" className="-mr-2 -mt-2 grid h-11 w-11 place-items-center rounded-full hover:bg-sand-deep">
-            <Icon name="close" className="h-5 w-5" />
-          </button>
+          <DialogClose onClose={close} className="-mr-2 -mt-2" />
         </div>
         <div className="mt-5 flex items-center gap-4">
           {image && (
@@ -95,7 +84,7 @@ export function ShareButton({ listingId, name, facts, image, variant = "text", c
         </div>
 
         <div className="mt-5 flex items-stretch overflow-hidden rounded-xl ring-1 ring-field focus-within:ring-2 focus-within:ring-ink">
-          <input readOnly value={url} aria-label="Short link" onFocus={(e) => e.target.select()} className="focus-own min-w-0 flex-1 bg-transparent px-4 py-3 text-base outline-none" />
+          <input ref={field} readOnly value={url ?? ""} aria-label="Short link" onFocus={(e) => e.target.select()} className="focus-own min-w-0 flex-1 bg-transparent px-4 py-3 text-base outline-none" />
           <button type="button" onClick={copy} className="focus-own shrink-0 border-l border-line px-5 font-medium hover:bg-sand-deep focus-visible:bg-sand-deep">
             {copied ? "Copied" : "Copy"}
           </button>
@@ -115,12 +104,12 @@ export function ShareButton({ listingId, name, facts, image, variant = "text", c
             <Icon name="phone" /> Messages
           </a>
           {canShare && (
-            <button type="button" onClick={() => navigator.share({ title: name, url }).catch(() => undefined)} className={item}>
+            <button type="button" onClick={() => navigator.share({ title: name, url: url ?? "" }).catch(() => undefined)} className={item}>
               <Icon name="share" /> More options
             </button>
           )}
         </div>
-      </dialog>
+      </Dialog>
     </>
   );
 }

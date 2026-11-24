@@ -5,6 +5,8 @@ import { MobileMenu } from "@/components/mobile-menu";
 import { Icon } from "@/components/icons";
 import { HeaderSearch, HeaderSearchFallback, SearchHost } from "@/components/search/header-search";
 import { SignInHost } from "@/components/sign-in";
+import { buttonClass } from "@/components/ui/button";
+import { telUrl, whatsappUrl } from "@/lib/links";
 import type { Place } from "@/components/search/where-panel";
 import type { Site } from "@/lib/pms";
 
@@ -21,40 +23,41 @@ function Wordmark({ site }: { site: Site }) {
 export function SiteHeader({ site, places }: { site: Site; places: Place[] }) {
   return (
     <>
-    <header className="site-header sticky top-0 z-40 border-b border-line bg-white/95 backdrop-blur-md print:hidden">
-      <div className="mx-auto flex max-w-[1440px] flex-wrap items-center justify-between gap-x-4 px-4 sm:grid sm:grid-cols-[1fr_auto_1fr] sm:px-6 lg:px-8">
-        <div className="flex h-[76px] min-w-0 flex-1 items-center">
-          <Wordmark site={site} />
+      <header className="site-header sticky top-0 z-40 border-b border-line bg-white/95 backdrop-blur-md print:hidden">
+        <div className="mx-auto flex max-w-[1440px] flex-wrap items-center justify-between gap-x-4 px-4 sm:grid sm:grid-cols-[1fr_auto_1fr] sm:px-6 lg:px-8">
+          <div className="flex h-[76px] min-w-0 flex-1 items-center">
+            <Wordmark site={site} />
+          </div>
+          {/* Phones: a second row, on the results page only. Wider: the middle of the bar. */}
+          <div className="header-search hide-in-booking-flow order-last w-full min-w-0 pb-3 sm:order-none sm:w-auto sm:pb-0">
+            <Suspense fallback={<HeaderSearchFallback />}>
+              <HeaderSearch />
+            </Suspense>
+          </div>
+          <nav aria-label="Main" className="hide-in-booking-flow col-start-3 flex shrink-0 items-center justify-end gap-2 text-ink md:gap-3">
+            <Link href="/stays" className="header-book hide-in-booking-flow inline-flex min-h-11 shrink-0 items-center whitespace-nowrap rounded-full bg-brand px-5 text-white transition hover:brightness-125">
+              Book now
+            </Link>
+            <span className="hidden md:inline-flex">
+              <AccountMenu />
+            </span>
+            <MobileMenu brandName={site.brandName} whatsapp={site.contact.whatsapp} phone={site.contact.phone} />
+          </nav>
         </div>
-        {/* Phones: a second row, on the results page only. Wider: the middle of the bar. */}
-        <div className="header-search hide-in-booking-flow order-last w-full min-w-0 pb-3 sm:order-none sm:w-auto sm:pb-0">
-          <Suspense fallback={<HeaderSearchFallback />}>
-            <HeaderSearch />
-          </Suspense>
-        </div>
-        <nav aria-label="Main" className="hide-in-booking-flow col-start-3 flex shrink-0 items-center justify-end gap-2 text-ink md:gap-3">
-          <Link href="/stays" className="header-book hide-in-booking-flow inline-flex min-h-11 shrink-0 items-center whitespace-nowrap rounded-full bg-brand px-5 text-white transition hover:brightness-125">
-            Book now
-          </Link>
-          <span className="hidden md:inline-flex">
-            <AccountMenu />
-          </span>
-          <MobileMenu brandName={site.brandName} whatsapp={site.contact.whatsapp?.replace(/\D/g, "") || null} phone={site.contact.phone} />
-        </nav>
-      </div>
-    </header>
-    {/* Outside the header: there the bar may be hidden, and the panel must still show. */}
-    <Suspense fallback={null}>
-      <SearchHost places={places} timezone={site.timezone} brandName={site.brandName} />
-      <SignInHost brandName={site.brandName} phoneSignIn={site.features.includes("guest.phone_sign_in")} />
-    </Suspense>
+      </header>
+      {/* Outside the header: there the bar may be hidden, and the panel must still show. */}
+      <Suspense fallback={null}>
+        <SearchHost places={places} timezone={site.timezone} brandName={site.brandName} />
+        <SignInHost brandName={site.brandName} phoneSignIn={site.features.includes("guest.phone_sign_in")} />
+      </Suspense>
     </>
   );
 }
 
 export function SiteFooter({ site }: { site: Site }) {
   const { contact } = site;
-  const whatsapp = contact.whatsapp?.replace(/\D/g, "");
+  const chat = whatsappUrl(contact.whatsapp);
+  const call = telUrl(contact.phone);
   const label = "text-eyebrow uppercase text-ink-soft";
   // 44px-tall tap target on phones without changing how the column looks.
   const link = "inline-flex min-h-11 items-center text-ink hover:text-ink-soft";
@@ -67,18 +70,13 @@ export function SiteFooter({ site }: { site: Site }) {
             Questions about a stay, a special occasion or getting here? We usually reply within minutes.
           </p>
           <div className="mt-7 flex flex-wrap gap-3">
-            {whatsapp && (
-              <a
-                href={`https://wa.me/${whatsapp}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-xl bg-brand px-6 py-3 text-white hover:brightness-125"
-              >
+            {chat && (
+              <a href={chat} target="_blank" rel="noopener noreferrer" className={buttonClass()}>
                 <Icon name="chat" className="h-4 w-4" /> WhatsApp
               </a>
             )}
-            {contact.phone && (
-              <a href={`tel:${contact.phone.replace(/\s/g, "")}`} className="inline-flex items-center gap-2 rounded-xl px-6 py-3 ring-1 ring-line hover:bg-sand-deep">
+            {call && (
+              <a href={call} className={buttonClass("outline")}>
                 <Icon name="phone" className="h-4 w-4" /> {contact.phone}
               </a>
             )}

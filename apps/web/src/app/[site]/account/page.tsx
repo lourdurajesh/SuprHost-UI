@@ -4,7 +4,10 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { Icon } from "@/components/icons";
+import { buttonClass } from "@/components/ui/button";
 import { formatDate, formatMoney, todayIn } from "@/lib/dates";
+import { bookingUrl, whatsappUrl } from "@/lib/links";
+import { plural } from "@/lib/text";
 import { getGuestSession, getSite, getTrips, getWishlist, type TripSummary } from "@/lib/pms";
 import { ListingCard } from "@/themes/escape/listing-card";
 import { readSessionToken } from "@/lib/session";
@@ -33,7 +36,8 @@ async function Trips({ params }: Pick<PageProps<"/[site]/account">, "params">) {
   const today = todayIn(site.timezone);
   const upcoming = trips.filter((t) => t.status === "confirmed" && t.checkOut >= today).reverse();
   const past = trips.filter((t) => !(t.status === "confirmed" && t.checkOut >= today));
-  const whatsapp = site.contact.whatsapp?.replace(/\D/g, "");
+  const { whatsapp } = site.contact;
+  const chat = whatsappUrl(whatsapp);
 
   return (
     <>
@@ -43,7 +47,7 @@ async function Trips({ params }: Pick<PageProps<"/[site]/account">, "params">) {
           <p className="mt-2 text-ink-soft">Signed in as {session.signedInWith === "phone" ? maskMobile(session.phone ?? "") : session.email}</p>
         </div>
         {session.role === "host" && session.pmsUrl && (
-          <a href={session.pmsUrl} className="inline-flex items-center gap-2 rounded-xl bg-brand px-6 py-3 text-white hover:brightness-125">
+          <a href={session.pmsUrl} className={buttonClass()}>
             <Icon name="key" className="h-4 w-4" /> Open PMS
           </a>
         )}
@@ -54,7 +58,7 @@ async function Trips({ params }: Pick<PageProps<"/[site]/account">, "params">) {
         {upcoming.length === 0 ? (
           <div className="mt-5 rounded-2xl bg-sand-deep p-8">
             <p>No upcoming trips yet.</p>
-            <Link href="/stays" className="mt-4 inline-flex rounded-xl bg-brand px-6 py-3 text-white">
+            <Link href="/stays" className={`${buttonClass()} mt-4`}>
               Find a stay
             </Link>
           </div>
@@ -96,8 +100,8 @@ async function Trips({ params }: Pick<PageProps<"/[site]/account">, "params">) {
         <p className="mt-2 text-ink-soft">
           Questions about a stay? Message us on WhatsApp with your booking reference.
         </p>
-        {whatsapp && (
-          <a href={`https://wa.me/${whatsapp}`} target="_blank" rel="noopener noreferrer" className="mt-5 inline-flex items-center gap-2 rounded-xl px-5 py-2.5 ring-1 ring-line hover:bg-sand-deep">
+        {chat && (
+          <a href={chat} target="_blank" rel="noopener noreferrer" className={`${buttonClass("outline", "sm")} mt-5`}>
             <Icon name="chat" className="h-4 w-4" /> Chat on WhatsApp
           </a>
         )}
@@ -106,7 +110,8 @@ async function Trips({ params }: Pick<PageProps<"/[site]/account">, "params">) {
   );
 }
 
-function TripRow({ trip, whatsapp, muted = false }: { trip: TripSummary; whatsapp?: string; muted?: boolean }) {
+function TripRow({ trip, whatsapp, muted = false }: { trip: TripSummary; whatsapp: string | null; muted?: boolean }) {
+  const message = whatsappUrl(whatsapp, `Hello! About booking ${trip.reference}`);
   return (
     // No opacity for past trips: faded text would drop below 4.5:1.
     <li className={`flex flex-col gap-5 rounded-2xl p-4 ring-1 sm:flex-row sm:items-center ${muted ? "ring-line bg-sand-deep/40" : "ring-line"}`}>
@@ -118,28 +123,22 @@ function TripRow({ trip, whatsapp, muted = false }: { trip: TripSummary; whatsap
         </p>
         <p className="mt-1 text-lg font-medium">{trip.listing.name}</p>
         <p className="mt-1 text-ink-soft">
-          {formatDate(trip.checkIn, { weekday: "short", day: "numeric", month: "short" })} – {formatDate(trip.checkOut)} · {trip.guests} guest
-          {trip.guests === 1 ? "" : "s"} · {formatMoney(trip.total, trip.currency)}
+          {formatDate(trip.checkIn, { weekday: "short", day: "numeric", month: "short" })} – {formatDate(trip.checkOut)} · {plural(trip.guests, "guest")} · {formatMoney(trip.total, trip.currency)}
         </p>
       </div>
       <div className="flex flex-wrap gap-2 sm:flex-col">
         {trip.token && (
-          <Link href={`/booking/${encodeURIComponent(trip.token)}`} className={`inline-flex min-h-11 items-center justify-center rounded-xl px-5 text-center text-sm ${muted ? "ring-1 ring-line hover:bg-sand-deep" : "bg-brand text-white"}`}>
+          <Link href={bookingUrl(trip.token)} className={buttonClass(muted ? "outline" : "primary", "sm")}>
             View booking
           </Link>
         )}
         {trip.token && muted && trip.status === "confirmed" && (
-          <Link href={`/review/${encodeURIComponent(trip.token)}`} className="inline-flex min-h-11 items-center justify-center rounded-xl px-5 text-center text-sm ring-1 ring-ink hover:bg-sand-deep">
+          <Link href={`/review/${encodeURIComponent(trip.token)}`} className={buttonClass("outline", "sm")}>
             Write a review
           </Link>
         )}
-        {whatsapp && (
-          <a
-            href={`https://wa.me/${whatsapp}?text=${encodeURIComponent(`Hello! About booking ${trip.reference}`)}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex min-h-11 items-center justify-center rounded-xl px-5 text-center text-sm ring-1 ring-line hover:bg-sand-deep"
-          >
+        {message && (
+          <a href={message} target="_blank" rel="noopener noreferrer" className={buttonClass("outline", "sm")}>
             Message host
           </a>
         )}

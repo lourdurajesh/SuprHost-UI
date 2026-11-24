@@ -19,6 +19,7 @@ import type {
   TripSummary,
 } from "./types";
 import { PmsError } from "./types";
+import { plural } from "@/lib/text";
 import demo from "./demo-data.json";
 import { addDays, nightsBetween, overlapsBusy, toIso } from "@/lib/dates";
 
@@ -132,7 +133,7 @@ function buildQuote(listing: Listing, checkIn: string, checkOut: string, guests:
     guests,
     nights,
     currency: site.currency,
-    lines: [{ label: `₹${listing.fromPrice.toLocaleString("en-IN")} × ${nights} night${nights === 1 ? "" : "s"}`, amount: stay }],
+    lines: [{ label: `₹${listing.fromPrice.toLocaleString("en-IN")} × ${plural(nights, "night")}`, amount: stay }],
     subtotal: stay,
     taxes: [],
     total: stay,

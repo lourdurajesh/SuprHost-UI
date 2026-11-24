@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { formatMoney } from "@/lib/dates";
+import { buttonClass } from "./ui/button";
 
 type Tab = { id: string; label: string };
 
@@ -16,23 +17,28 @@ export function SectionTabs({ tabs, fromPrice, currency, addsGst }: { tabs: Tab[
 
   useEffect(() => {
     const sections = tabs.map((t) => document.getElementById(t.id)).filter((e): e is HTMLElement => e !== null);
-    const photos = sections[0];
     const card = document.getElementById("book");
-    const onScroll = () => {
-      setShown(Boolean(photos) && photos.getBoundingClientRect().bottom < 80);
+    let frame = 0;
+    const measure = () => {
+      frame = 0;
+      setShown(sections.length > 0 && sections[0].getBoundingClientRect().bottom < 80);
       if (card) {
         const b = card.getBoundingClientRect();
         setCardAway(b.bottom < 160 || b.top > window.innerHeight);
       }
       // The active section is the last one whose top has passed the bar.
-      let current = sections[0]?.id;
-      for (const el of sections) if (el.getBoundingClientRect().top <= 130) current = el.id;
-      setActive(current);
+      const passed = sections.filter((el) => el.getBoundingClientRect().top <= 130);
+      setActive((passed.at(-1) ?? sections[0])?.id);
     };
-    onScroll();
+    // At most once per drawn frame, however fast scroll events come.
+    const onScroll = () => {
+      if (!frame) frame = requestAnimationFrame(measure);
+    };
+    measure();
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll);
     return () => {
+      cancelAnimationFrame(frame);
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
     };
@@ -71,7 +77,7 @@ export function SectionTabs({ tabs, fromPrice, currency, addsGst }: { tabs: Tab[
             <span className="text-base font-medium">{formatMoney(fromPrice, currency)}</span> / night
             {addsGst && <span className="block text-ink-soft">+ GST</span>}
           </p>
-          <a href="#book" className="inline-flex min-h-12 items-center rounded-xl bg-brand px-6 font-medium text-white">
+          <a href="#book" className={buttonClass()}>
             Check availability
           </a>
         </div>

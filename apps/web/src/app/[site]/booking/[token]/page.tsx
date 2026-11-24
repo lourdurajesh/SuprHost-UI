@@ -6,9 +6,11 @@ import { connection } from "next/server";
 import { Icon } from "@/components/icons";
 import { ManageBooking } from "@/components/manage-booking";
 import { formatDate, formatMoney, todayIn } from "@/lib/dates";
+import { bookingUrl, mapsUrl, stayUrl, whatsappUrl } from "@/lib/links";
 import { getBooking, getListing, getSite } from "@/lib/pms";
 import { bookingToken } from "@/lib/validation";
-import { StaySummary } from "@/themes/escape/checkout";
+import { buttonClass } from "@/components/ui/button";
+import { StaySummary, summaryOf } from "@/themes/escape/checkout";
 
 export const metadata: Metadata = { title: "Your booking", robots: { index: false, follow: false } };
 
@@ -46,9 +48,8 @@ async function Confirmation({ params }: Pick<PageProps<"/[site]/booking/[token]"
   const simulated = booking.payment.mode === "simulated";
 
   // The booked home's own place. Never the site's: that can be in another city.
-  const at = listing?.location;
-  const mapsUrl = at ? `https://www.google.com/maps/search/?api=1&query=${at.lat},${at.lng}` : null;
-  const whatsapp = site.contact.whatsapp?.replace(/\D/g, "");
+  const directions = mapsUrl(listing?.location);
+  const message = whatsappUrl(site.contact.whatsapp, `Hello! Booking ${booking.reference}`);
 
   return (
     <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_372px] lg:gap-20">
@@ -97,57 +98,54 @@ async function Confirmation({ params }: Pick<PageProps<"/[site]/booking/[token]"
 
             {past && (
               <div className="mt-8 flex flex-wrap gap-3">
-                <Link href={`/review/${encodeURIComponent(token)}`} className="inline-flex min-h-12 items-center rounded-xl bg-brand px-6 font-medium text-white">
+                <Link href={`/review/${encodeURIComponent(token)}`} className={buttonClass()}>
                   Write a review
                 </Link>
-                <Link href={`/stays/${booking.listing.slug}`} className="inline-flex min-h-12 items-center rounded-xl px-6 font-medium ring-1 ring-line hover:bg-sand-deep">
+                <Link href={stayUrl(booking.listing.slug)} className={buttonClass("outline")}>
                   Book again
                 </Link>
-                <Link href={`/booking/${encodeURIComponent(token)}/receipt`} className="inline-flex min-h-12 items-center rounded-xl px-6 font-medium ring-1 ring-line hover:bg-sand-deep">
+                <Link href={bookingUrl(token, "receipt")} className={buttonClass("outline")}>
                   Receipt
                 </Link>
               </div>
             )}
 
-            <div className={past ? "hidden" : "mt-10 border-t border-line pt-8"}>
-              <h2 className="text-h2">What happens next</h2>
-              <ol className="mt-5 space-y-5">
-                {[
-                  ["mail", "Check your inbox", "Your confirmation and receipt are on the way. Keep the booking reference handy."],
-                  ["chat", "We’ll be in touch", "A day before arrival we’ll send directions and how to get in."],
-                  ["key", "Arrive and relax", `Check-in is from ${site.policies.checkInTime}. Bring a photo ID for each adult guest.`],
-                ].map(([icon, title, text]) => (
-                  <li key={title} className="flex gap-4">
-                    <Icon name={icon} className="mt-0.5 h-6 w-6 shrink-0 text-accent" />
-                    <div>
-                      <p className="font-medium">{title}</p>
-                      <p className="text-sm text-ink-soft">{text}</p>
-                    </div>
-                  </li>
-                ))}
-              </ol>
+            {!past && (
+              <div className="mt-10 border-t border-line pt-8">
+                <h2 className="text-h2">What happens next</h2>
+                <ol className="mt-5 space-y-5">
+                  {[
+                    ["mail", "Check your inbox", "Your confirmation and receipt are on the way. Keep the booking reference handy."],
+                    ["chat", "We’ll be in touch", "A day before arrival we’ll send directions and how to get in."],
+                    ["key", "Arrive and relax", `Check-in is from ${site.policies.checkInTime}. Bring a photo ID for each adult guest.`],
+                  ].map(([icon, title, text]) => (
+                    <li key={title} className="flex gap-4">
+                      <Icon name={icon} className="mt-0.5 h-6 w-6 shrink-0 text-accent" />
+                      <div>
+                        <p className="font-medium">{title}</p>
+                        <p className="text-sm text-ink-soft">{text}</p>
+                      </div>
+                    </li>
+                  ))}
+                </ol>
 
-              <div className="mt-8 flex flex-wrap gap-3">
-                {mapsUrl && (
-                  <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-xl border border-line px-5 py-2.5 text-sm font-medium hover:bg-sand">
-                    <Icon name="pin" className="h-4 w-4" /> Get directions
-                  </a>
-                )}
-                {whatsapp && (
-                  <a
-                    href={`https://wa.me/${whatsapp}?text=${encodeURIComponent(`Hello! Booking ${booking.reference}`)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 rounded-xl border border-line px-5 py-2.5 text-sm font-medium hover:bg-sand"
-                  >
-                    <Icon name="chat" className="h-4 w-4" /> Message the host
-                  </a>
-                )}
-                <Link href="/" className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-medium text-ink-soft hover:text-ink">
-                  Back to home
-                </Link>
+                <div className="mt-8 flex flex-wrap gap-3">
+                  {directions && (
+                    <a href={directions} target="_blank" rel="noopener noreferrer" className={buttonClass("outline", "sm")}>
+                      <Icon name="pin" className="h-4 w-4" /> Get directions
+                    </a>
+                  )}
+                  {message && (
+                    <a href={message} target="_blank" rel="noopener noreferrer" className={buttonClass("outline", "sm")}>
+                      <Icon name="chat" className="h-4 w-4" /> Message the host
+                    </a>
+                  )}
+                  <Link href="/" className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-medium text-ink-soft hover:text-ink">
+                    Back to home
+                  </Link>
+                </div>
               </div>
-            </div>
+            )}
 
             {booking.manage && !past && (
               <ManageBooking
@@ -171,25 +169,14 @@ async function Confirmation({ params }: Pick<PageProps<"/[site]/booking/[token]"
         {cancelled && (
           <p className="mt-6 text-sm text-ink-soft">
             Total was {formatMoney(booking.quote.total, booking.quote.currency)}.{" "}
-            <Link href={`/booking/${encodeURIComponent(token)}/receipt`} className="underline underline-offset-4">
+            <Link href={bookingUrl(token, "receipt")} className="underline underline-offset-4">
               View receipt
             </Link>
           </p>
         )}
       </section>
 
-      <StaySummary
-        phoneFirst={false}
-        name={booking.listing.name}
-        propertyName={booking.listing.propertyName}
-        image={booking.listing.image}
-        rating={listing?.rating}
-        checkIn={booking.checkIn}
-        checkOut={booking.checkOut}
-        guests={booking.guests}
-        quote={booking.quote}
-        cancellation={site.policies.cancellation}
-      />
+      <StaySummary {...summaryOf(booking)} rating={listing?.rating} cancellation={site.policies.cancellation} phoneFirst={false} />
     </div>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { whatsappUrl } from "@/lib/links";
 import { Icon } from "./icons";
 
 interface Props {
@@ -30,9 +31,10 @@ export function ChatLauncher({ brandName, whatsapp }: Props) {
   }
 
   function send(message: string) {
-    const page = typeof window !== "undefined" ? window.location.href.split("#")[0] : "";
+    const page = window.location.href.split("#")[0];
     const body = `${message.trim()}\n\n(Sent from ${page})`;
-    window.open(`https://wa.me/${whatsapp}?text=${encodeURIComponent(body)}`, "_blank", "noopener,noreferrer");
+    const url = whatsappUrl(whatsapp, body);
+    if (url) window.open(url, "_blank", "noopener,noreferrer");
     setText("");
     setOpen(false);
   }

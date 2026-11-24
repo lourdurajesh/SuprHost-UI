@@ -1,7 +1,5 @@
 "use client";
 
-export { maskMobile, toMobile } from "@/lib/mobile";
-
 interface Props {
   id: string;
   value: string;

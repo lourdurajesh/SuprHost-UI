@@ -3,7 +3,8 @@
 import { useRef } from "react";
 import type { StayLength } from "@/lib/pms/types";
 import { monthName, STAY_LABEL } from "@/lib/search-query";
-import { useToday } from "@/lib/use-today";
+import { useToday } from "@/lib/browser";
+import { plural } from "@/lib/text";
 import { DateRangePicker } from "../date-range-picker";
 import { Icon } from "../icons";
 
@@ -49,7 +50,7 @@ export function WhenPanel({
   return (
     <div>
       {/* Dates | Flexible: a two-way switch whose white thumb slides. */}
-      <div role="tablist" aria-label="How to choose dates" className="relative mx-auto grid w-72 grid-cols-2 rounded-full bg-sand-deep p-1 text-sm">
+      <div role="group" aria-label="How to choose dates" className="relative mx-auto grid w-72 grid-cols-2 rounded-full bg-sand-deep p-1 text-sm">
         <span
           aria-hidden
           className="absolute inset-y-1 left-1 w-[calc(50%-0.25rem)] rounded-full bg-white shadow-md ring-1 ring-line transition-transform duration-200 ease-out"
@@ -59,8 +60,7 @@ export function WhenPanel({
           <button
             key={m}
             type="button"
-            role="tab"
-            aria-selected={draft.mode === m}
+            aria-pressed={draft.mode === m}
             onClick={() => onChange(m === "flexible" ? { mode: m, stay: draft.stay ?? "weekend" } : { mode: m })}
             className="focus-own relative z-10 min-h-10 rounded-full px-4 capitalize focus-visible:ring-2 focus-visible:ring-ink"
           >
@@ -87,7 +87,7 @@ export function WhenPanel({
           <div className="mt-5 flex flex-wrap gap-2" role="group" aria-label="Date flexibility">
             {[undefined, 1, 2, 3].map((d) => (
               <button key={d ?? 0} type="button" aria-pressed={draft.flex === d} onClick={() => onChange({ flex: d })} className={chip(draft.flex === d)}>
-                {d ? `± ${d} day${d === 1 ? "" : "s"}` : "Exact dates"}
+                {d ? `± ${plural(d, "day")}` : "Exact dates"}
               </button>
             ))}
           </div>

@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { useRef } from "react";
+import { telUrl, whatsappUrl } from "@/lib/links";
 import { Icon } from "./icons";
+import { buttonClass, iconButton } from "./ui/button";
 
 interface Props {
   brandName: string;
@@ -13,6 +15,8 @@ interface Props {
 // Below md the header keeps only the brand, "Book now" and this menu. A native modal dialog gives
 // focus trapping, Escape to close and an inert page behind it for free.
 export function MobileMenu({ brandName, whatsapp, phone }: Props) {
+  const chat = whatsappUrl(whatsapp);
+  const call = telUrl(phone);
   const dialog = useRef<HTMLDialogElement>(null);
   const close = () => dialog.current?.close();
   const item = "flex min-h-12 items-center border-b border-line text-lg";
@@ -37,11 +41,11 @@ export function MobileMenu({ brandName, whatsapp, phone }: Props) {
       >
         <div className="flex h-[76px] items-center justify-between px-5">
           <span className="text-h3">{brandName}</span>
-          <button type="button" onClick={close} aria-label="Close menu" className="grid h-11 w-11 place-items-center rounded-full hover:bg-sand-deep">
+          <button type="button" onClick={close} aria-label="Close menu" className={iconButton}>
             <Icon name="close" />
           </button>
         </div>
-        <nav aria-label="Menu" className="flex flex-1 flex-col overflow-y-auto px-5">
+        <nav aria-label="Menu" className="relative flex flex-1 flex-col overflow-y-auto px-5">
           <Link href="/stays" onClick={close} className={item}>Stays</Link>
           <Link href="/#about" onClick={close} className={item}>Our story</Link>
           <Link href="/#faq" onClick={close} className={item}>FAQ</Link>
@@ -49,22 +53,17 @@ export function MobileMenu({ brandName, whatsapp, phone }: Props) {
           <Link href="/#contact" onClick={close} className={item}>Contact</Link>
           <Link href="/account" onClick={close} className={item}>Your trips and sign in</Link>
           <div className="mt-auto space-y-3 py-6">
-            {whatsapp && (
-              <a
-                href={`https://wa.me/${whatsapp}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex min-h-12 items-center justify-center gap-2 rounded-xl ring-1 ring-line"
-              >
+            {chat && (
+              <a href={chat} target="_blank" rel="noopener noreferrer" className={`${buttonClass("outline")} w-full`}>
                 <Icon name="chat" className="h-4 w-4" /> Chat on WhatsApp
               </a>
             )}
-            {phone && (
-              <a href={`tel:${phone.replace(/\s/g, "")}`} className="flex min-h-12 items-center justify-center gap-2 rounded-xl ring-1 ring-line">
+            {call && (
+              <a href={call} className={`${buttonClass("outline")} w-full`}>
                 <Icon name="phone" className="h-4 w-4" /> {phone}
               </a>
             )}
-            <Link href="/stays" onClick={close} className="flex min-h-12 items-center justify-center rounded-xl bg-brand text-white">
+            <Link href="/stays" onClick={close} className={`${buttonClass()} w-full`}>
               Book now
             </Link>
           </div>

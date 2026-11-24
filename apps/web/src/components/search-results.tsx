@@ -4,14 +4,12 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useRef, useState, useTransition } from "react";
 import type { SearchHit, SearchQuery } from "@/lib/pms/types";
-import { formatDate, formatMoney } from "@/lib/dates";
-import { ListingPhoto } from "@/themes/escape/listing-media";
-import { PROPERTY_TYPE } from "@/themes/escape/listing-card";
+import { stayUrl } from "@/lib/links";
+import { toSearchString } from "@/lib/search-query";
+import { ListingCard } from "@/themes/escape/listing-card";
 import { Icon } from "./icons";
 import { StaysMap } from "./stays-map";
-import { Rating } from "./rating";
-import { WishlistButton } from "./wishlist";
-import { toSearchString } from "./search-filters";
+import { buttonClass } from "./ui/button";
 
 interface Props {
   hits: SearchHit[];
@@ -46,16 +44,7 @@ export function SearchResults({ hits, query, currency, addsGst, toolbar, before,
   const initialBounds = query.bounds ? (query.bounds.split(",").map(Number) as [number, number, number, number]) : null;
 
   // Dates carried to a stay page: a shifted match carries its own dates.
-  const carryFor = (h?: SearchHit) => {
-    const checkIn = h?.altCheckIn ?? query.checkIn;
-    const checkOut = h?.altCheckOut ?? query.checkOut;
-    const s = new URLSearchParams(
-      Object.entries({ checkIn, checkOut, guests: query.guests })
-        .filter(([, v]) => v !== undefined && v !== null)
-        .map(([k, v]) => [k, String(v)]),
-    ).toString();
-    return s ? `?${s}` : "";
-  };
+  const stayFor = (h: SearchHit) => ({ checkIn: h.altCheckIn ?? query.checkIn, checkOut: h.altCheckOut ?? query.checkOut, guests: query.guests });
 
   function onMapMove(b: [number, number, number, number]) {
     if (!followMap) return;
@@ -79,7 +68,7 @@ export function SearchResults({ hits, query, currency, addsGst, toolbar, before,
       lng: h.location!.lng,
       // Same figure the card shows: the trip total once dates are chosen, else the nightly price.
       label: compactPrice(h.total && h.nights ? h.total : h.fromPrice),
-      href: `/stays/${h.slug}${carryFor(h)}`,
+      href: stayUrl(h.slug, stayFor(h)),
       title: h.name,
     }));
 
@@ -88,7 +77,7 @@ export function SearchResults({ hits, query, currency, addsGst, toolbar, before,
       <div className="rounded-3xl bg-sand-deep p-10 text-center">
         <p className="text-xl">No stays in this part of the map.</p>
         <p className="mt-2 text-ink-soft">Zoom out or search the whole area.</p>
-        <Link href={`${pathname}${toSearchString({ ...query, bounds: undefined })}`} className="mt-6 inline-flex min-h-11 items-center rounded-xl bg-brand px-6 text-white">
+        <Link href={`${pathname}${toSearchString({ ...query, bounds: undefined })}`} className={`${buttonClass()} mt-6`}>
           Search everywhere
         </Link>
       </div>
@@ -96,7 +85,7 @@ export function SearchResults({ hits, query, currency, addsGst, toolbar, before,
       <div className="rounded-3xl bg-sand-deep p-10 text-center">
         <p className="text-xl">No stays match these filters.</p>
         <p className="mt-2 text-ink-soft">Try different dates, fewer filters, or message us — we may be able to help.</p>
-        <Link href="/stays" className="mt-6 inline-flex rounded-xl bg-brand px-6 py-3 text-white">
+        <Link href="/stays" className={`${buttonClass()} mt-6`}>
           Clear search
         </Link>
       </div>
@@ -111,70 +100,19 @@ export function SearchResults({ hits, query, currency, addsGst, toolbar, before,
           {empty}
           <ul className="grid grid-cols-2 gap-x-4 gap-y-7 sm:gap-x-6">
             {hits.map((h, i) => (
-              <li key={h.id} className="relative min-w-0" onMouseEnter={() => setActive(h.id)} onMouseLeave={() => setActive(null)}>
-                <WishlistButton listingId={h.id} name={h.name} className="absolute right-2 top-2 z-10 sm:right-3 sm:top-3" />
-                <Link href={`/stays/${h.slug}${carryFor(h)}`} className="group block">
-                  <div className="relative">
-                    <ListingPhoto
-                      image={h.image}
-                      name={h.name}
-                      sizes="(min-width: 1024px) 28vw, 50vw"
-                      priority={i < 4}
-                      className={`aspect-square rounded-2xl ring-2 transition ${active === h.id ? "ring-ink" : "ring-transparent"}`}
-                      imgClassName="transition-transform duration-700 group-hover:scale-[1.04]"
-                    />
-                    {h.instantBook && (
-                      <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-white/95 px-2 py-1 text-xs shadow-sm sm:left-3 sm:top-3 sm:px-3">
-                        <Icon name="bolt" className="h-3.5 w-3.5" /> <span className="max-sm:sr-only">Instant book</span>
-                      </span>
-                    )}
-                  </div>
-                  <h2 className="mt-2 flex items-center justify-between gap-2 text-base leading-6">
-                    <span className="truncate font-medium group-hover:underline group-hover:decoration-1 group-hover:underline-offset-4" title={h.name}>
-                      {h.name}
-                    </span>
-                    <Rating rating={h.rating} className="shrink-0 text-sm text-ink" />
-                  </h2>
-                  <p className="truncate text-sm leading-5 text-ink-soft">
-                    {h.city} · {h.propertyName}
-                  </p>
-                  <p className="truncate text-sm leading-5 text-ink-soft">
-                    <span className="max-sm:hidden">{PROPERTY_TYPE[h.propertyType]} · </span>
-                    {[
-                      `${h.maxGuests} guest${h.maxGuests === 1 ? "" : "s"}`,
-                      h.bedrooms && `${h.bedrooms} bedroom${h.bedrooms === 1 ? "" : "s"}`,
-                      h.bathrooms && `${h.bathrooms} bath${h.bathrooms === 1 ? "" : "s"}`,
-                    ]
-                      .filter(Boolean)
-                      .join(" · ")}
-                  </p>
-                  {h.altCheckIn && h.altCheckOut && (
-                    <p className="truncate text-sm font-medium leading-5 text-accent">
-                      <span className="max-sm:hidden">Available </span>
-                      {formatDate(h.altCheckIn, { day: "numeric", month: "short" })} – {formatDate(h.altCheckOut, { day: "numeric", month: "short" })}
-                    </p>
-                  )}
-                  <p className="truncate text-base leading-6">
-                    {h.total && h.nights ? (
-                      <>
-                        <span className="font-medium">{formatMoney(h.total, currency)}</span>
-                        <span className="text-sm text-ink-soft">
-                          {" "}
-                          for {h.nights} night{h.nights === 1 ? "" : "s"}
-                          <span className="max-sm:hidden">{addsGst ? " · incl. GST and fees" : " · incl. fees"}</span>
-                        </span>
-                      </>
-                    ) : (
-                      <>
-                        <span className="font-medium">{formatMoney(h.fromPrice, currency)}</span>
-                        <span className="text-sm text-ink-soft">
-                          {" "}
-                          / night{addsGst && " + GST"}
-                        </span>
-                      </>
-                    )}
-                  </p>
-                </Link>
+              <li key={h.id} className="min-w-0" onMouseEnter={() => setActive(h.id)} onMouseLeave={() => setActive(null)}>
+                <ListingCard
+                  listing={h}
+                  currency={currency}
+                  addsGst={addsGst}
+                  stay={stayFor(h)}
+                  trip={h.total && h.nights ? { total: h.total, nights: h.nights } : null}
+                  window={h.altCheckIn && h.altCheckOut ? { checkIn: h.altCheckIn, checkOut: h.altCheckOut } : null}
+                  active={active === h.id}
+                  heading="h2"
+                  preload={i < 2}
+                  sizes="(min-width: 1024px) 28vw, 50vw"
+                />
               </li>
             ))}
           </ul>
@@ -190,7 +128,6 @@ export function SearchResults({ hits, query, currency, addsGst, toolbar, before,
             Search as I move the map
           </label>
           <StaysMap
-            key={hits.map((h) => h.id).join(",")}
             pins={pins}
             activeId={active}
             onPinHover={setActive}

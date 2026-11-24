@@ -1,5 +1,6 @@
 "use client";
 
+import { plural } from "@/lib/text";
 import { useRef } from "react";
 import { Icon } from "../icons";
 
@@ -65,7 +66,7 @@ export function WherePanel({ places, typed, selected, onPick }: { places: Place[
                   <Highlight text={p.value} match={q} />
                 </span>
                 <span className="block text-sm text-ink-soft">
-                  {p.count} home{p.count === 1 ? "" : "s"}
+                  {plural(p.count, "home")}
                 </span>
               </span>
             </button>

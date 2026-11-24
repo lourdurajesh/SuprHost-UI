@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { formatMoney } from "@/lib/dates";
+import { stayUrl } from "@/lib/links";
 import type { GroupSuggestion } from "@/lib/group-stays";
 
 /**
@@ -21,7 +22,6 @@ export function GroupSuggestions({
   currency: string;
 }) {
   if (suggestions.length === 0) return null;
-  const dates = checkIn && checkOut ? { checkIn, checkOut } : {};
   return (
     <section className="mb-8 rounded-3xl bg-sand-deep p-6 sm:p-8" aria-labelledby="group-heading">
       <h2 id="group-heading" className="text-h2">
@@ -42,10 +42,9 @@ export function GroupSuggestions({
                 // Split the party across the homes, filling the biggest first.
                 const before = g.stays.slice(0, i).reduce((n, x) => n + x.maxGuests, 0);
                 const party = Math.max(1, Math.min(s.maxGuests, guests - before));
-                const q = new URLSearchParams({ ...dates, guests: String(party) } as Record<string, string>);
                 return (
                   <li key={s.id}>
-                    <Link href={`/stays/${s.slug}?${q}`} className="flex min-h-11 items-center justify-between gap-4 underline-offset-4 hover:underline">
+                    <Link href={stayUrl(s.slug, { checkIn, checkOut, guests: party })} className="flex min-h-11 items-center justify-between gap-4 underline-offset-4 hover:underline">
                       <span>
                         {s.name} <span className="text-ink-soft">· up to {s.maxGuests}</span>
                       </span>

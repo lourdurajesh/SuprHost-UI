@@ -44,8 +44,6 @@ const paths: Record<string, string> = {
   clock: "M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20ZM12 6v6l4 2",
 };
 
-export type IconName = keyof typeof paths;
-
 export function Icon({ name, className = "h-5 w-5", strokeWidth = 1.6 }: { name: string; className?: string; strokeWidth?: number }) {
   const d = paths[name] ?? paths.check;
   return (

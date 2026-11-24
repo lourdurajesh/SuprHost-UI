@@ -1,34 +1,24 @@
 "use client";
 
-import { useCallback, useSyncExternalStore } from "react";
+import { useCallback } from "react";
+import { createStore } from "@/lib/store";
 
 // The place in a stay page's text where the booking panel draws its calendar. The panel owns the dates
-// and the availability; the calendar sits in the other column, so it is portalled (one slot per home:
-// Next keeps the previous page in the document).
-const slots = new Map<string, HTMLElement>();
-const listeners = new Set<() => void>();
-const subscribe = (l: () => void) => {
-  listeners.add(l);
-  return () => {
-    listeners.delete(l);
-  };
-};
+// and the availability; the calendar sits in the other column, so it is portalled. One slot per home,
+// because Next keeps the previous page in the document.
+const slots = createStore<Readonly<Record<string, HTMLElement>>>({});
 
 export function CalendarSlot({ listingId }: { listingId: string }) {
   const ref = useCallback(
     (el: HTMLElement | null) => {
-      if (el) slots.set(listingId, el);
-      else slots.delete(listingId);
-      listeners.forEach((l) => l());
+      const next = { ...slots.get() };
+      if (el) next[listingId] = el;
+      else delete next[listingId];
+      slots.set(next);
     },
     [listingId],
   );
   return <div ref={ref} className="min-h-[22rem]" />;
 }
 
-export const useCalendarSlot = (listingId: string) =>
-  useSyncExternalStore(
-    subscribe,
-    () => slots.get(listingId) ?? null,
-    () => null,
-  );
+export const useCalendarSlot = (listingId: string): HTMLElement | null => slots.use()[listingId] ?? null;

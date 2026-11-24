@@ -9,14 +9,19 @@ import { CalendarSlot } from "@/components/calendar-slot";
 import { MoreDialog } from "@/components/more-dialog";
 import { ShareButton } from "@/components/share-button";
 import { Rating } from "@/components/rating";
-import { ReviewItem, ReviewsDialog } from "@/components/reviews";
+import { ReviewItem } from "@/components/review-item";
+import { ReviewsDialog } from "@/components/reviews";
+import { buttonClass } from "@/components/ui/button";
 import { groupAmenities } from "@/lib/amenity-groups";
 import { relatedStays } from "@/lib/related-stays";
 import { Track } from "@/components/track";
 import { StaysMap } from "@/components/stays-map";
 import { TrackRecentView, WishlistButton } from "@/components/wishlist";
 import { getListing, getListings, getSite } from "@/lib/pms";
-import { ListingCard, PROPERTY_TYPE } from "@/themes/escape/listing-card";
+import { listingSpecs, PROPERTY_TYPE } from "@/lib/listing-facts";
+import { telUrl, whatsappUrl } from "@/lib/links";
+import { plural } from "@/lib/text";
+import { ListingCard } from "@/themes/escape/listing-card";
 import { ListingPhoto } from "@/themes/escape/listing-media";
 import { Suspense } from "react";
 
@@ -50,13 +55,7 @@ async function ListingPageContent({ params }: Pick<PageProps<"/[site]/stays/[lis
   const photos = listing.images.length ? listing.images : listing.image ? [listing.image] : [];
   const others = relatedStays(listing, all, 4);
   const rules = [...new Set([...site.policies.houseRules, ...listing.houseRules])];
-  const n = (count: number, one: string) => `${count} ${one}${count === 1 ? "" : "s"}`;
-  const specs = [
-    n(listing.maxGuests, "guest"),
-    listing.bedrooms && n(listing.bedrooms, "bedroom"),
-    listing.beds && n(listing.beds, "bed"),
-    listing.bathrooms && n(listing.bathrooms, "bathroom"),
-  ].filter(Boolean) as string[];
+  const specs = listingSpecs(listing);
   const kind = PROPERTY_TYPE[listing.propertyType];
   const bedrooms = listing.images.filter((i) => i.category === "bedroom").slice(0, 4);
 
@@ -77,13 +76,14 @@ async function ListingPageContent({ params }: Pick<PageProps<"/[site]/stays/[lis
   };
   const reviews = listing.reviews ?? [];
   const amenityGroups = groupAmenities(listing.amenities);
-  const whatsapp = site.contact.whatsapp?.replace(/\D/g, "") || null;
-  const callHref = site.contact.phone ? `tel:${site.contact.phone.replace(/\s/g, "")}` : null;
+  const { whatsapp } = site.contact;
+  const messageHref = whatsappUrl(whatsapp, `Hello! I'm looking at ${listing.name}.`);
+  const callHref = telUrl(site.contact.phone);
   // The site's own pin stands in only for a stay in the same town; elsewhere it would mislead.
   const mapAt =
     listing.location ?? (site.location && site.location.label.toLowerCase().includes(listing.city.toLowerCase()) ? site.location : null);
 
-  const section = "scroll-mt-24 border-t border-line py-8 lg:py-12";
+  const section = "border-t border-line py-8 lg:py-12";
   const amenity = (a: string) => (
     <li key={a} className="flex items-center gap-4">
       <Icon name={amenityIcon(a)} className="h-6 w-6 shrink-0" strokeWidth={1.4} /> {a}
@@ -120,7 +120,7 @@ async function ListingPageContent({ params }: Pick<PageProps<"/[site]/stays/[lis
         </div>
       </div>
 
-      <div id="photos" className="relative scroll-mt-24 max-sm:-mx-4">
+      <div id="photos" className="relative max-sm:-mx-4">
         <div className="absolute right-4 top-4 z-10 flex gap-2 sm:hidden">
           <ShareButton listingId={listing.id} name={listing.name} facts={`${kind} in ${listing.city}`} image={listing.image} variant="icon" />
           <WishlistButton listingId={listing.id} name={listing.name} />
@@ -133,7 +133,7 @@ async function ListingPageContent({ params }: Pick<PageProps<"/[site]/stays/[lis
                   {photos.map((img, i) => (
                     // Tapping a photo opens the slideshow at that photo.
                     <button key={`${img.url}-${i}`} type="button" data-photo={i} aria-label={`Open photo ${i + 1} of ${photos.length}`} className="block w-full">
-                      <ListingPhoto image={img} name={i === 0 ? listing.name : ""} sizes="(min-width: 1152px) 1104px, 100vw" priority={i === 0} className="aspect-[4/3] sm:aspect-video" />
+                      <ListingPhoto image={img} name={i === 0 ? listing.name : ""} sizes="(min-width: 1152px) 1104px, 100vw" preload={i === 0} className="aspect-[4/3] sm:aspect-video" />
                     </button>
                   ))}
                 </Carousel>
@@ -152,7 +152,7 @@ async function ListingPageContent({ params }: Pick<PageProps<"/[site]/stays/[lis
                         image={img}
                         name={i === 0 ? listing.name : ""}
                         sizes={i === 0 ? "(min-width: 1152px) 1104px, 100vw" : "25vw"}
-                        priority={i === 0}
+                        preload={i === 0}
                         className="h-full w-full"
                         imgClassName="transition duration-300 group-hover:brightness-90"
                       />
@@ -175,7 +175,7 @@ async function ListingPageContent({ params }: Pick<PageProps<"/[site]/stays/[lis
               Entire {kind.toLowerCase()} in {listing.city}
             </h2>
             <p className="mt-1">{specs.join(" · ")}</p>
-            {listing.rating && listing.rating.count > 0 && <ReviewsDialog trigger="link" rating={listing.rating} reviews={reviews} brandName={site.brandName} />}
+            {listing.rating && listing.rating.count > 0 && <ReviewsDialog trigger="link" slug={listing.slug} rating={listing.rating} brandName={site.brandName} />}
           </header>
 
           <div className="flex items-center gap-5 border-t border-line py-6">
@@ -258,7 +258,7 @@ async function ListingPageContent({ params }: Pick<PageProps<"/[site]/stays/[lis
           </section>
         </div>
 
-        <aside id="book" className="scroll-mt-24 self-start max-md:pb-8 md:sticky md:top-[88px] md:pt-8" aria-label="Check availability">
+        <aside id="book" className="self-start max-md:pb-8 md:sticky md:top-[88px] md:pt-8" aria-label="Check availability">
           <BookingWidget
             listingId={listing.id}
             city={listing.city}
@@ -288,7 +288,7 @@ async function ListingPageContent({ params }: Pick<PageProps<"/[site]/stays/[lis
           </ul>
           {listing.rating && (
             <div className="mt-10">
-              <ReviewsDialog trigger="button" rating={listing.rating} reviews={reviews} brandName={site.brandName} />
+              <ReviewsDialog trigger="button" slug={listing.slug} rating={listing.rating} brandName={site.brandName} />
             </div>
           )}
         </section>
@@ -304,7 +304,7 @@ async function ListingPageContent({ params }: Pick<PageProps<"/[site]/stays/[lis
       )}
 
       {/* Who is behind the stay, in the host's own words, with a direct line. No invented stats. */}
-      {(whatsapp || callHref) && (
+      {(messageHref || callHref) && (
         <section className={section} aria-labelledby="host-heading">
           <h2 id="host-heading" className="text-h2">
             Meet your host
@@ -316,24 +316,19 @@ async function ListingPageContent({ params }: Pick<PageProps<"/[site]/stays/[lis
                   {host}
                 </span>
                 <p className="mt-4 text-[1.625rem] font-medium leading-tight">{site.brandName}</p>
-                <p className="mt-1 text-sm text-ink-soft">{n(all.length, "home")} in all</p>
+                <p className="mt-1 text-sm text-ink-soft">{plural(all.length, "home")} in all</p>
               </div>
             </div>
             <div>
               <p>{site.statement}</p>
               <div className="mt-6 flex flex-wrap gap-3">
-                {whatsapp && (
-                  <a
-                    href={`https://wa.me/${whatsapp}?text=${encodeURIComponent(`Hello! I'm looking at ${listing.name}.`)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex min-h-12 items-center gap-2 rounded-xl bg-ink px-6 font-medium text-white"
-                  >
+                {messageHref && (
+                  <a href={messageHref} target="_blank" rel="noopener noreferrer" className={buttonClass("dark")}>
                     <Icon name="chat" className="h-4 w-4" /> Message host
                   </a>
                 )}
                 {callHref && (
-                  <a href={callHref} className="inline-flex min-h-12 items-center gap-2 rounded-xl bg-white px-6 font-medium ring-1 ring-line hover:ring-ink">
+                  <a href={callHref} className={buttonClass("outline")}>
                     Call {site.contact.phone}
                   </a>
                 )}
@@ -360,7 +355,7 @@ async function ListingPageContent({ params }: Pick<PageProps<"/[site]/stays/[lis
             <ul className="mt-2 space-y-1 text-sm text-ink-soft">
               <li>Check-in from {site.policies.checkInTime}</li>
               <li>Check-out by {site.policies.checkOutTime}</li>
-              <li>{n(listing.maxGuests, "guest")} maximum</li>
+              <li>{plural(listing.maxGuests, "guest")} maximum</li>
               {listing.minNights > 1 && <li>Minimum stay {listing.minNights} nights</li>}
             </ul>
             {rules.length > 0 && (

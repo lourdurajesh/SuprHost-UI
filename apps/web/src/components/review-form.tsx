@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Icon } from "./icons";
+import { buttonClass, fieldClass } from "./ui/button";
 
 const LABELS = ["Poor", "Fair", "Good", "Very good", "Excellent"];
 
@@ -65,7 +66,7 @@ export function ReviewForm({ token, stayName }: { token: string; stayName: strin
           value={text}
           onChange={(e) => setText(e.target.value)}
           aria-describedby="review-help"
-          className="mt-1.5 w-full rounded-lg border border-field bg-white px-4 py-3 text-base outline-none placeholder:text-ink-soft focus:border-brand focus:ring-4 focus:ring-brand/10"
+          className={`${fieldClass} mt-1.5`}
           placeholder="The place, the hosts, anything future guests should know"
         />
         <p id="review-help" className="mt-1 text-sm text-ink-soft">Your first name and the month appear with your review. {2000 - text.length} characters left.</p>
@@ -73,7 +74,7 @@ export function ReviewForm({ token, stayName }: { token: string; stayName: strin
 
       {error && <p role="alert" className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-800">{error}</p>}
 
-      <button type="submit" disabled={state === "sending"} className="min-h-12 rounded-xl bg-brand px-8 font-medium text-white disabled:opacity-60">
+      <button type="submit" disabled={state === "sending"} className={buttonClass()}>
         {state === "sending" ? "Sending…" : "Send review"}
       </button>
     </form>

@@ -4,6 +4,7 @@ import { connection } from "next/server";
 import { Suspense } from "react";
 import { PrintButton } from "@/components/print-button";
 import { formatDate, formatMoney } from "@/lib/dates";
+import { bookingUrl } from "@/lib/links";
 import { getBooking, getSite } from "@/lib/pms";
 import { bookingToken } from "@/lib/validation";
 
@@ -110,7 +111,7 @@ async function Receipt({ params }: Pick<PageProps<"/[site]/booking/[token]/recei
 
       <div className="mt-8 flex flex-wrap items-center gap-4 print:hidden">
         <PrintButton />
-        <Link href={`/booking/${encodeURIComponent(token)}`} className="inline-flex min-h-11 items-center text-sm underline underline-offset-4">
+        <Link href={bookingUrl(token)} className="inline-flex min-h-11 items-center text-sm underline underline-offset-4">
           Back to booking
         </Link>
       </div>

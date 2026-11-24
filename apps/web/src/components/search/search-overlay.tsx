@@ -1,8 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useMediaQuery } from "@/lib/browser";
 import type { SearchQuery } from "@/lib/pms/types";
 import { describeWhen } from "@/lib/search-query";
+import { plural } from "@/lib/text";
 import { Icon } from "../icons";
 import { applyDraft, draftFrom, EMPTY_DRAFT, type Draft } from "./draft";
 import { SearchFace } from "./search-bar";
@@ -16,13 +18,6 @@ const MOVE_MS = 420;
 const SETTLE_MS = 260;
 const HEADER = 76;
 const BAR_H = 66;
-
-const subscribe = (cb: () => void) => {
-  const mq = window.matchMedia("(min-width: 640px)");
-  mq.addEventListener("change", cb);
-  return () => mq.removeEventListener("change", cb);
-};
-const useWide = () => useSyncExternalStore(subscribe, () => window.matchMedia("(min-width: 640px)").matches, () => true);
 
 const onResize = (cb: () => void) => {
   window.addEventListener("resize", cb);
@@ -80,7 +75,7 @@ interface Props {
  * then the bar travels up into the header while the results load.
  */
 export function SearchOverlay({ open, query, places, timezone, brandName, pending, onApply, onClose }: Props) {
-  const wide = useWide();
+  const wide = useMediaQuery("(min-width: 640px)", true);
   const dialog = useRef<HTMLDialogElement>(null);
   const [active, setActive] = useState<Section>(open.section);
   const [draft, setDraft] = useState<Draft>(() => draftFrom(query));
@@ -169,7 +164,7 @@ export function SearchOverlay({ open, query, places, timezone, brandName, pendin
     next: applyDraft(draft, query),
     whereValue: draft.city ?? "",
     whenText: describeWhen(applyDraft(draft, {}), true),
-    whoText: guests ? `${guests} guest${guests === 1 ? "" : "s"}` : "Add guests",
+    whoText: guests ? plural(guests, "guest") : "Add guests",
     panels: {
       where: (
         <WherePanel
@@ -359,8 +354,6 @@ function Desktop({ open, phase, target, active, setActive, close, search, draft,
             <input
               id="search-where"
               ref={input}
-              role="combobox"
-              aria-expanded={active === "where"}
               aria-controls="search-where-panel"
               autoComplete="off"
               placeholder="Search places"
@@ -471,7 +464,7 @@ function Mobile({ open, phase, target, active, setActive, close, search, clear, 
             <span className="w-11" />
           </div>
 
-          <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
+          <div className="relative flex-1 space-y-3 overflow-y-auto px-4 py-4">
             {cards.map((c) =>
               active === c.id ? (
                 <section key={c.id} className="panel-in rounded-3xl bg-white p-5 shadow-[0_8px_24px_-12px_rgba(0,0,0,0.3)] ring-1 ring-line">

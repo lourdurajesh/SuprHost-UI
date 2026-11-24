@@ -6,7 +6,7 @@ import { Icon } from "../icons";
 import { setSearchOpen, useSearchOpen, type SearchVariant, type Section } from "./search-store";
 
 /** What the bar says. Anything not chosen yet is an invitation, in the softer colour. */
-export function searchTexts(query: SearchQuery) {
+function searchTexts(query: SearchQuery) {
   return {
     where: query.city ?? "Anywhere",
     when: describeWhen(query, true),

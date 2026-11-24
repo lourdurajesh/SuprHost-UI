@@ -5,9 +5,11 @@ import { Suspense } from "react";
 import { connection } from "next/server";
 import { PaymentSteps } from "@/components/payment-steps";
 import { getBooking, getListing, getSite } from "@/lib/pms";
+import { bookingUrl, stayUrl } from "@/lib/links";
 import { formatDate } from "@/lib/dates";
 import { bookingToken } from "@/lib/validation";
-import { checkoutGrid, CheckoutShell, StaySummary } from "@/themes/escape/checkout";
+import { buttonClass } from "@/components/ui/button";
+import { checkoutGrid, CheckoutShell, StaySummary, summaryOf } from "@/themes/escape/checkout";
 
 // Holder-of-token page: never indexed, never cached, and the token never leaves this origin in
 // a Referer (Referrer-Policy: strict-origin-when-cross-origin sends the origin only).
@@ -35,12 +37,12 @@ async function CheckoutContent({ params }: Pick<PageProps<"/[site]/checkout/[tok
   const site = await getSite(key);
 
   if (!booking || !site) return <Gone message="We couldn’t find this reservation." />;
-  if (booking.status === "confirmed") redirect(`/booking/${encodeURIComponent(token)}`);
+  if (booking.status === "confirmed") redirect(bookingUrl(token));
   if (booking.status !== "pending_payment" || !booking.holdExpiresAt) {
     return (
       <Gone
         message="Your hold on these dates has expired, so they’ve been released. You haven’t been charged."
-        href={`/stays/${booking.listing.slug}`}
+        href={stayUrl(booking.listing.slug)}
       />
     );
   }
@@ -51,7 +53,7 @@ async function CheckoutContent({ params }: Pick<PageProps<"/[site]/checkout/[tok
   const day = (iso: string) => formatDate(iso, { weekday: "short", day: "numeric", month: "short" });
 
   return (
-    <CheckoutShell title={simulated ? "Confirm your booking" : "Confirm and pay"} back={`/stays/${booking.listing.slug}`}>
+    <CheckoutShell title={simulated ? "Confirm your booking" : "Confirm and pay"} back={stayUrl(booking.listing.slug)}>
       <div className={checkoutGrid}>
         <PaymentSteps
           token={token}
@@ -99,17 +101,7 @@ async function CheckoutContent({ params }: Pick<PageProps<"/[site]/checkout/[tok
           }
         />
 
-        <StaySummary
-          name={booking.listing.name}
-          propertyName={booking.listing.propertyName}
-          image={booking.listing.image}
-          rating={listing?.rating}
-          checkIn={booking.checkIn}
-          checkOut={booking.checkOut}
-          guests={booking.guests}
-          quote={booking.quote}
-          cancellation={site.policies.cancellation}
-        />
+        <StaySummary {...summaryOf(booking)} rating={listing?.rating} cancellation={site.policies.cancellation} />
       </div>
     </CheckoutShell>
   );
@@ -120,7 +112,7 @@ function Gone({ message, href = "/stays" }: { message: string; href?: string }) 
     <CheckoutShell title="Confirm and pay" back={href}>
       <div className="mt-8 rounded-2xl border border-line p-6 sm:p-8">
         <p>{message}</p>
-        <Link href={href} className="mt-5 inline-flex rounded-xl bg-brand px-6 py-3 font-medium text-white">
+        <Link href={href} className={`${buttonClass()} mt-5`}>
           Choose dates again
         </Link>
       </div>

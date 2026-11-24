@@ -1,13 +1,14 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState, useTransition } from "react";
-import type { Availability } from "@/lib/pms/types";
-import { addDays, todayIn } from "@/lib/dates";
-import { DatesDialog } from "./date-range-field";
-import { Icon } from "./icons";
+import { useState, useTransition } from "react";
+import { bookUrl } from "@/lib/links";
+import { useAvailability } from "@/lib/use-availability";
+import { DatesDialog } from "./dates-dialog";
 import { CountRow } from "./search/count-row";
 import { changeButton } from "./step-card";
+import { buttonClass, textButton } from "./ui/button";
+import { Dialog, DialogClose } from "./ui/dialog";
 
 interface Stay {
   listingId: string;
@@ -16,27 +17,19 @@ interface Stay {
   guests: number;
 }
 
-const bookUrl = (s: Stay) => `/book?${new URLSearchParams({ listing: s.listingId, checkIn: s.checkIn, checkOut: s.checkOut, guests: String(s.guests) })}`;
+/** The same checkout page, for other dates or guests. */
+function useChangeStay(stay: Stay) {
+  const router = useRouter();
+  const [pending, start] = useTransition();
+  const change = (next: Partial<Stay>) => start(() => router.replace(bookUrl(stay.listingId, { ...stay, ...next }), { scroll: false }));
+  return { pending, change };
+}
 
 /** "Change" beside the dates in the checkout summary: a calendar, then the same page with the new price. */
 export function ChangeDates({ stay, timezone, minNights, maxNights }: { stay: Stay; timezone: string; minNights: number; maxNights: number }) {
-  const router = useRouter();
+  const { pending, change } = useChangeStay(stay);
   const [open, setOpen] = useState(false);
-  const [pending, start] = useTransition();
-  const [availability, setAvailability] = useState<Availability | null>(null);
-
-  useEffect(() => {
-    if (!open || availability) return;
-    const today = todayIn(timezone);
-    const ctrl = new AbortController();
-    fetch(`/api/availability?listing=${stay.listingId}&from=${today}&to=${addDays(today, 400)}`, { signal: ctrl.signal })
-      .then((r) => (r.ok ? r.json() : Promise.reject(r)))
-      .then(setAvailability)
-      // The dates are checked again when the price is worked out, so a blank calendar is only less helpful.
-      .catch(() => undefined);
-    return () => ctrl.abort();
-  }, [open, availability, stay.listingId, timezone]);
-
+  const { busy, rules } = useAvailability(stay.listingId, timezone, open);
   return (
     <>
       <button type="button" onClick={() => setOpen(true)} aria-label="Change dates" disabled={pending} className={changeButton}>
@@ -47,12 +40,10 @@ export function ChangeDates({ stay, timezone, minNights, maxNights }: { stay: St
         onOpenChange={setOpen}
         checkIn={stay.checkIn}
         checkOut={stay.checkOut}
-        onChange={(checkIn, checkOut) => {
-          if (checkIn && checkOut) start(() => router.replace(bookUrl({ ...stay, checkIn, checkOut }), { scroll: false }));
-        }}
+        onChange={(checkIn, checkOut) => checkIn && checkOut && change({ checkIn, checkOut })}
         timezone={timezone}
-        busy={availability?.busy ?? []}
-        rules={availability?.rules ?? []}
+        busy={busy}
+        rules={rules}
         minNights={minNights}
         maxNights={maxNights}
       />
@@ -62,17 +53,17 @@ export function ChangeDates({ stay, timezone, minNights, maxNights }: { stay: St
 
 /** "Change" beside the guests. */
 export function ChangeGuests({ stay, maxGuests }: { stay: Stay; maxGuests: number }) {
-  const router = useRouter();
-  const dialog = useRef<HTMLDialogElement>(null);
+  const { pending, change } = useChangeStay(stay);
+  const [open, setOpen] = useState(false);
   const [guests, setGuests] = useState(stay.guests);
-  const [pending, start] = useTransition();
+  const close = () => setOpen(false);
   return (
     <>
       <button
         type="button"
         onClick={() => {
           setGuests(stay.guests);
-          dialog.current?.showModal();
+          setOpen(true);
         }}
         aria-label="Change guests"
         disabled={pending}
@@ -80,40 +71,33 @@ export function ChangeGuests({ stay, maxGuests }: { stay: Stay; maxGuests: numbe
       >
         {pending ? "…" : "Change"}
       </button>
-      <dialog
-        ref={dialog}
-        aria-labelledby="change-guests"
-        onClick={(e) => e.target === dialog.current && dialog.current.close()}
-        className="modal-in m-auto w-[min(30rem,calc(100vw-2rem))] max-w-none rounded-[28px] bg-white p-6 text-ink shadow-[0_24px_80px_-20px_rgba(0,0,0,0.5)] backdrop:bg-black/40"
-      >
+      <Dialog open={open} onClose={close} labelledBy="change-guests">
         <div className="flex items-center justify-between">
           <h2 id="change-guests" className="text-h2">
             Change guests
           </h2>
-          <button type="button" onClick={() => dialog.current?.close()} aria-label="Close" className="-mr-2 grid h-11 w-11 place-items-center rounded-full hover:bg-sand-deep">
-            <Icon name="close" className="h-5 w-5" />
-          </button>
+          <DialogClose onClose={close} className="-mr-2" />
         </div>
         <p className="mt-1 text-sm text-ink-soft">This home sleeps up to {maxGuests}.</p>
         <div className="mt-2">
           <CountRow title="Guests" value={guests} min={1} max={maxGuests} onChange={setGuests} />
         </div>
         <div className="mt-4 flex items-center justify-between">
-          <button type="button" onClick={() => dialog.current?.close()} className="min-h-11 rounded-lg px-1 font-medium underline underline-offset-4">
+          <button type="button" onClick={close} className={textButton}>
             Cancel
           </button>
           <button
             type="button"
             onClick={() => {
-              dialog.current?.close();
-              if (guests !== stay.guests) start(() => router.replace(bookUrl({ ...stay, guests }), { scroll: false }));
+              close();
+              if (guests !== stay.guests) change({ guests });
             }}
-            className="min-h-12 rounded-xl bg-ink px-8 font-medium text-white"
+            className={buttonClass("dark")}
           >
             Save
           </button>
         </div>
-      </dialog>
+      </Dialog>
     </>
   );
 }

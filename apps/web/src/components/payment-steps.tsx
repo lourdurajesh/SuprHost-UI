@@ -1,11 +1,14 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { PaymentMethod } from "@/lib/pms/types";
+import { useNow } from "@/lib/browser";
 import { formatMoney } from "@/lib/dates";
+import { bookingUrl } from "@/lib/links";
 import { Icon } from "./icons";
 import { changeButton, StepCard } from "./step-card";
+import { buttonClass } from "./ui/button";
 
 const METHODS: Record<PaymentMethod, { label: string; icon: string; hint: string }> = {
   upi: { label: "UPI", icon: "upi", hint: "Google Pay, PhonePe, Paytm or any UPI app" },
@@ -26,16 +29,18 @@ interface Props {
   review: React.ReactNode;
 }
 
-// Ticks once a second on the client only; the server render shows no countdown.
-function useNow() {
-  return useSyncExternalStore(
-    (notify) => {
-      const id = setInterval(notify, 1000);
-      return () => clearInterval(id);
-    },
-    () => Math.floor(Date.now() / 1000) * 1000,
-    () => null,
-  );
+/** "14:52": on its own, so the steps around it don't re-render every second. */
+function Countdown({ until, onEnd }: { until: string; onEnd: () => void }) {
+  const now = useNow();
+  const left = now === null ? null : Math.max(0, new Date(until).getTime() - now);
+  const ended = left === 0;
+  useEffect(() => {
+    if (ended) onEnd();
+    // Once, when it runs out.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ended]);
+  const two = (n: number) => String(Math.floor(n)).padStart(2, "0");
+  return <span className="font-mono font-medium tabular-nums text-ink">{left === null ? "--:--" : `${two(left / 60_000)}:${two((left % 60_000) / 1000)}`}</span>;
 }
 
 // Steps 2 and 3 of checkout (step 1, the guest's details, made the hold). The selected method is sent
@@ -43,20 +48,13 @@ function useNow() {
 // gateway returns a redirect to its own page.
 export function PaymentSteps({ token, guestName, reference, total, currency, methods, holdExpiresAt, simulated, review }: Props) {
   const router = useRouter();
-  const now = useNow();
+  const [expired, setExpired] = useState(false);
   const [step, setStep] = useState<2 | 3>(2);
   const [method, setMethod] = useState<PaymentMethod>(methods[0] ?? "upi");
   const [idempotencyKey] = useState(() => crypto.randomUUID());
   const [paying, setPaying] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const last = useRef<HTMLDivElement>(null);
-
-  const remaining = now === null ? null : Math.max(0, new Date(holdExpiresAt).getTime() - now);
-  const expired = remaining === 0;
-
-  useEffect(() => {
-    if (expired) router.refresh();
-  }, [expired, router]);
 
   // The next step opens below: bring it into view and tell the keyboard and screen readers.
   useEffect(() => {
@@ -75,7 +73,7 @@ export function PaymentSteps({ token, guestName, reference, total, currency, met
       });
       const body = await res.json().catch(() => ({}));
       if (res.ok && body.status === "succeeded") {
-        router.replace(`/booking/${encodeURIComponent(token)}`);
+        router.replace(bookingUrl(token));
         return;
       }
       if (res.ok && body.status === "requires_action" && typeof body.redirectUrl === "string") {
@@ -94,14 +92,17 @@ export function PaymentSteps({ token, guestName, reference, total, currency, met
     }
   }
 
-  const mins = remaining === null ? null : Math.floor(remaining / 60000);
-  const secs = remaining === null ? null : Math.floor((remaining % 60000) / 1000);
-
   return (
     <div className="space-y-5">
       <p className="flex items-center gap-2 text-sm text-ink-soft">
         <Icon name="clock" className="h-4 w-4" /> Your dates are held for{" "}
-        <span className="font-mono font-medium tabular-nums text-ink">{mins === null ? "--:--" : `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`}</span>
+        <Countdown
+          until={holdExpiresAt}
+          onEnd={() => {
+            setExpired(true);
+            router.refresh();
+          }}
+        />
       </p>
 
       <StepCard n={1} title="Your details" state="done" summary={`${guestName} · Reservation ${reference}`} />
@@ -146,7 +147,7 @@ export function PaymentSteps({ token, guestName, reference, total, currency, met
           </div>
         </fieldset>
         <div className="mt-2 flex justify-end border-t border-line pt-5">
-          <button type="button" onClick={() => setStep(3)} disabled={expired} className="min-h-12 rounded-xl bg-ink px-8 font-medium text-white disabled:opacity-50">
+          <button type="button" onClick={() => setStep(3)} disabled={expired} className={buttonClass("dark")}>
             Next
           </button>
         </div>
@@ -164,7 +165,7 @@ export function PaymentSteps({ token, guestName, reference, total, currency, met
             type="button"
             onClick={pay}
             disabled={paying || expired}
-            className="mt-6 flex min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-brand px-6 text-lg font-medium text-white transition hover:brightness-110 disabled:opacity-50"
+            className={`${buttonClass("primary", "lg")} mt-6 w-full`}
           >
             {paying ? "Processing…" : simulated ? "Confirm booking" : `Confirm and pay ${formatMoney(total, currency)}`}
           </button>

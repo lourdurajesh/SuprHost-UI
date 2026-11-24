@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { Carousel } from "@/components/carousel";
+import { buttonClass } from "@/components/ui/button";
+import { plural } from "@/lib/text";
 import { HeroSearchBar } from "@/components/search/header-search";
 import { Icon } from "@/components/icons";
 import { formatMoney } from "@/lib/dates";
@@ -11,14 +13,13 @@ import { ListingPhoto } from "./listing-media";
 // and visibility owner-configurable without touching the sections themselves.
 
 const container = "mx-auto max-w-7xl px-4 sm:px-6 lg:px-8";
-const pill = "inline-flex items-center gap-2 rounded-xl bg-brand px-7 py-3.5 text-white transition hover:brightness-125";
 
 export function Hero({ site }: { site: Site }) {
   return (
     // Full-bleed photo with the promise and the search on top: the place sells itself first.
     <section className="relative isolate overflow-hidden bg-brand">
       <div className="absolute inset-0 -z-10">
-        <ListingPhoto image={site.heroImage} name="" sizes="100vw" priority className="h-full w-full" />
+        <ListingPhoto image={site.heroImage} name="" sizes="100vw" preload className="h-full w-full" />
         {/* Two scrims keep white text at >= 4.5:1 over the photo: bottom (all screens) and left (wide screens).
             Strengths were measured against the real photo, text block by text block; phones need the heavier
             one because the text block covers more of the picture. Re-measure when the hero photo changes. */}
@@ -56,7 +57,7 @@ export function Stays({ listings, currency, addsGst }: { listings: ListingSummar
   // A grid, not a carousel: guests see the range at a glance instead of paging to find it.
   const shown = listings.slice(0, 8);
   return (
-    <section id="stays" className={`${container} scroll-mt-24`}>
+    <section id="stays" className={container}>
       <div className="flex items-end justify-between gap-4">
         <div>
           <h2 className="text-h1">Our homes</h2>
@@ -72,14 +73,14 @@ export function Stays({ listings, currency, addsGst }: { listings: ListingSummar
         <p className="mt-10 text-ink-soft">New stays are coming soon.</p>
       ) : (
         <div className="mt-6 grid grid-cols-2 gap-x-4 gap-y-8 sm:gap-x-6 lg:grid-cols-4">
-          {shown.map((l, i) => (
-            <ListingCard key={l.id} listing={l} currency={currency} priority={i < 2} addsGst={addsGst} />
+          {shown.map((l) => (
+            <ListingCard key={l.id} listing={l} currency={currency} addsGst={addsGst} />
           ))}
         </div>
       )}
       {listings.length > shown.length && (
         <div className="mt-12 text-center">
-          <Link href="/stays" className={pill}>
+          <Link href="/stays" className={buttonClass()}>
             See all {listings.length} stays <Icon name="arrowRight" className="h-4 w-4" />
           </Link>
         </div>
@@ -128,7 +129,7 @@ export function Destinations({ listings, currency }: { listings: ListingSummary[
               <span className="absolute inset-x-0 bottom-0 p-3 text-white sm:p-4">
                 <span className="block text-lg leading-tight sm:text-xl">{p.city}</span>
                 <span className="mt-1 block text-sm text-white/90">
-                  {p.count} stay{p.count === 1 ? "" : "s"} · from {formatMoney(p.from, currency)}
+                  {plural(p.count, "stay")} · from {formatMoney(p.from, currency)}
                 </span>
               </span>
             </Link>
@@ -160,7 +161,7 @@ export function Highlights({ items }: { items: Site["highlights"] }) {
 export function About({ about }: { about: Site["about"] }) {
   if (!about) return null;
   return (
-    <section id="about" className={`${container} scroll-mt-24 py-8`}>
+    <section id="about" className={`${container} py-8`}>
       <div className="grid items-center gap-8 lg:grid-cols-2 lg:gap-16">
         <ListingPhoto image={about.image} name="" sizes="(min-width: 1024px) 50vw, 100vw" className="aspect-[4/3] rounded-2xl" />
         <div>
@@ -215,7 +216,7 @@ export function Testimonials({ items }: { items: Site["testimonials"] }) {
 export function Faq({ items }: { items: Site["faqs"] }) {
   if (!items.length) return null;
   return (
-    <section id="faq" className={`${container} scroll-mt-24 py-12 sm:py-16`}>
+    <section id="faq" className={`${container} py-12 sm:py-16`}>
       <div className="grid gap-12 lg:grid-cols-[1fr_1.6fr]">
         <div>
           <h2 className="text-h1">Questions, answered</h2>

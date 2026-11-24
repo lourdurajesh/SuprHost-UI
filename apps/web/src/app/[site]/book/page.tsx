@@ -4,10 +4,12 @@ import { Suspense } from "react";
 import { CheckoutForm } from "@/components/checkout-form";
 import { Track } from "@/components/track";
 import { getGuestSession, getListing, getListings, getQuote, getSite, PmsError } from "@/lib/pms";
+import { stayUrl } from "@/lib/links";
 import { readSessionToken } from "@/lib/session";
 import { stayQuery } from "@/lib/validation";
 import { ChangeDates, ChangeGuests } from "@/components/change-stay";
 import { StepCard } from "@/components/step-card";
+import { buttonClass } from "@/components/ui/button";
 import { checkoutGrid, CheckoutShell, StaySummary } from "@/themes/escape/checkout";
 
 export const metadata: Metadata = { title: "Your details", robots: { index: false, follow: false } };
@@ -50,14 +52,14 @@ async function BookContent({ params, searchParams }: Pick<PageProps<"/[site]/boo
     quote = await getQuote(key, listing.id, checkIn, checkOut, guests);
   } catch (e) {
     if (e instanceof PmsError && e.status < 500) {
-      return <StartOver message="These dates are no longer available. Please choose other dates." href={`/stays/${listing.slug}`} />;
+      return <StartOver message="These dates are no longer available. Please choose other dates." href={stayUrl(listing.slug)} />;
     }
     throw e;
   }
 
   const full = await getListing(key, listing.slug);
   const stay = { listingId: listing.id, checkIn, checkOut, guests };
-  const back = `/stays/${listing.slug}?${new URLSearchParams({ checkIn, checkOut, guests: String(guests) })}`;
+  const back = stayUrl(listing.slug, stay);
 
   return (
     <CheckoutShell title="Confirm and book" back={back}>
@@ -101,7 +103,7 @@ function StartOver({ message, href = "/stays" }: { message: string; href?: strin
     <CheckoutShell title="Confirm and book" back={href}>
       <div className="mt-8 rounded-2xl border border-line p-6 sm:p-8">
         <p>{message}</p>
-        <Link href={href} className="mt-5 inline-flex rounded-xl bg-brand px-6 py-3 font-medium text-white">
+        <Link href={href} className={`${buttonClass()} mt-5`}>
           Choose dates
         </Link>
       </div>

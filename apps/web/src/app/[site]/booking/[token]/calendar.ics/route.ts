@@ -1,6 +1,7 @@
 import { connection } from "next/server";
 import { stayCalendar } from "@/lib/ics";
 import { getBooking, getListing, getSite } from "@/lib/pms";
+import { plural } from "@/lib/text";
 import { bookingToken } from "@/lib/validation";
 
 // "Add to calendar" for a confirmed stay. The token in the path is the guest's link, as on the
@@ -24,7 +25,7 @@ export async function GET(_request: Request, ctx: RouteContext<"/[site]/booking/
     timeZone: site.timezone,
     location: listing ? [listing.name, listing.propertyName, listing.city].join(", ") : booking.listing.name,
     description:
-      `Booking ${booking.reference} for ${booking.guests} guest${booking.guests === 1 ? "" : "s"}. ` +
+      `Booking ${booking.reference} for ${plural(booking.guests, "guest")}. ` +
       `Check-in from ${site.policies.checkInTime}, check-out by ${site.policies.checkOutTime}.` +
       (site.contact.phone ? ` Questions: ${site.contact.phone}.` : ""),
     url: site.canonicalUrl,

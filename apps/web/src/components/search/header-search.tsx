@@ -1,14 +1,19 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useTransition } from "react";
 import type { SearchQuery } from "@/lib/pms/types";
 import { queryFromParams, toSearchString } from "@/lib/search-query";
 import { setFiltersSlot } from "./filters-slot";
 import { SearchBar } from "./search-bar";
-import { SearchOverlay } from "./search-overlay";
 import { setSearchOpen, useSearchOpen } from "./search-store";
 import type { Place } from "./where-panel";
+
+// The panel (calendar and all) is fetched once the page is idle, so it costs nothing on first load and is
+// there by the time someone presses the bar.
+const loadPanel = () => import("./search-overlay");
+const SearchOverlay = dynamic(() => loadPanel().then((m) => m.SearchOverlay), { ssr: false });
 
 function useUrlQuery() {
   const params = useSearchParams();
@@ -67,6 +72,15 @@ export function SearchHost({ places, timezone, brandName }: { places: Place[]; t
   const query = useUrlQuery();
   const open = useSearchOpen();
   const [pending, startTransition] = useTransition();
+
+  useEffect(() => {
+    if (typeof requestIdleCallback === "undefined") {
+      const t = setTimeout(loadPanel, 2000);
+      return () => clearTimeout(t);
+    }
+    const id = requestIdleCallback(() => void loadPanel());
+    return () => cancelIdleCallback(id);
+  }, []);
 
   function apply(next: SearchQuery) {
     const url = `/stays${toSearchString(next)}`;

@@ -281,7 +281,7 @@ export function PhotoTour({ images, name, children }: { images: ListingImage[]; 
                   alt={current.alt || `${name}, photo ${index + 1} of ${count}`}
                   fill
                   sizes="100vw"
-                  priority
+                  preload
                   draggable={false}
                   unoptimized={skipOptimizer(current.url)}
                   className="object-contain"

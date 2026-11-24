@@ -74,7 +74,7 @@ async function Footer({ params }: { params: SiteParams }) {
   return (
     <>
       <SiteFooter site={site} />
-      {site.contact.whatsapp && <ChatLauncher brandName={site.brandName} whatsapp={site.contact.whatsapp.replace(/\D/g, "")} />}
+      {site.contact.whatsapp && <ChatLauncher brandName={site.brandName} whatsapp={site.contact.whatsapp} />}
     </>
   );
 }

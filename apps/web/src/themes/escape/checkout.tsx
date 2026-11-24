@@ -1,6 +1,7 @@
 import Link from "next/link";
-import type { ListingImage, Quote, RatingSummary } from "@/lib/pms";
-import { formatDate, formatMoney } from "@/lib/dates";
+import type { BookingSummary, ListingImage, Quote, RatingSummary } from "@/lib/pms";
+import { formatMoney, stayDates } from "@/lib/dates";
+import { plural } from "@/lib/text";
 import { Icon } from "@/components/icons";
 import { MoreDialog } from "@/components/more-dialog";
 import { PriceBreakdown } from "@/components/price-breakdown";
@@ -26,13 +27,16 @@ export function CheckoutShell({ title, back, children }: { title: string; back: 
 /** Steps and summary side by side; on phones the summary comes first, folded to one line. */
 export const checkoutGrid = "mt-6 grid items-start gap-6 lg:mt-8 lg:grid-cols-[minmax(0,1fr)_372px] lg:gap-20";
 
-/** "1–6 Dec 2026", or "28 Dec 2026 – 3 Jan 2027" across months. */
-function stayDates(checkIn: string, checkOut: string) {
-  const sameMonth = checkIn.slice(0, 7) === checkOut.slice(0, 7);
-  return sameMonth
-    ? `${Number(checkIn.slice(8))}–${formatDate(checkOut, { day: "numeric", month: "short", year: "numeric" })}`
-    : `${formatDate(checkIn, { day: "numeric", month: "short", year: "numeric" })} – ${formatDate(checkOut, { day: "numeric", month: "short", year: "numeric" })}`;
-}
+/** What the summary shows of a booking that has been made. */
+export const summaryOf = ({ listing, checkIn, checkOut, guests, quote }: BookingSummary) => ({
+  name: listing.name,
+  propertyName: listing.propertyName,
+  image: listing.image,
+  checkIn,
+  checkOut,
+  guests,
+  quote,
+});
 
 export function StaySummary({
   name,
@@ -64,7 +68,7 @@ export function StaySummary({
   phoneFirst?: boolean;
 }) {
   const row = "flex items-center justify-between gap-4 border-t border-line py-4";
-  const guestText = `${guests} guest${guests === 1 ? "" : "s"}`;
+  const guestText = plural(guests, "guest");
   const details = (
     <>
       <div className="py-4">

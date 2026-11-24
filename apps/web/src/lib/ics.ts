@@ -41,7 +41,7 @@ function fold(line: string): string {
   return out.join("\r\n ");
 }
 
-export interface StayEvent {
+interface StayEvent {
   uid: string;
   title: string;
   checkIn: string;

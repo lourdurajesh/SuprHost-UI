@@ -1,8 +1,7 @@
 import type { RatingSummary } from "@/lib/pms/types";
+import { formatScore, MIN_REVIEWS_FOR_SCORE } from "@/lib/reviews";
+import { plural } from "@/lib/text";
 import { Icon } from "./icons";
-
-/** An average from one or two reviews says little and reads as a pitch; show the count only. */
-const MIN_REVIEWS_FOR_SCORE = 3;
 
 /** "★ 4.8 (12)": the average of published reviews, with a screen-reader sentence. */
 export function Rating({ rating, className = "" }: { rating?: RatingSummary | null; className?: string }) {
@@ -10,7 +9,7 @@ export function Rating({ rating, className = "" }: { rating?: RatingSummary | nu
   if (rating.count < MIN_REVIEWS_FOR_SCORE) {
     return (
       <span className={`inline-flex items-center gap-1 text-ink-soft ${className}`}>
-        {rating.count} review{rating.count === 1 ? "" : "s"}
+        {plural(rating.count, "review")}
       </span>
     );
   }
@@ -18,10 +17,10 @@ export function Rating({ rating, className = "" }: { rating?: RatingSummary | nu
     <span className={`inline-flex items-center gap-1 ${className}`}>
       <Icon name="star" className="h-4 w-4 fill-ink text-ink" />
       <span aria-hidden>
-        {rating.average.toFixed(1)} <span className="text-ink-soft">({rating.count})</span>
+        {formatScore(rating.average)} <span className="text-ink-soft">({rating.count})</span>
       </span>
       <span className="sr-only">
-        Rated {rating.average.toFixed(1)} out of 5 from {rating.count} review{rating.count === 1 ? "" : "s"}
+        Rated {formatScore(rating.average)} out of 5 from {plural(rating.count, "review")}
       </span>
     </span>
   );

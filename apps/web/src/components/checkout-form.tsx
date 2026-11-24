@@ -1,21 +1,14 @@
 "use client";
 
-import Script from "next/script";
 import { useEffect, useRef, useState } from "react";
 import type { GuestSession } from "@/lib/pms/types";
+import { requestCode, verifyCode } from "@/lib/auth-client";
+import { maskMobile, toMobile } from "@/lib/mobile";
 import { Icon } from "./icons";
-import { MobileField, maskMobile, toMobile } from "./mobile-field";
-
-declare global {
-  interface Window {
-    turnstile?: {
-      render: (el: HTMLElement, opts: Record<string, unknown>) => string;
-      reset: (id?: string) => void;
-    };
-  }
-}
-
-const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+import { MobileField } from "./mobile-field";
+import { CodeInput, Honeypot, honeypotValue, TestModeCode } from "./sign-in-code";
+import { TurnstileWidget, useTurnstile } from "./turnstile";
+import { buttonClass, fieldClass, textButton } from "./ui/button";
 
 interface Props {
   listingId: string;
@@ -45,8 +38,6 @@ interface Details {
 export function CheckoutForm({ listingId, checkIn, checkOut, guests, holdMinutes, session, phoneSignIn = false }: Props) {
   const signedInByPhone = session?.signedInWith === "phone";
   const mountedAt = useRef(0);
-  const widget = useRef<HTMLDivElement>(null);
-  const widgetId = useRef<string | null>(null);
   // One key per form instance: a double click or a retry after a timeout cannot hold dates twice.
   // Per stay: the dates or guests can be changed on this page, and that is a different hold.
   const keys = useRef(new Map<string, string>());
@@ -63,7 +54,6 @@ export function CheckoutForm({ listingId, checkIn, checkOut, guests, holdMinutes
   const mobileMode = method === "phone";
   const [code, setCode] = useState("");
   const [testModeCode, setTestModeCode] = useState<string | null>(null);
-  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [busy, setBusy] = useState<null | "code" | "verify" | "book">(null);
 
@@ -71,19 +61,7 @@ export function CheckoutForm({ listingId, checkIn, checkOut, guests, holdMinutes
     mountedAt.current = performance.now();
   }, []);
 
-  const needsChallenge = !session && Boolean(TURNSTILE_SITE_KEY);
-
-  function renderTurnstile() {
-    if (!TURNSTILE_SITE_KEY || !widget.current || !window.turnstile || widgetId.current) return;
-    widgetId.current = window.turnstile.render(widget.current, {
-      sitekey: TURNSTILE_SITE_KEY,
-      action: "signin",
-      appearance: "interaction-only",
-      callback: (t: string) => setTurnstileToken(t),
-      "expired-callback": () => setTurnstileToken(null),
-      "error-callback": () => setTurnstileToken(null),
-    });
-  }
+  const check = useTurnstile(!session);
 
   const set = (field: keyof Details) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setDetails((d) => ({ ...d, [field]: e.target.value }));
@@ -108,7 +86,7 @@ export function CheckoutForm({ listingId, checkIn, checkOut, guests, holdMinutes
   async function book(): Promise<void> {
     setBusy("book");
     try {
-      const website = (document.getElementById("website") as HTMLInputElement | null)?.value ?? "";
+      const website = honeypotValue("website");
       const stay = `${checkIn}|${checkOut}|${guests}`;
       const idempotencyKey = keys.current.get(stay) ?? crypto.randomUUID();
       keys.current.set(stay, idempotencyKey);
@@ -152,26 +130,16 @@ export function CheckoutForm({ listingId, checkIn, checkOut, guests, holdMinutes
   async function sendCode(by: "phone" | "email" = method) {
     setBusy("code");
     setMethod(by);
-    const login = by === "phone" ? { mobile: toMobile(details.phone) } : { email: details.email.trim() };
-    const res = await fetch("/api/auth/code", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...login, website: "", turnstileToken }),
-    }).catch(() => null);
+    const login = by === "phone" ? { mobile: toMobile(details.phone) ?? "" } : { email: details.email.trim() };
+    const sent = await requestCode(login, { website: honeypotValue("website"), turnstileToken: check.take() });
     setBusy(null);
-    window.turnstile?.reset(widgetId.current ?? undefined);
-    setTurnstileToken(null);
-
-    const body = res ? await res.json().catch(() => ({})) : {};
-    if (res?.status === 202) {
-      setTestModeCode(typeof body.testModeCode === "string" ? body.testModeCode : null);
+    if (sent.sent) {
+      setTestModeCode(sent.testModeCode);
       setCode("");
       setErrors({});
       setStep("code");
-    } else if (res?.status === 429) setErrors({ form: "Too many attempts. Please wait a few minutes." });
-    else if (res?.status === 400) setErrors(by === "phone" ? { phone: "Enter a valid 10-digit mobile number" } : { email: "Enter a valid email" });
-    else if (res?.status === 422 && typeof body.message === "string") setErrors({ form: body.message });
-    else setErrors({ form: by === "phone" ? "We couldn't send the text message just now. Please try again." : "We couldn't send a code just now. Please try again." });
+    } else if (sent.invalid) setErrors(by === "phone" ? { phone: sent.message } : { email: sent.message });
+    else setErrors({ form: sent.message });
   }
 
   async function onDetails(e: React.FormEvent) {
@@ -189,25 +157,20 @@ export function CheckoutForm({ listingId, checkIn, checkOut, guests, holdMinutes
     if (busy) return;
     setErrors({});
     setBusy("verify");
-    const res = await fetch("/api/auth/verify", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(
-        mobileMode
-          ? { mobile: toMobile(details.phone), code, name: details.name.trim(), contactEmail: details.email.trim() }
-          : { email: details.email.trim(), code, name: details.name.trim(), phone: details.phone },
-      ),
-    }).catch(() => null);
-    if (!res?.ok) {
+    const name = details.name.trim();
+    const email = details.email.trim();
+    const problem = mobileMode
+      ? await verifyCode({ mobile: toMobile(details.phone) ?? "" }, code, { name, contactEmail: email })
+      : await verifyCode({ email }, code, { name, phone: details.phone });
+    if (problem) {
       setBusy(null);
-      setErrors({ code: res?.status === 429 ? "Too many attempts. Request a new code in a few minutes." : "That code is invalid or has expired." });
+      setErrors({ code: problem });
       return;
     }
     await book();
   }
 
-  const input =
-    "focus-own mt-1.5 w-full rounded-xl border border-field bg-white px-4 py-3.5 text-base outline-none transition placeholder:text-ink-soft focus:border-ink focus:ring-1 focus:ring-ink read-only:bg-sand-deep read-only:text-ink-soft";
+  const input = `${fieldClass} mt-1.5`;
   const error = (f: Field) =>
     errors[f] && (
       <p id={`${f}-error`} className="mt-1.5 text-sm text-red-700">
@@ -219,8 +182,7 @@ export function CheckoutForm({ listingId, checkIn, checkOut, guests, holdMinutes
       {errors.form}
     </p>
   );
-  const primary =
-    "group ml-auto flex min-h-12 items-center justify-center gap-2 rounded-xl bg-ink px-8 font-medium text-white transition hover:brightness-125 disabled:opacity-50 max-sm:w-full";
+  const next = `${buttonClass("dark")} max-sm:w-full`;
 
   if (step === "code") {
     return (
@@ -233,48 +195,27 @@ export function CheckoutForm({ listingId, checkIn, checkOut, guests, holdMinutes
             minutes. Confirming creates your account, so you can find this booking later.
           </p>
         </div>
-        {testModeCode && (
-          <p className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-            <strong>Test mode:</strong> {mobileMode ? "text messages" : "emails"} aren’t sent yet. Your code is{" "}
-            <span className="font-mono text-base tracking-widest">{testModeCode}</span>
-          </p>
-        )}
-        <div>
-          <label htmlFor="code" className="text-sm font-medium">
-            Code
-          </label>
-          <input
-            id="code"
-            inputMode="numeric"
-            autoComplete="one-time-code"
-            pattern="\d{6}"
-            maxLength={6}
-            required
-            autoFocus
-            value={code}
-            aria-invalid={Boolean(errors.code)}
-            aria-describedby={errors.code ? "code-error" : undefined}
-            onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
-            className={`${input} text-center font-mono text-2xl tracking-[0.5em]`}
-          />
-          {error("code")}
-        </div>
+        <TestModeCode code={testModeCode} byPhone={mobileMode} />
+        <CodeInput id="code" value={code} onChange={setCode} error={errors.code} />
         {formError}
-        <button type="submit" disabled={Boolean(busy) || code.length !== 6} className={primary}>
-          {busy === "book" ? "Holding your dates…" : busy === "verify" ? "Checking…" : "Next"}
-        </button>
+        <div className="flex justify-end">
+          <button type="submit" disabled={Boolean(busy) || code.length !== 6} className={next}>
+            {busy === "book" ? "Holding your dates…" : busy === "verify" ? "Checking…" : "Next"}
+          </button>
+        </div>
         <div className="flex flex-wrap justify-between gap-3 text-sm">
-          <button type="button" onClick={() => { setStep("details"); setErrors({}); }} className="min-h-11 underline underline-offset-4">
+          <button type="button" onClick={() => { setStep("details"); setErrors({}); }} className={textButton}>
             Edit details
           </button>
-          <button type="button" onClick={() => sendCode()} disabled={Boolean(busy)} className="min-h-11 underline underline-offset-4">
+          <button type="button" onClick={() => sendCode()} disabled={Boolean(busy)} className={textButton}>
             Resend code
           </button>
         </div>
+        <TurnstileWidget check={check} />
         {mobileMode && (
           <p className="text-center text-sm text-ink-soft">
             No SMS?{" "}
-            <button type="button" onClick={() => sendCode("email")} disabled={Boolean(busy)} className="min-h-11 text-ink underline underline-offset-4">
+            <button type="button" onClick={() => sendCode("email")} disabled={Boolean(busy)} className={`${textButton} text-ink`}>
               Get the code by email instead
             </button>
           </p>
@@ -285,10 +226,6 @@ export function CheckoutForm({ listingId, checkIn, checkOut, guests, holdMinutes
 
   return (
     <form onSubmit={onDetails} noValidate className="space-y-5">
-      {needsChallenge && (
-        <Script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" strategy="afterInteractive" onReady={renderTurnstile} />
-      )}
-
       {session && (
         <p className="flex items-center gap-2 text-sm text-ink-soft">
           <Icon name="check" className="h-4 w-4 text-brand" /> Signed in as{" "}
@@ -384,23 +321,21 @@ export function CheckoutForm({ listingId, checkIn, checkOut, guests, holdMinutes
         {error("message")}
       </div>
 
-      {/* Honeypot: hidden from people and screen readers, irresistible to form-filling bots. */}
-      <div aria-hidden="true" className="absolute -left-[9999px] h-px w-px overflow-hidden">
-        <label htmlFor="website">Website</label>
-        <input id="website" name="website" type="text" tabIndex={-1} autoComplete="off" />
-      </div>
+      <Honeypot id="website" />
 
-      {needsChallenge && <div ref={widget} />}
+      <TurnstileWidget check={check} />
       {formError}
 
-      {needsChallenge && !turnstileToken && (
+      {!check.ready && (
         <p role="status" className="text-center text-sm text-ink-soft">
           Checking that you’re not a robot… the button turns on in a moment.
         </p>
       )}
-      <button type="submit" disabled={Boolean(busy) || (needsChallenge && !turnstileToken)} className={primary}>
-        {busy === "book" ? "Holding your dates…" : busy === "code" ? "Sending code…" : "Next"}
-      </button>
+      <div className="flex justify-end">
+        <button type="submit" disabled={Boolean(busy) || !check.ready} className={next}>
+          {busy === "book" ? "Holding your dates…" : busy === "code" ? "Sending code…" : "Next"}
+        </button>
+      </div>
       <p className="flex items-center gap-1.5 text-sm text-ink-soft">
         <Icon name="lock" className="h-3.5 w-3.5" />
         {session
@@ -411,7 +346,7 @@ export function CheckoutForm({ listingId, checkIn, checkOut, guests, holdMinutes
       </p>
       {!session && phoneSignIn && (
         <p className="text-center text-sm">
-          <button type="button" onClick={() => { setMethod(mobileMode ? "email" : "phone"); setErrors({}); }} className="min-h-11 underline underline-offset-4">
+          <button type="button" onClick={() => { setMethod(mobileMode ? "email" : "phone"); setErrors({}); }} className={textButton}>
             {mobileMode ? "Confirm by email instead" : "Confirm by SMS instead"}
           </button>
         </p>

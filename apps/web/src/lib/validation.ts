@@ -6,15 +6,13 @@ import { isIsoDate, nightsBetween } from "./dates";
 
 const isoDate = z.string().refine(isIsoDate, "Invalid date");
 
-export const stayQuery = z
-  .object({
-    listing: z.string().uuid(),
-    checkIn: isoDate,
-    checkOut: isoDate,
-    guests: z.coerce.number().int().min(1).max(50),
-  })
-  .refine((v) => v.checkOut > v.checkIn, { message: "Check-out must be after check-in", path: ["checkOut"] })
-  .refine((v) => nightsBetween(v.checkIn, v.checkOut) <= 60, { message: "Stays are limited to 60 nights", path: ["checkOut"] });
+/** The rules every stay follows, whoever asks: a quote, a booking or a change of dates. */
+const asStay = <S extends z.ZodType<{ checkIn: string; checkOut: string }>>(schema: S): S =>
+  schema
+    .refine((v) => v.checkOut > v.checkIn, { message: "Check-out must be after check-in", path: ["checkOut"] })
+    .refine((v) => nightsBetween(v.checkIn, v.checkOut) <= 60, { message: "Stays are limited to 60 nights", path: ["checkOut"] });
+
+export const stayQuery = asStay(z.object({ listing: z.string().uuid(), checkIn: isoDate, checkOut: isoDate, guests: z.coerce.number().int().min(1).max(50) }));
 
 export const availabilityQuery = z
   .object({ listing: z.string().uuid(), from: isoDate, to: isoDate })
@@ -91,11 +89,7 @@ export const bookingToken = z.string().regex(/^[A-Za-z0-9_-]{32,64}$/);
 
 export const reviewBody = z.object({ rating: z.number().int().min(1).max(5), text: z.string().trim().min(10).max(2000) }).strict();
 
-export const changeDatesBody = z
-  .object({ checkIn: isoDate, checkOut: isoDate })
-  .strict()
-  .refine((v) => v.checkOut > v.checkIn, { message: "Check-out must be after check-in", path: ["checkOut"] })
-  .refine((v) => nightsBetween(v.checkIn, v.checkOut) <= 60, { message: "Stays are limited to 60 nights", path: ["checkOut"] });
+export const changeDatesBody = asStay(z.object({ checkIn: isoDate, checkOut: isoDate }).strict());
 
 export const paymentBody = z
   .object({
@@ -104,24 +98,23 @@ export const paymentBody = z
   })
   .strict();
 
-export const createBookingBody = z
-  .object({
-    listingId: z.string().uuid(),
-    checkIn: isoDate,
-    checkOut: isoDate,
-    guests: z.number().int().min(1).max(50),
-    name: z.string().trim().min(2, "Enter your full name").max(100),
-    email: z.string().trim().toLowerCase().email("Enter a valid email").max(254),
-    phone,
-    message: z.string().trim().max(1000).default(""),
-    // Anti-spam fields, never forwarded to the PMS.
-    website: z.string().max(0).optional(), // honeypot: must stay empty
-    elapsedMs: z.number().int().nonnegative(),
-    // Signed-in guests passed Turnstile when they requested their email code.
-    turnstileToken: z.string().max(2048).nullable().optional(),
-    idempotencyKey: z.string().uuid(),
-  })
-  .strict()
-  .refine((v) => v.checkOut > v.checkIn, { message: "Check-out must be after check-in", path: ["checkOut"] });
-
-export type CreateBookingBody = z.infer<typeof createBookingBody>;
+export const createBookingBody = asStay(
+  z
+    .object({
+      listingId: z.string().uuid(),
+      checkIn: isoDate,
+      checkOut: isoDate,
+      guests: z.number().int().min(1).max(50),
+      name: z.string().trim().min(2, "Enter your full name").max(100),
+      email: z.string().trim().toLowerCase().email("Enter a valid email").max(254),
+      phone,
+      message: z.string().trim().max(1000).default(""),
+      // Anti-spam fields, never forwarded to the PMS.
+      website: z.string().max(0).optional(), // honeypot: must stay empty
+      elapsedMs: z.number().int().nonnegative(),
+      // Signed-in guests passed Turnstile when they requested their email code.
+      turnstileToken: z.string().max(2048).nullable().optional(),
+      idempotencyKey: z.string().uuid(),
+    })
+    .strict(),
+);

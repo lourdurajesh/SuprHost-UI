@@ -1,5 +1,6 @@
-import { formatDate } from "@/lib/dates";
+import { isIsoDate, shortRange } from "@/lib/dates";
 import type { PropertyType, SearchQuery, SearchSort, StayLength } from "@/lib/pms/types";
+import { plural } from "@/lib/text";
 
 /** Search state lives in the URL; this is its one writer, so the bar, the filters and the hero agree. */
 export function toSearchString(q: SearchQuery): string {
@@ -23,7 +24,7 @@ export function queryFromParams(p: { get(name: string): string | null }): Search
   };
   const date = (k: string) => {
     const v = p.get(k) ?? "";
-    return /^\d{4}-\d{2}-\d{2}$/.test(v) && !Number.isNaN(Date.parse(v)) ? v : undefined;
+    return isIsoDate(v) ? v : undefined;
   };
   const list = (k: string) => {
     const v = (p.get(k) ?? "").split(",").filter(Boolean);
@@ -38,7 +39,7 @@ export function queryFromParams(p: { get(name: string): string | null }): Search
     checkIn: dated ? checkIn : undefined,
     checkOut: dated ? checkOut : undefined,
     flex: dated ? num("flex") : undefined,
-    stay: stay in STAY_LABEL ? (stay as StayLength) : undefined,
+    stay: Object.hasOwn(STAY_LABEL, stay) ? (stay as StayLength) : undefined,
     months: months?.length ? months : undefined,
     guests: num("guests"),
     children: num("children"),
@@ -66,7 +67,7 @@ export const monthName = (ym: string, short = false) => (short ? MONTH_SHORT : M
 /** What the "When" segment shows: dates, a flexible choice, or an invitation. */
 export function describeWhen(q: SearchQuery, short = false): string {
   if (q.checkIn && q.checkOut) {
-    const range = `${formatDate(q.checkIn, { day: "numeric", month: "short" })} – ${formatDate(q.checkOut, { day: "numeric", month: "short" })}`;
+    const range = shortRange(q.checkIn, q.checkOut);
     return q.flex ? `${range} (±${q.flex})` : range;
   }
   if (q.stay || q.months?.length) {
@@ -80,5 +81,5 @@ export function describeWhen(q: SearchQuery, short = false): string {
 /** What the "Who" segment shows. */
 export function describeWho(q: SearchQuery): string {
   if (!q.guests) return "Add guests";
-  return `${q.guests} guest${q.guests === 1 ? "" : "s"}`;
+  return plural(q.guests, "guest");
 }

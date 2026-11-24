@@ -1,4 +1,5 @@
 import { Icon } from "./icons";
+import { buttonClass } from "./ui/button";
 
 /** One numbered step of the checkout: open, done (one line says what was chosen) or still to come. */
 export function StepCard({
@@ -45,4 +46,4 @@ export function StepCard({
 }
 
 /** The small grey "Change" buttons of the checkout. */
-export const changeButton = "inline-flex min-h-11 shrink-0 items-center rounded-xl bg-sand-deep px-4 text-sm font-medium transition hover:brightness-95";
+export const changeButton = `${buttonClass("soft", "sm")} shrink-0`;

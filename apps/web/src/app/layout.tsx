@@ -13,7 +13,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${body.variable} antialiased`}>
+    <html lang="en" data-scroll-behavior="smooth" className={`${body.variable} antialiased`}>
       <body className="min-h-dvh font-sans">{children}</body>
     </html>
   );

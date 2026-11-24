@@ -2,7 +2,7 @@ import type { ListingImage } from "@/lib/pms/types";
 
 // Guest-facing names for the photo categories the PMS offers (slugs match the backend's closed
 // list). Anything else on a photo is ignored, so a new or odd value can never reach the page.
-export const PHOTO_CATEGORY_LABEL: Record<string, string> = {
+const PHOTO_CATEGORY_LABEL: Record<string, string> = {
   exterior: "Outside",
   living: "Living area",
   bedroom: "Bedrooms",
@@ -13,7 +13,7 @@ export const PHOTO_CATEGORY_LABEL: Record<string, string> = {
   other: "More",
 };
 
-export type PhotoChip = { slug: string; label: string; count: number; first: number };
+type PhotoChip = { slug: string; label: string; count: number; first: number };
 
 /**
  * One chip per category present on the photos, in order of first appearance, each pointing at

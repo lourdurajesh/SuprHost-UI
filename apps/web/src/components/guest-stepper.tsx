@@ -1,16 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { plural } from "@/lib/text";
+import { StepButton } from "./ui/step-button";
 
 interface Props {
   value: number;
   onChange: (value: number) => void;
   max: number;
   min?: number;
-  /** Show "guest(s)" beside the number; off where a label above already says it. */
-  showUnit?: boolean;
-  /** 36px buttons instead of 40px, for tight places like the hero search bar. */
-  compact?: boolean;
   className?: string;
 }
 
@@ -24,7 +22,7 @@ const TYPING_PAUSE_MS = 700;
  * applied when typing pauses, on Enter, or on leaving the field; anything above the limit becomes the
  * limit (and the unit briefly reads "max N"), anything unreadable returns to the current value.
  */
-export function GuestStepper({ value, onChange, max, min = 1, showUnit = true, compact = false, className = "" }: Props) {
+export function GuestStepper({ value, onChange, max, min = 1, className = "" }: Props) {
   // While the number is being typed it shows the draft; otherwise the real value.
   const [draft, setDraft] = useState<string | null>(null);
   const [limitHit, setLimitHit] = useState(false);
@@ -62,22 +60,10 @@ export function GuestStepper({ value, onChange, max, min = 1, showUnit = true, c
 
   const atMin = value <= min;
   const atMax = value >= max;
-  const button =
-    `grid ${compact ? "h-9 w-9" : "h-10 w-10"} shrink-0 place-items-center rounded-lg text-ink ring-1 ring-line transition hover:ring-ink aria-disabled:cursor-not-allowed aria-disabled:opacity-40 aria-disabled:hover:ring-line`;
 
   return (
     <div role="group" aria-label="Guests" className={`flex items-center justify-between gap-3 ${className}`}>
-      <button
-        type="button"
-        aria-label="Fewer guests"
-        aria-disabled={atMin}
-        onClick={() => !atMin && apply(value - 1)}
-        className={button}
-      >
-        <svg aria-hidden viewBox="0 0 20 20" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
-          <path d="M4.5 10h11" />
-        </svg>
-      </button>
+      <StepButton kind="less" label="Fewer guests" atLimit={atMin} onClick={() => !atMin && apply(value - 1)} />
 
       <label className="flex min-w-0 items-baseline justify-center gap-1.5">
         <input
@@ -120,31 +106,16 @@ export function GuestStepper({ value, onChange, max, min = 1, showUnit = true, c
           }}
           className="focus-own w-9 rounded-md bg-transparent text-center text-base tabular-nums text-ink outline-none focus-visible:ring-2 focus-visible:ring-ink"
         />
-        {showUnit && (
-          <span className="whitespace-nowrap text-sm text-ink-soft" aria-hidden>
-            {limitHit ? `max ${max}` : value === 1 ? "guest" : "guests"}
-          </span>
-        )}
+        <span className="whitespace-nowrap text-sm text-ink-soft" aria-hidden>
+          {limitHit ? `max ${max}` : value === 1 ? "guest" : "guests"}
+        </span>
       </label>
 
-      <button
-        type="button"
-        aria-label="More guests"
-        aria-disabled={atMax}
-        onClick={() => {
-          if (atMax) flashLimit();
-          else apply(value + 1);
-        }}
-        className={button}
-      >
-        <svg aria-hidden viewBox="0 0 20 20" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
-          <path d="M4.5 10h11M10 4.5v11" />
-        </svg>
-      </button>
+      <StepButton kind="more" label="More guests" atLimit={atMax} onClick={() => (atMax ? flashLimit() : apply(value + 1))} />
 
       {/* Announces changes and limits to screen readers. */}
       <span role="status" className="sr-only">
-        {limitHit ? `Maximum ${max} guests` : `${value} ${value === 1 ? "guest" : "guests"}`}
+        {limitHit ? `Maximum ${max} guests` : plural(value, "guest")}
       </span>
     </div>
   );

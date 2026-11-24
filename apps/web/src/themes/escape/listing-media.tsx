@@ -22,14 +22,14 @@ export function ListingPhoto({
   image,
   name,
   sizes,
-  priority = false,
+  preload = false,
   className = "",
   imgClassName = "",
 }: {
   image: ListingImage | null;
   name: string;
   sizes: string;
-  priority?: boolean;
+  preload?: boolean;
   className?: string;
   imgClassName?: string;
 }) {
@@ -41,7 +41,7 @@ export function ListingPhoto({
           alt={image.alt || name}
           fill
           sizes={sizes}
-          priority={priority}
+          preload={preload}
           unoptimized={skipOptimizer(image.url)}
           className={`object-cover ${imgClassName}`}
         />

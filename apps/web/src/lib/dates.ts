@@ -47,3 +47,15 @@ export function formatDate(iso: string, opts: Intl.DateTimeFormatOptions = { day
 export function formatMoney(amount: number, currency: string): string {
   return new Intl.NumberFormat("en-IN", { style: "currency", currency, maximumFractionDigits: 0 }).format(amount);
 }
+
+/** "1–6 Dec 2026", or "28 Dec 2026 – 3 Jan 2027" across months. */
+export function stayDates(checkIn: string, checkOut: string): string {
+  const end = formatDate(checkOut, { day: "numeric", month: "short", year: "numeric" });
+  return checkIn.slice(0, 7) === checkOut.slice(0, 7)
+    ? `${Number(checkIn.slice(8))}–${end}`
+    : `${formatDate(checkIn, { day: "numeric", month: "short", year: "numeric" })} – ${end}`;
+}
+
+/** "1 Dec – 6 Dec". */
+export const shortRange = (checkIn: string, checkOut: string): string =>
+  `${formatDate(checkIn, { day: "numeric", month: "short" })} – ${formatDate(checkOut, { day: "numeric", month: "short" })}`;
