@@ -1,7 +1,10 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { AccountMenu } from "@/components/account-menu";
 import { MobileMenu } from "@/components/mobile-menu";
 import { Icon } from "@/components/icons";
+import { HeaderSearch, HeaderSearchFallback } from "@/components/search/header-search";
+import type { Place } from "@/components/search/where-panel";
 import type { Site } from "@/lib/pms";
 
 function Wordmark({ site }: { site: Site }) {
@@ -13,30 +16,27 @@ function Wordmark({ site }: { site: Site }) {
   );
 }
 
-export function SiteHeader({ site }: { site: Site }) {
+// Brand, search and one menu: everything else (story, FAQ, contact, sign in) lives in the menu.
+export function SiteHeader({ site, places }: { site: Site; places: Place[] }) {
   return (
-    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md print:hidden">
-      <div className="mx-auto flex h-[76px] max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
-        <Wordmark site={site} />
-        <nav aria-label="Main" className="flex shrink-0 items-center gap-2 text-ink md:gap-3">
-          <Link href="/#about" className="hidden min-h-11 items-center rounded-full px-3 hover:text-ink-soft md:inline-flex">
-            Our story
-          </Link>
-          <Link href="/stays" className="hidden min-h-11 items-center rounded-full px-3 hover:text-ink-soft md:inline-flex">
-            Stays
-          </Link>
-          <Link href="/#faq" className="hidden min-h-11 items-center rounded-full px-3 hover:text-ink-soft md:inline-flex">
-            FAQ
-          </Link>
-          <Link href="/#contact" className="hidden min-h-11 items-center rounded-full px-3 hover:text-ink-soft lg:inline-flex">
-            Contact
+    <header className="site-header sticky top-0 z-40 bg-white/95 backdrop-blur-md print:hidden">
+      <div className="mx-auto flex max-w-[1440px] flex-wrap items-center justify-between gap-x-4 px-4 sm:grid sm:grid-cols-[1fr_auto_1fr] sm:px-6 lg:px-8">
+        <div className="flex h-[76px] min-w-0 flex-1 items-center">
+          <Wordmark site={site} />
+        </div>
+        {/* Phones: a second row, on the results page only. Wider: the middle of the bar. */}
+        <div className="header-search hide-in-booking-flow order-last w-full min-w-0 pb-3 sm:order-none sm:w-auto sm:pb-0">
+          <Suspense fallback={<HeaderSearchFallback />}>
+            <HeaderSearch places={places} timezone={site.timezone} brandName={site.brandName} />
+          </Suspense>
+        </div>
+        <nav aria-label="Main" className="col-start-3 flex shrink-0 items-center justify-end gap-2 text-ink md:gap-3">
+          <Link href="/stays" className="header-book hide-in-booking-flow inline-flex min-h-11 shrink-0 items-center whitespace-nowrap rounded-full bg-brand px-5 text-white transition hover:brightness-125">
+            Book now
           </Link>
           <span className="hidden md:inline-flex">
             <AccountMenu />
           </span>
-          <Link href="/stays" className="hide-in-booking-flow inline-flex min-h-11 shrink-0 items-center whitespace-nowrap rounded-full bg-brand px-5 text-white transition hover:brightness-125">
-            Book now
-          </Link>
           <MobileMenu brandName={site.brandName} whatsapp={site.contact.whatsapp?.replace(/\D/g, "") || null} phone={site.contact.phone} />
         </nav>
       </div>

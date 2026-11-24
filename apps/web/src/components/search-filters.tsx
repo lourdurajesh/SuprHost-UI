@@ -2,13 +2,14 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import { createPortal } from "react-dom";
 import type { PropertyType, SearchQuery, SearchResult } from "@/lib/pms/types";
 import { formatMoney } from "@/lib/dates";
 import { toSearchString } from "@/lib/search-query";
 import { Dropdown } from "./dropdown";
 import { Icon } from "./icons";
 import { FiltersModal } from "./search/filters-modal";
-import { SearchBar } from "./search/search-bar";
+import { useFiltersSlot } from "./search/filters-slot";
 
 const TYPE_LABEL: Record<PropertyType, string> = {
   cottage: "Cottages",
@@ -25,18 +26,18 @@ interface Props {
   facets: SearchResult["facets"];
   currency: string;
   count: number;
-  timezone: string;
   /** Every home's nightly price, for the price histogram in the filters. */
   prices: number[];
 }
 
-// Search state lives in the URL (shareable, back-button friendly). The search bar and the filters each
-// apply in one go ("Search" / "Show N stays"); sort applies at once.
-export function SearchFilters({ query, facets, currency, count, timezone, prices }: Props) {
+// Search state lives in the URL (shareable, back-button friendly). The search bar is in the site header;
+// this puts the Filters button beside it, and keeps the count, applied filters and sort with the results.
+export function SearchFilters({ query, facets, currency, count, prices }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const [pending, startTransition] = useTransition();
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const slot = useFiltersSlot();
 
   function apply(next: SearchQuery) {
     startTransition(() => router.replace(`${pathname}${toSearchString(next)}`, { scroll: false }));
@@ -80,27 +81,26 @@ export function SearchFilters({ query, facets, currency, count, timezone, prices
 
   return (
     <div aria-busy={pending}>
-      {/* The compact search bar stays here at the top; Filters sits beside it. */}
-      <div className="flex items-center gap-3 sm:grid sm:grid-cols-[1fr_auto_1fr]">
-        <span className="hidden sm:block" />
-        <SearchBar query={query} places={facets.cities} timezone={timezone} onApply={apply} />
-        <div className="flex sm:justify-end">
+      {slot &&
+        createPortal(
           <button
             type="button"
             onClick={() => setFiltersOpen(true)}
             aria-label={activeFilters ? `Filters, ${activeFilters} applied` : "Filters"}
-            className={`${pill} inline-flex items-center gap-2 max-sm:h-11 max-sm:w-11 max-sm:justify-center max-sm:px-0`}
+            className={`${pill} relative inline-flex h-12 items-center gap-2 max-lg:w-12 max-lg:justify-center max-lg:px-0`}
           >
             <Icon name="sliders" className="h-4 w-4" />
-            <span className="max-sm:hidden">Filters</span>
-            {activeFilters > 0 && <span className="rounded-full bg-ink px-2 text-xs text-white max-sm:hidden">{activeFilters}</span>}
-          </button>
-        </div>
-      </div>
+            <span className="max-lg:hidden">Filters</span>
+            {activeFilters > 0 && (
+              <span className="rounded-full bg-ink px-2 text-xs text-white max-lg:absolute max-lg:-right-1 max-lg:-top-1 max-lg:px-1.5 max-lg:py-0.5">{activeFilters}</span>
+            )}
+          </button>,
+          slot,
+        )}
 
       <FiltersModal open={filtersOpen} onClose={() => setFiltersOpen(false)} query={query} facets={facets} prices={prices} currency={currency} onApply={apply} />
 
-      <div className="mt-3 flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <p className="mr-2 text-sm text-ink" aria-live="polite">
           {pending ? "Updating…" : `${count} stay${count === 1 ? "" : "s"}${query.checkIn && query.checkOut ? " available for your dates" : query.stay || query.months?.length ? ` free for a ${query.stay ?? "weekend"}` : ""}`}
         </p>

@@ -6,8 +6,8 @@ import { useEffect, useRef, useState } from "react";
 import type { GuestSession } from "@/lib/pms/types";
 import { Icon } from "./icons";
 
-// Loads the session after the page renders, so every page stays cacheable and identical for all
-// visitors. Hosts (staff of this tenant in the PMS) also get an "Open PMS" link.
+// The one menu in the header: the account and the site's pages. Loads the session after the page
+// renders, so every page stays cacheable and identical for all visitors. Hosts (staff of this tenant in the PMS) also get an "Open PMS" link.
 export function AccountMenu() {
   const [session, setSession] = useState<GuestSession | null | undefined>(undefined);
   const [open, setOpen] = useState(false);
@@ -59,16 +59,6 @@ export function AccountMenu() {
     window.location.assign("/");
   }
 
-  if (session === undefined) return <span className="inline-block h-11 w-11" aria-hidden />;
-
-  if (!session) {
-    return (
-      <Link href="/account/signin" className="inline-flex min-h-11 items-center rounded-full px-3 hover:text-ink-soft">
-        Sign in
-      </Link>
-    );
-  }
-
   return (
     <div ref={box} className="relative">
       <button
@@ -77,28 +67,54 @@ export function AccountMenu() {
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-haspopup="menu"
-        aria-label={session.role === "host" ? "Host account menu" : "Account menu"}
-        className="flex min-h-11 min-w-11 items-center gap-2 rounded-full py-1.5 pl-2 pr-2 ring-1 ring-line hover:shadow-sm sm:pr-3"
+        aria-label={session?.role === "host" ? "Menu, host account" : session ? "Menu, your account" : "Menu"}
+        className="focus-own flex min-h-11 items-center gap-3 rounded-full bg-white py-1.5 pl-3.5 pr-2 ring-1 ring-line transition hover:shadow-md focus-visible:ring-2 focus-visible:ring-ink"
       >
-        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-ink text-xs uppercase text-white">
-          {(session.name ?? session.email ?? "G").charAt(0)}
+        <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
+          <path d="M4 7h16M4 12h16M4 17h16" strokeLinecap="round" />
+        </svg>
+        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-ink text-xs uppercase text-white">
+          {session ? (session.name ?? session.email ?? "G").charAt(0) : <Icon name="users" className="h-4 w-4" />}
         </span>
-        <span className="hidden text-sm sm:inline">{session.role === "host" ? "Host" : "Account"}</span>
       </button>
       {open && (
-        <div role="menu" aria-label="Account" onKeyDown={onMenuKey} className="absolute right-0 mt-2 w-60 overflow-hidden rounded-2xl bg-white py-2 text-base shadow-xl ring-1 ring-line">
-          <p className="truncate px-4 pb-2 pt-1 text-xs text-ink-soft">{session.signedInWith === "phone" ? maskMobile(session.phone ?? "") : session.email}</p>
-          <Link role="menuitem" href="/account" className="flex items-center gap-3 px-4 min-h-11 py-2.5 hover:bg-sand-deep focus-visible:bg-sand-deep">
-            <Icon name="calendar" className="h-4 w-4" /> My trips
-          </Link>
-          {session.role === "host" && session.pmsUrl && (
+        <div role="menu" aria-label="Menu" onKeyDown={onMenuKey} className="absolute right-0 top-full mt-2 w-60 overflow-hidden rounded-2xl bg-white py-2 text-base shadow-xl ring-1 ring-line">
+          {session && <p className="truncate px-4 pb-2 pt-1 text-xs text-ink-soft">{session.signedInWith === "phone" ? maskMobile(session.phone ?? "") : session.email}</p>}
+          {session ? (
+            <Link role="menuitem" href="/account" onClick={() => setOpen(false)} className="flex items-center gap-3 px-4 min-h-11 py-2.5 hover:bg-sand-deep focus-visible:bg-sand-deep">
+              <Icon name="calendar" className="h-4 w-4" /> My trips
+            </Link>
+          ) : (
+            <Link role="menuitem" href="/account/signin" onClick={() => setOpen(false)} className="flex items-center px-4 min-h-11 py-2.5 font-medium hover:bg-sand-deep focus-visible:bg-sand-deep">
+              Sign in
+            </Link>
+          )}
+          {session?.role === "host" && session.pmsUrl && (
             <a role="menuitem" href={session.pmsUrl} className="flex items-center gap-3 px-4 min-h-11 py-2.5 hover:bg-sand-deep focus-visible:bg-sand-deep">
               <Icon name="key" className="h-4 w-4" /> Open PMS
             </a>
           )}
-          <button role="menuitem" type="button" onClick={signOut} className="flex w-full items-center gap-3 border-t border-line px-4 min-h-11 py-2.5 text-left hover:bg-sand-deep focus-visible:bg-sand-deep">
-            <Icon name="arrowRight" className="h-4 w-4" /> Sign out
-          </button>
+          <hr className="my-2 border-line" />
+          <Link role="menuitem" href="/stays" onClick={() => setOpen(false)} className="flex items-center px-4 min-h-11 py-2.5 hover:bg-sand-deep focus-visible:bg-sand-deep">
+            All stays
+          </Link>
+          <Link role="menuitem" href="/#about" onClick={() => setOpen(false)} className="flex items-center px-4 min-h-11 py-2.5 hover:bg-sand-deep focus-visible:bg-sand-deep">
+            Our story
+          </Link>
+          <Link role="menuitem" href="/#faq" onClick={() => setOpen(false)} className="flex items-center px-4 min-h-11 py-2.5 hover:bg-sand-deep focus-visible:bg-sand-deep">
+            FAQ
+          </Link>
+          <Link role="menuitem" href="/policies" onClick={() => setOpen(false)} className="flex items-center px-4 min-h-11 py-2.5 hover:bg-sand-deep focus-visible:bg-sand-deep">
+            Policies
+          </Link>
+          <Link role="menuitem" href="/#contact" onClick={() => setOpen(false)} className="flex items-center px-4 min-h-11 py-2.5 hover:bg-sand-deep focus-visible:bg-sand-deep">
+            Contact
+          </Link>
+          {session && (
+            <button role="menuitem" type="button" onClick={signOut} className="mt-2 flex w-full items-center gap-3 border-t border-line px-4 min-h-11 py-2.5 text-left hover:bg-sand-deep focus-visible:bg-sand-deep">
+              <Icon name="arrowRight" className="h-4 w-4" /> Sign out
+            </button>
+          )}
         </div>
       )}
     </div>

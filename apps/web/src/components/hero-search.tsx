@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { DateRangeField } from "./date-range-field";
 import { Dropdown } from "./dropdown";
 import { GuestStepper } from "./guest-stepper";
@@ -14,6 +14,20 @@ export function HeroSearch({ cities }: { cities: string[] }) {
   const [city, setCity] = useState("");
   const [dates, setDates] = useState<{ checkIn: string | null; checkOut: string | null }>({ checkIn: null, checkOut: null });
   const [guests, setGuests] = useState(2);
+
+  // The header shows its own search bar once this one has scrolled under it (globals.css).
+  const form = useRef<HTMLFormElement>(null);
+  useEffect(() => {
+    const el = form.current;
+    if (!el) return;
+    const root = document.documentElement;
+    const seen = new IntersectionObserver(([e]) => root.toggleAttribute("data-past-hero", !e.isIntersecting && e.boundingClientRect.top < 76), { rootMargin: "-76px 0px 0px" });
+    seen.observe(el);
+    return () => {
+      seen.disconnect();
+      root.removeAttribute("data-past-hero");
+    };
+  }, []);
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -32,6 +46,8 @@ export function HeroSearch({ cities }: { cities: string[] }) {
   const divider = <span aria-hidden className="hidden h-10 w-px bg-line sm:block" />;
   return (
     <form
+      ref={form}
+      data-hero-search
       onSubmit={submit}
       className="grid w-full max-w-3xl grid-cols-2 gap-1 rounded-3xl bg-white p-2 text-ink shadow-[0_18px_50px_-15px_rgba(0,0,0,0.45)] sm:flex sm:items-center sm:rounded-full sm:pl-2"
     >

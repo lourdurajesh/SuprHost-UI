@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { getSite } from "@/lib/pms";
+import { getListings, getSite } from "@/lib/pms";
 import { allSiteKeys } from "@/lib/sites";
 import { readable } from "@/lib/colors";
 import { ChatLauncher } from "@/components/chat-launcher";
@@ -51,8 +51,10 @@ export default function SiteLayout({ children, params }: LayoutProps<"/[site]">)
 }
 
 async function Header({ params }: { params: SiteParams }) {
-  const site = await getSite((await params).site);
+  const key = (await params).site;
+  const [site, listings] = await Promise.all([getSite(key), getListings(key)]);
   if (!site) notFound();
+  const places = [...new Set(listings.map((l) => l.city))].sort().map((value) => ({ value, count: listings.filter((l) => l.city === value).length }));
   // Brand colours come from the PMS (validated there); only plain hex values reach the stylesheet,
   // darkened if needed so white text on brand and accent text on sand stay at 4.5:1 (WCAG AA).
   const primary = readable(site.colors.primary, "#3d3a3a", "#ffffff");
@@ -60,7 +62,7 @@ async function Header({ params }: { params: SiteParams }) {
   return (
     <>
       <style>{`:root{--brand:${primary};--accent:${accent}}`}</style>
-      <SiteHeader site={site} />
+      <SiteHeader site={site} places={places} />
     </>
   );
 }

@@ -46,7 +46,8 @@ export function MobileMenu({ brandName, whatsapp, phone }: Props) {
           <Link href="/#about" onClick={close} className={item}>Our story</Link>
           <Link href="/#faq" onClick={close} className={item}>FAQ</Link>
           <Link href="/policies" onClick={close} className={item}>Policies</Link>
-          <Link href="/account" onClick={close} className={item}>Your trips</Link>
+          <Link href="/#contact" onClick={close} className={item}>Contact</Link>
+          <Link href="/account" onClick={close} className={item}>Your trips and sign in</Link>
           <div className="mt-auto space-y-3 py-6">
             {whatsapp && (
               <a

@@ -158,7 +158,7 @@ export function SearchResults({ hits, query, currency, addsGst }: Props) {
 
       {/* Sticky on the wrapper: MapLibre forces position:relative on its own container. */}
       <div className={`${showMap ? "block" : "hidden"} lg:block`}>
-        <div className="lg:sticky lg:top-[170px]">
+        <div className="lg:sticky lg:top-[100px]">
           <label className="mb-3 flex min-h-11 items-center gap-3 text-sm">
             <input type="checkbox" checked={followMap} onChange={(e) => toggleFollow(e.target.checked)} className="h-5 w-5 accent-[var(--brand)]" />
             Search as I move the map

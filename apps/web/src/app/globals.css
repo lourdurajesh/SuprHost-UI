@@ -214,6 +214,46 @@ body:has([data-booking-flow]) .hide-in-booking-flow {
   display: none;
 }
 
+/* Where the header shows its search bar: everywhere from 640px up, except over the home page's own
+   search until that has scrolled away; on phones only on the results page, in a second row that
+   stays while the brand row scrolls off. "Book now" is there when the search bar is not. */
+@media (max-width: 639.98px) {
+  body:not(:has([data-stays-page])) .header-search,
+  body:has([data-stays-page]) .header-book {
+    display: none;
+  }
+  body:has([data-stays-page]) .site-header {
+    top: -66px; /* the brand row scrolls off, less the gap above the search row */
+  }
+}
+/* Room for the Filters button before it arrives, so the bar doesn't jump. */
+body:has([data-stays-page]) .filters-slot {
+  display: block;
+  min-width: 3rem;
+}
+@media (min-width: 1024px) {
+  body:has([data-stays-page]) .filters-slot {
+    min-width: 6rem;
+  }
+}
+@media (min-width: 640px) {
+  .header-search {
+    transition:
+      opacity 0.2s ease-out,
+      transform 0.2s ease-out,
+      visibility 0.2s;
+  }
+  html:not([data-past-hero]) body:has([data-hero-search]) .header-search {
+    visibility: hidden;
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  body:not(:has([data-hero-search])) .header-book,
+  html[data-past-hero] .header-book {
+    display: none;
+  }
+}
+
 .no-scrollbar {
   scrollbar-width: none;
 }

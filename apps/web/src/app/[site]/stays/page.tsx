@@ -17,7 +17,8 @@ export const metadata: Metadata = {
 
 export default function StaysPage({ params, searchParams }: PageProps<"/[site]/stays">) {
   return (
-    <div className="mx-auto max-w-[1440px] px-4 pb-16 pt-6 sm:px-6 lg:px-8">
+    // data-stays-page: on phones the header shows its search bar here (globals.css).
+    <div data-stays-page className="mx-auto max-w-[1440px] px-4 pb-16 pt-6 sm:px-6 lg:px-8">
       <h1 className="text-h1">All stays</h1>
       <Suspense fallback={<ResultsSkeleton />}>
         <StaysContent params={params} searchParams={searchParams} />
@@ -41,8 +42,8 @@ async function StaysContent({ params, searchParams }: Pick<PageProps<"/[site]/st
 
   return (
     <>
-      <div className="sticky top-[76px] z-30 -mx-4 mt-4 border-b border-line bg-white/95 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
-        <SearchFilters key={JSON.stringify(query)} query={query} facets={result.facets} currency={site.currency} count={result.hits.length} timezone={site.timezone} prices={prices} />
+      <div className="mt-4">
+        <SearchFilters key={JSON.stringify(query)} query={query} facets={result.facets} currency={site.currency} count={result.hits.length} prices={prices} />
       </div>
       <div className="mt-6">
         <RecentlyViewed currency={site.currency} />

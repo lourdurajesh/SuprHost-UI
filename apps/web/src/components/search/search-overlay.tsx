@@ -11,7 +11,7 @@ import { WhoPanel } from "./who-panel";
 
 export type Section = "where" | "when" | "who";
 
-const CLOSE_MS = 180;
+const CLOSE_MS = 220;
 
 const subscribe = (cb: () => void) => {
   const mq = window.matchMedia("(min-width: 640px)");
@@ -25,6 +25,9 @@ interface Props {
   places: Place[];
   timezone: string;
   initial: Section;
+  brandName: string;
+  /** Where the compact bar is on screen, to grow out of. */
+  from: DOMRect | null;
   onApply: (next: SearchQuery) => void;
   onClose: () => void;
 }
@@ -35,7 +38,7 @@ interface Props {
  * opens below. On phones it is a full-screen sheet of three cards, one open at a time. Nothing
  * reaches the URL until "Search".
  */
-export function SearchOverlay({ query, places, timezone, initial, onApply, onClose }: Props) {
+export function SearchOverlay({ query, places, timezone, initial, brandName, from, onApply, onClose }: Props) {
   const wide = useWide();
   const dialog = useRef<HTMLDialogElement>(null);
   const [active, setActive] = useState<Section>(initial);
@@ -59,11 +62,14 @@ export function SearchOverlay({ query, places, timezone, initial, onApply, onClo
     if (!el.open) el.showModal();
     const id = requestAnimationFrame(() => setShown(true));
     const html = document.documentElement;
-    const before = html.style.overflow;
+    const before = { overflow: html.style.overflow, gutter: html.style.scrollbarGutter };
+    // Keep the scrollbar's width while the page is locked, so nothing behind shifts sideways.
+    if (window.innerWidth > html.clientWidth) html.style.scrollbarGutter = "stable";
     html.style.overflow = "hidden";
     return () => {
       cancelAnimationFrame(id);
-      html.style.overflow = before;
+      html.style.overflow = before.overflow;
+      html.style.scrollbarGutter = before.gutter;
     };
   }, []);
 
@@ -122,6 +128,8 @@ export function SearchOverlay({ query, places, timezone, initial, onApply, onClo
           whoText={whoText}
           draft={draft}
           patch={patch}
+          brandName={brandName}
+          from={from}
           panels={panels}
         />
       ) : (
@@ -167,13 +175,13 @@ interface LayoutProps {
 const hasValue = (d: Draft, s: Section) =>
   s === "where" ? Boolean(d.city) : s === "when" ? Boolean(d.checkIn || d.stay || d.months.length) : d.adults + d.children > 0;
 
-function Desktop({ shown, active, setActive, close, search, whereValue, typed, setTyped, whenText, whoText, draft, patch, panels }: LayoutProps & { patch: (p: Partial<Draft>) => void }) {
+function Desktop({ shown, active, setActive, close, search, whereValue, typed, setTyped, whenText, whoText, draft, patch, brandName, from, panels }: LayoutProps & { patch: (p: Partial<Draft>) => void; brandName: string; from: DOMRect | null }) {
   const bar = useRef<HTMLDivElement>(null);
   const whereRef = useRef<HTMLDivElement>(null);
   const whenRef = useRef<HTMLDivElement>(null);
   const whoRef = useRef<HTMLDivElement>(null);
   const input = useRef<HTMLInputElement>(null);
-  const [geo, setGeo] = useState<{ rects: Record<Section, { left: number; width: number }>; barWidth: number } | null>(null);
+  const [geo, setGeo] = useState<{ rects: Record<Section, { left: number; width: number }>; barWidth: number; start: string } | null>(null);
 
   // Where the white thumb and the panels go: measured from the real segments, so it follows any width.
   useLayoutEffect(() => {
@@ -184,16 +192,24 @@ function Desktop({ shown, active, setActive, close, search, whereValue, typed, s
         const b = el!.getBoundingClientRect();
         return { left: b.left - barBox.left, width: b.width };
       };
-      setGeo({ rects: { where: r(whereRef.current), when: r(whenRef.current), who: r(whoRef.current) }, barWidth: barBox.width });
+      // The transform that puts the big bar exactly over the compact one it grows out of.
+      const start = from
+        ? `translate(${from.left + from.width / 2 - (barBox.left + barBox.width / 2)}px, ${from.top + from.height / 2 - (barBox.top + barBox.height / 2)}px) scale(${from.width / barBox.width}, ${from.height / barBox.height})`
+        : "translateY(-12px)";
+      setGeo({ rects: { where: r(whereRef.current), when: r(whenRef.current), who: r(whoRef.current) }, barWidth: barBox.width, start });
     };
     measure();
     window.addEventListener("resize", measure);
     return () => window.removeEventListener("resize", measure);
-  }, []);
+  }, [from]);
 
+  // Focus follows the segment being edited, so the keyboard and screen readers move on with the panel.
+  // Waits for the dialog to be open: nothing inside a closed one can take focus.
   useEffect(() => {
-    if (active === "where") input.current?.focus();
-  }, [active]);
+    if (!shown) return;
+    const target = active === "where" ? input.current : (active === "when" ? whenRef : whoRef).current?.querySelector("button");
+    target?.focus({ preventScroll: true });
+  }, [active, shown]);
 
   const thumb = geo?.rects[active];
   const panelBox = geo
@@ -215,19 +231,26 @@ function Desktop({ shown, active, setActive, close, search, whereValue, typed, s
         aria-hidden
       />
       <div
-        className={`absolute inset-x-0 top-0 origin-top bg-white shadow-[0_10px_30px_rgba(0,0,0,0.12)] transition duration-200 ease-out ${
-          shown ? "translate-y-0 scale-100 opacity-100" : "-translate-y-3 scale-[0.97] opacity-0"
-        }`}
+        className={`absolute inset-x-0 top-0 transition-opacity duration-200 ease-out ${shown ? "opacity-100" : "opacity-0"}`}
       >
-        <div className="mx-auto max-w-[56rem] px-4 pb-7 pt-5">
-          <div className="mb-4 flex justify-end">
+        {/* The header coming down: its white ground unrolls while the bar grows out of the compact one. */}
+        <div
+          aria-hidden
+          className={`absolute inset-0 origin-top bg-white shadow-[0_10px_30px_rgba(0,0,0,0.12)] transition-transform duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)] ${shown ? "scale-y-100" : "scale-y-[0.45]"}`}
+        />
+        <div className="relative mx-auto flex h-[76px] max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+            <span className="truncate text-xl tracking-tight sm:text-2xl">{brandName}</span>
             <button type="button" onClick={close} aria-label="Close search" className="focus-own grid h-10 w-10 place-items-center rounded-full ring-1 ring-line hover:ring-ink focus-visible:ring-2 focus-visible:ring-ink">
               <Icon name="close" className="h-4 w-4" />
             </button>
-          </div>
-
+        </div>
+        <div className="relative mx-auto max-w-[56rem] px-4 pb-7">
           <div className="relative">
-            <div ref={bar} className="relative flex items-stretch rounded-full bg-sand-deep p-0 ring-1 ring-line">
+            <div
+              ref={bar}
+              className="relative flex items-stretch rounded-full bg-sand-deep p-0 ring-1 ring-line transition-transform duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)]"
+              style={{ transform: shown ? "none" : geo?.start }}
+            >
               {thumb && (
                 <span
                   aria-hidden
@@ -249,7 +272,9 @@ function Desktop({ shown, active, setActive, close, search, whereValue, typed, s
                   autoComplete="off"
                   placeholder="Search places"
                   value={typed || whereValue}
-                  onFocus={() => setActive("where")}
+                  // Only when focus comes from another control: coming back to the window focuses the
+                  // input again with no relatedTarget, and that must not reopen Where.
+                  onFocus={(e) => e.relatedTarget && setActive("where")}
                   onChange={(e) => {
                     setTyped(e.target.value);
                     if (draft.city) patch({ city: undefined });
