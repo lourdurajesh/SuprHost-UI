@@ -46,7 +46,7 @@ async function StaysContent({ params, searchParams }: Pick<PageProps<"/[site]/st
         <SearchFilters key={JSON.stringify(query)} query={query} facets={result.facets} currency={site.currency} count={result.hits.length} prices={prices} />
       </div>
       <div className="mt-6">
-        <RecentlyViewed currency={site.currency} />
+        <RecentlyViewed currency={site.currency} offered={allListings.map((l) => l.slug)} />
         {query.guests && groups.length > 0 && (
           <GroupSuggestions suggestions={groups} guests={query.guests} checkIn={query.checkIn} checkOut={query.checkOut} currency={site.currency} />
         )}

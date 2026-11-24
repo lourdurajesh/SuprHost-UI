@@ -5,9 +5,9 @@ import { formatMoney } from "@/lib/dates";
 import { useRecentStays } from "./wishlist";
 import { mediaSrc } from "@/themes/escape/listing-media";
 
-/** A quiet row of the stays this browser viewed recently; nothing renders until there are some. */
-export function RecentlyViewed({ currency }: { currency: string }) {
-  const recent = useRecentStays();
+/** A quiet row of the stays this browser viewed recently and that are still offered; nothing renders until there are some. */
+export function RecentlyViewed({ currency, offered }: { currency: string; offered: string[] }) {
+  const recent = useRecentStays().filter((s) => offered.includes(s.slug));
   if (recent.length === 0) return null;
   return (
     <section aria-labelledby="recent-heading" className="mb-8">

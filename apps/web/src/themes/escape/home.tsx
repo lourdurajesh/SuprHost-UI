@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Carousel } from "@/components/carousel";
-import { HeroSearch } from "@/components/hero-search";
+import { HeroSearchBar } from "@/components/search/header-search";
 import { Icon } from "@/components/icons";
 import { formatMoney } from "@/lib/dates";
 import type { ListingImage, ListingSummary, Site } from "@/lib/pms";
@@ -13,7 +13,7 @@ import { ListingPhoto } from "./listing-media";
 const container = "mx-auto max-w-7xl px-4 sm:px-6 lg:px-8";
 const pill = "inline-flex items-center gap-2 rounded-full bg-brand px-7 py-3.5 text-white transition hover:brightness-125";
 
-export function Hero({ site, stays }: { site: Site; stays: ListingSummary[] }) {
+export function Hero({ site }: { site: Site }) {
   return (
     // Full-bleed photo with the promise and the search on top: the place sells itself first.
     <section className="relative isolate overflow-hidden bg-brand">
@@ -30,7 +30,7 @@ export function Hero({ site, stays }: { site: Site; stays: ListingSummary[] }) {
         <h1 className="mt-3 max-w-3xl text-display text-white">{site.tagline}</h1>
         <p className="mt-4 max-w-xl text-base leading-relaxed text-white/90 sm:mt-5 sm:text-lead">{site.intro}</p>
         <div className="mt-7 sm:mt-9">
-          <HeroSearch cities={[...new Set(stays.map((s) => s.city))].sort()} />
+          <HeroSearchBar />
         </div>
         <ul className="mt-5 flex flex-wrap gap-x-6 gap-y-2 text-sm text-white/90">
           {["Best rate, booked direct", "Instant confirmation", "Free cancellation up to 7 days"].map((t) => (
@@ -111,16 +111,16 @@ export function Destinations({ listings, currency }: { listings: ListingSummary[
       <h2 id="places-heading" className="text-h1">
         Choose your place
       </h2>
-      <p className="mt-3 text-ink-soft">Each town is a different kind of stay: river, hills, city or estate.</p>
-      <ul className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-6">
+      <p className="mt-3 text-ink-soft">Pick a city to see its homes.</p>
+      <ul className={`mt-10 grid gap-3 sm:grid-cols-3 sm:gap-4 ${places.length > 3 ? "grid-cols-2 lg:grid-cols-6" : ""}`}>
         {places.map((p) => (
           <li key={p.city}>
             <Link href={`/stays?city=${encodeURIComponent(p.city)}`} className="group relative block overflow-hidden rounded-2xl">
               <ListingPhoto
                 image={p.image}
                 name=""
-                sizes="(min-width: 1024px) 16vw, (min-width: 640px) 33vw, 50vw"
-                className="aspect-[4/5]"
+                sizes={places.length > 3 ? "(min-width: 1024px) 16vw, (min-width: 640px) 33vw, 50vw" : "(min-width: 640px) 33vw, 100vw"}
+                className={places.length > 3 ? "aspect-[4/5]" : "aspect-[4/3]"}
                 imgClassName="transition-transform duration-700 group-hover:scale-[1.04]"
               />
               {/* Scrim keeps the white text readable on any photo. */}

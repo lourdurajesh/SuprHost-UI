@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { AccountMenu } from "@/components/account-menu";
 import { MobileMenu } from "@/components/mobile-menu";
 import { Icon } from "@/components/icons";
-import { HeaderSearch, HeaderSearchFallback } from "@/components/search/header-search";
+import { HeaderSearch, HeaderSearchFallback, SearchHost } from "@/components/search/header-search";
 import type { Place } from "@/components/search/where-panel";
 import type { Site } from "@/lib/pms";
 
@@ -19,6 +19,7 @@ function Wordmark({ site }: { site: Site }) {
 // Brand, search and one menu: everything else (story, FAQ, contact, sign in) lives in the menu.
 export function SiteHeader({ site, places }: { site: Site; places: Place[] }) {
   return (
+    <>
     <header className="site-header sticky top-0 z-40 bg-white/95 backdrop-blur-md print:hidden">
       <div className="mx-auto flex max-w-[1440px] flex-wrap items-center justify-between gap-x-4 px-4 sm:grid sm:grid-cols-[1fr_auto_1fr] sm:px-6 lg:px-8">
         <div className="flex h-[76px] min-w-0 flex-1 items-center">
@@ -27,7 +28,7 @@ export function SiteHeader({ site, places }: { site: Site; places: Place[] }) {
         {/* Phones: a second row, on the results page only. Wider: the middle of the bar. */}
         <div className="header-search hide-in-booking-flow order-last w-full min-w-0 pb-3 sm:order-none sm:w-auto sm:pb-0">
           <Suspense fallback={<HeaderSearchFallback />}>
-            <HeaderSearch places={places} timezone={site.timezone} brandName={site.brandName} />
+            <HeaderSearch />
           </Suspense>
         </div>
         <nav aria-label="Main" className="col-start-3 flex shrink-0 items-center justify-end gap-2 text-ink md:gap-3">
@@ -41,6 +42,11 @@ export function SiteHeader({ site, places }: { site: Site; places: Place[] }) {
         </nav>
       </div>
     </header>
+    {/* Outside the header: there the bar may be hidden, and the panel must still show. */}
+    <Suspense fallback={null}>
+      <SearchHost places={places} timezone={site.timezone} brandName={site.brandName} />
+    </Suspense>
+    </>
   );
 }
 

@@ -1,0 +1,1132 @@
+{
+  "site": {
+    "brandName": "Boutique Stays",
+    "tagline": "Feel the comfort and class.",
+    "intro": "Entire homes in Chennai, Bengaluru and Hyderabad: neat, simple and ready for a weekend, a work trip or a longer stay.",
+    "statement": "We look after every home ourselves, from your first message to the morning you leave. Clean rooms, a warm welcome and a host who replies come first.",
+    "heroImage": {
+      "url": "/homes/hero.jpg",
+      "alt": "Bright living and dining room with a balcony view",
+      "width": 1920,
+      "height": 1081
+    },
+    "about": {
+      "title": "Neat homes, warmly hosted",
+      "body": "We keep our homes simple: calm rooms, fresh linen, a working kitchen and good Wi-Fi. Families visiting for a wedding or a hospital appointment, people here for work and guests staying a month all find what they need.\n\nEvery home is entire and private, and you always know who to message.",
+      "image": {
+        "url": "/homes/about.jpg",
+        "alt": "Living and dining room with carved wooden furniture",
+        "width": 1440,
+        "height": 810
+      }
+    },
+    "highlights": [
+      {
+        "icon": "home",
+        "title": "The whole home is yours",
+        "text": "Every stay is an entire, private home."
+      },
+      {
+        "icon": "wallet",
+        "title": "Best price, direct",
+        "text": "No platform fees when you book here."
+      },
+      {
+        "icon": "chat",
+        "title": "A real host",
+        "text": "Message or call us any time before and during your stay."
+      },
+      {
+        "icon": "shield",
+        "title": "Secure booking",
+        "text": "Instant confirmation and a clear cancellation policy."
+      }
+    ],
+    "testimonials": [],
+    "faqs": [
+      {
+        "q": "Is the whole home mine?",
+        "a": "Yes. Every stay is an entire home with its own kitchen and bathrooms. Nothing inside is shared."
+      },
+      {
+        "q": "Do guests need ID?",
+        "a": "Most of our homes are in residential communities that ask for a valid ID for every guest."
+      },
+      {
+        "q": "Is there parking?",
+        "a": "Yes, every home has parking. Some buildings give spaces on a first-come basis."
+      },
+      {
+        "q": "Can I bring my pet?",
+        "a": "Many of our homes welcome pets. Look for “Pets allowed” in the home’s amenities."
+      },
+      {
+        "q": "When do I pay?",
+        "a": "You pay securely when you book, and your dates are confirmed instantly."
+      }
+    ],
+    "location": {
+      "lat": 12.948,
+      "lng": 80.206,
+      "label": "Chennai · Bengaluru · Hyderabad"
+    },
+    "seo": {
+      "title": "Boutique Stays — Feel the Comfort and Class",
+      "description": "Book entire homes in Chennai, Bengaluru and Hyderabad directly with the host. Best rates, instant confirmation."
+    }
+  },
+  "homes": [
+    {
+      "slug": "luxury-2bhk-beach-sunset",
+      "name": "Luxury 2BHK, Beach & Sunset Views",
+      "property": "Boutique Stays Padur, OMR",
+      "city": "Chennai",
+      "type": "apartment",
+      "tagline": "A 19th-floor home with a balcony over greenery and the far coast",
+      "guests": 6,
+      "bedrooms": 2,
+      "beds": 2,
+      "baths": 2,
+      "price": 4500,
+      "lat": 12.808,
+      "lng": 80.226,
+      "amenities": [
+        "Wi-Fi",
+        "Air conditioning",
+        "Full kitchen",
+        "Washing machine",
+        "Free parking",
+        "Hot water",
+        "Balcony",
+        "TV",
+        "Gym",
+        "Self check-in"
+      ],
+      "highlights": [
+        {
+          "icon": "pin",
+          "title": "19th-floor views",
+          "text": "Sunset, greenery and the distant coast from your balcony."
+        },
+        {
+          "icon": "home",
+          "title": "Entire apartment",
+          "text": "Both bedrooms, living, dining and kitchen are yours."
+        },
+        {
+          "icon": "calendar",
+          "title": "Free cancellation",
+          "text": "Up to 7 days before check-in."
+        }
+      ],
+      "houseRules": [
+        "No pets",
+        "No smoking",
+        "Valid ID needed for all guests"
+      ],
+      "description": "A two-bedroom apartment on the 19th floor, with a private balcony that looks over the city, greenery and the distant coast.\n\nOne king and one queen bed, air conditioning in both bedrooms, a long living and dining room with hand-crafted wooden furniture and a 55-inch TV, and a full kitchen. Arachi Lake is about a 15-minute walk.",
+      "images": [
+        {
+          "url": "/homes/luxury-2bhk-beach-sunset/1.jpg",
+          "alt": "Living room opening to the dining table and kitchen",
+          "width": 1440,
+          "height": 810,
+          "category": "living"
+        },
+        {
+          "url": "/homes/luxury-2bhk-beach-sunset/2.jpg",
+          "alt": "Bedroom with a wooden queen bed and window seat",
+          "width": 1440,
+          "height": 810,
+          "category": "bedroom"
+        },
+        {
+          "url": "/homes/luxury-2bhk-beach-sunset/3.jpg",
+          "alt": "Corner sofa in the living room",
+          "width": 1440,
+          "height": 810,
+          "category": "living"
+        },
+        {
+          "url": "/homes/luxury-2bhk-beach-sunset/4.jpg",
+          "alt": "Dining table with the kitchen behind",
+          "width": 1440,
+          "height": 810,
+          "category": "kitchen"
+        },
+        {
+          "url": "/homes/luxury-2bhk-beach-sunset/5.jpg",
+          "alt": "Private balcony with wooden flooring",
+          "width": 1440,
+          "height": 810,
+          "category": "outdoors"
+        },
+        {
+          "url": "/homes/luxury-2bhk-beach-sunset/6.jpg",
+          "alt": "Kitchen with a breakfast counter",
+          "width": 810,
+          "height": 1440,
+          "category": "kitchen"
+        },
+        {
+          "url": "/homes/luxury-2bhk-beach-sunset/7.jpg",
+          "alt": "Carved wooden dining set",
+          "width": 1440,
+          "height": 810,
+          "category": "kitchen"
+        },
+        {
+          "url": "/homes/luxury-2bhk-beach-sunset/8.jpg",
+          "alt": "City lights from the dining room at night",
+          "width": 810,
+          "height": 1440,
+          "category": "view"
+        }
+      ]
+    },
+    {
+      "slug": "high-rise-2bhk-lake-sunset",
+      "name": "High-Rise 2BHK, Lake & Sunset View",
+      "property": "Boutique Stays Kelambakkam, OMR",
+      "city": "Chennai",
+      "type": "apartment",
+      "tagline": "Two bedrooms up high, with a lake view at breakfast",
+      "guests": 6,
+      "bedrooms": 2,
+      "beds": 2,
+      "baths": 2,
+      "price": 4000,
+      "lat": 12.798,
+      "lng": 80.222,
+      "amenities": [
+        "Wi-Fi",
+        "Air conditioning",
+        "Full kitchen",
+        "Washing machine",
+        "Free parking",
+        "Hot water",
+        "Balcony",
+        "TV",
+        "Pets allowed",
+        "Self check-in"
+      ],
+      "highlights": [
+        {
+          "icon": "pin",
+          "title": "Lake and sunset view",
+          "text": "From the balcony and the dining table."
+        },
+        {
+          "icon": "home",
+          "title": "Entire apartment",
+          "text": "The whole place is yours."
+        },
+        {
+          "icon": "calendar",
+          "title": "Free cancellation",
+          "text": "Up to 7 days before check-in."
+        }
+      ],
+      "houseRules": [
+        "No smoking",
+        "No parties or events",
+        "Valid ID needed for all guests"
+      ],
+      "description": "A high-floor two-bedroom apartment off OMR, with a private balcony and wide views over the lake.\n\nAir conditioning in both bedrooms, a bright living and dining room, a full kitchen with a water purifier, a washing machine inside the apartment and covered parking in the basement.",
+      "images": [
+        {
+          "url": "/homes/high-rise-2bhk-lake-sunset/1.jpg",
+          "alt": "Living and dining room with a lake view",
+          "width": 1440,
+          "height": 960,
+          "category": "living"
+        },
+        {
+          "url": "/homes/high-rise-2bhk-lake-sunset/2.jpg",
+          "alt": "Bedroom with wardrobe and mirror",
+          "width": 1440,
+          "height": 810,
+          "category": "bedroom"
+        },
+        {
+          "url": "/homes/high-rise-2bhk-lake-sunset/3.jpg",
+          "alt": "Dining table by the balcony doors",
+          "width": 1440,
+          "height": 810,
+          "category": "kitchen"
+        },
+        {
+          "url": "/homes/high-rise-2bhk-lake-sunset/4.jpg",
+          "alt": "Bright yellow kitchen",
+          "width": 810,
+          "height": 1440,
+          "category": "kitchen"
+        },
+        {
+          "url": "/homes/high-rise-2bhk-lake-sunset/5.jpg",
+          "alt": "The lake from the balcony doors",
+          "width": 810,
+          "height": 1440,
+          "category": "view"
+        },
+        {
+          "url": "/homes/high-rise-2bhk-lake-sunset/6.jpg",
+          "alt": "Second bedroom",
+          "width": 810,
+          "height": 1440,
+          "category": "bedroom"
+        },
+        {
+          "url": "/homes/high-rise-2bhk-lake-sunset/7.jpg",
+          "alt": "Wash area with mirror",
+          "width": 810,
+          "height": 1440,
+          "category": "bathroom"
+        },
+        {
+          "url": "/homes/high-rise-2bhk-lake-sunset/8.jpg",
+          "alt": "Living room with TV and balcony",
+          "width": 1440,
+          "height": 810,
+          "category": "living"
+        }
+      ]
+    },
+    {
+      "slug": "premium-2bhk-retreat",
+      "name": "Premium 2BHK Retreat",
+      "property": "Boutique Stays Pallikaranai",
+      "city": "Chennai",
+      "type": "apartment",
+      "tagline": "A calm seventh-floor home opposite Kamakshi Hospital",
+      "guests": 5,
+      "bedrooms": 2,
+      "beds": 2,
+      "baths": 2,
+      "price": 3600,
+      "lat": 12.948,
+      "lng": 80.206,
+      "amenities": [
+        "Wi-Fi",
+        "Air conditioning",
+        "Full kitchen",
+        "Washing machine",
+        "Free parking",
+        "Hot water",
+        "Balcony",
+        "TV",
+        "Pets allowed",
+        "Self check-in"
+      ],
+      "highlights": [
+        {
+          "icon": "pin",
+          "title": "Opposite Kamakshi Hospital",
+          "text": "Easy for medical visits and family functions."
+        },
+        {
+          "icon": "home",
+          "title": "Entire apartment",
+          "text": "The whole place is yours."
+        },
+        {
+          "icon": "calendar",
+          "title": "Free cancellation",
+          "text": "Up to 7 days before check-in."
+        }
+      ],
+      "houseRules": [
+        "Smoking outdoors only",
+        "No parties or events",
+        "Valid ID needed for all guests"
+      ],
+      "description": "A modern two-bedroom apartment on the seventh floor, with warm interiors and a balcony with open city views.\n\nTwo air-conditioned bedrooms, two bathrooms, a living hall with TV and a working kitchen with RO water. About 20 minutes' drive to the airport and close to the marriage halls on Radial Road.",
+      "images": [
+        {
+          "url": "/homes/premium-2bhk-retreat/1.jpg",
+          "alt": "Living room with a red sofa",
+          "width": 1440,
+          "height": 960,
+          "category": "living"
+        },
+        {
+          "url": "/homes/premium-2bhk-retreat/2.jpg",
+          "alt": "Bedroom with a wooden bed",
+          "width": 1440,
+          "height": 810,
+          "category": "bedroom"
+        },
+        {
+          "url": "/homes/premium-2bhk-retreat/3.jpg",
+          "alt": "Dining table beside the kitchen",
+          "width": 1440,
+          "height": 810,
+          "category": "kitchen"
+        },
+        {
+          "url": "/homes/premium-2bhk-retreat/4.jpg",
+          "alt": "Kitchen with gas hob",
+          "width": 1440,
+          "height": 810,
+          "category": "kitchen"
+        },
+        {
+          "url": "/homes/premium-2bhk-retreat/5.jpg",
+          "alt": "Living and dining room",
+          "width": 1440,
+          "height": 810,
+          "category": "living"
+        },
+        {
+          "url": "/homes/premium-2bhk-retreat/6.jpg",
+          "alt": "Bathroom",
+          "width": 1440,
+          "height": 810,
+          "category": "bathroom"
+        },
+        {
+          "url": "/homes/premium-2bhk-retreat/7.jpg",
+          "alt": "City lights from the balcony",
+          "width": 810,
+          "height": 1440,
+          "category": "view"
+        }
+      ]
+    },
+    {
+      "slug": "skyview-2bhk-pallikaranai",
+      "name": "SkyView 2BHK",
+      "property": "Boutique Stays Pallikaranai",
+      "city": "Chennai",
+      "type": "apartment",
+      "tagline": "Bright two-bedroom on Radial Road, with a gym in the building",
+      "guests": 5,
+      "bedrooms": 2,
+      "beds": 2,
+      "baths": 2,
+      "price": 3400,
+      "lat": 12.948,
+      "lng": 80.206,
+      "amenities": [
+        "Wi-Fi",
+        "Air conditioning",
+        "Full kitchen",
+        "Washing machine",
+        "Free parking",
+        "TV",
+        "Gym",
+        "Lift",
+        "Pets allowed",
+        "Self check-in"
+      ],
+      "highlights": [
+        {
+          "icon": "pin",
+          "title": "10 minutes from the airport",
+          "text": "On Radial Road, with OMR and ECR close by."
+        },
+        {
+          "icon": "home",
+          "title": "Entire apartment",
+          "text": "The whole place is yours."
+        },
+        {
+          "icon": "calendar",
+          "title": "Free cancellation",
+          "text": "Up to 7 days before check-in."
+        }
+      ],
+      "houseRules": [
+        "Quiet hours",
+        "Valid ID needed for all guests"
+      ],
+      "description": "A two-bedroom apartment on the 200 Feet Radial Road, opposite Kamakshi Hospital and about 10 minutes from Chennai airport.\n\nA queen bed in each bedroom, a fitted kitchen and dining area, Wi-Fi and a smart TV, in a secure gated community with a lift and gym.",
+      "images": [
+        {
+          "url": "/homes/skyview-2bhk-pallikaranai/1.jpg",
+          "alt": "Living room with a corner sofa and TV",
+          "width": 1440,
+          "height": 810,
+          "category": "living"
+        },
+        {
+          "url": "/homes/skyview-2bhk-pallikaranai/2.jpg",
+          "alt": "Bedroom with a view of the city",
+          "width": 810,
+          "height": 1440,
+          "category": "bedroom"
+        },
+        {
+          "url": "/homes/skyview-2bhk-pallikaranai/3.jpg",
+          "alt": "Kitchen with wooden cabinets",
+          "width": 1440,
+          "height": 810,
+          "category": "kitchen"
+        },
+        {
+          "url": "/homes/skyview-2bhk-pallikaranai/4.jpg",
+          "alt": "Dining table with lilies",
+          "width": 810,
+          "height": 1440,
+          "category": "kitchen"
+        },
+        {
+          "url": "/homes/skyview-2bhk-pallikaranai/5.jpg",
+          "alt": "City view from the balcony",
+          "width": 810,
+          "height": 1440,
+          "category": "view"
+        },
+        {
+          "url": "/homes/skyview-2bhk-pallikaranai/6.jpg",
+          "alt": "Bathroom",
+          "width": 810,
+          "height": 1440,
+          "category": "bathroom"
+        },
+        {
+          "url": "/homes/skyview-2bhk-pallikaranai/7.jpg",
+          "alt": "Gym in the building",
+          "width": 1440,
+          "height": 810,
+          "category": "other"
+        },
+        {
+          "url": "/homes/skyview-2bhk-pallikaranai/8.jpg",
+          "alt": "The apartment building",
+          "width": 1080,
+          "height": 1440,
+          "category": "exterior"
+        }
+      ]
+    },
+    {
+      "slug": "comfy-2bhk-pallikaranai",
+      "name": "Comfy 2BHK",
+      "property": "Boutique Stays Pallikaranai",
+      "city": "Chennai",
+      "type": "apartment",
+      "tagline": "Spacious, minimal two-bedroom near Narayanapuram Lake",
+      "guests": 5,
+      "bedrooms": 2,
+      "beds": 2,
+      "baths": 2,
+      "price": 3200,
+      "lat": 12.949,
+      "lng": 80.205,
+      "amenities": [
+        "Wi-Fi",
+        "Air conditioning",
+        "Full kitchen",
+        "Washing machine",
+        "Free parking",
+        "Hot water",
+        "Balcony",
+        "TV",
+        "Gym",
+        "Lift",
+        "Workspace",
+        "Pets allowed",
+        "Self check-in"
+      ],
+      "highlights": [
+        {
+          "icon": "pin",
+          "title": "Near Narayanapuram Lake",
+          "text": "A five-minute walk in a quiet neighbourhood."
+        },
+        {
+          "icon": "home",
+          "title": "Entire apartment",
+          "text": "The whole place is yours."
+        },
+        {
+          "icon": "calendar",
+          "title": "Free cancellation",
+          "text": "Up to 7 days before check-in."
+        }
+      ],
+      "houseRules": [
+        "No smoking",
+        "No parties or events",
+        "Valid ID needed for all guests"
+      ],
+      "description": "A bright, spacious two-bedroom apartment with a clean, minimal interior in a quiet residential community.\n\nAir-conditioned bedrooms, a comfortable living area with smart TV, a full kitchen and washing machine. Kamakshi Memorial Hospital is about two minutes away and the lake a five-minute walk.",
+      "images": [
+        {
+          "url": "/homes/comfy-2bhk-pallikaranai/1.jpg",
+          "alt": "Living room with TV wall and dining table",
+          "width": 1440,
+          "height": 1080,
+          "category": "living"
+        },
+        {
+          "url": "/homes/comfy-2bhk-pallikaranai/2.jpg",
+          "alt": "Bedroom with fitted wardrobes",
+          "width": 1440,
+          "height": 810,
+          "category": "bedroom"
+        },
+        {
+          "url": "/homes/comfy-2bhk-pallikaranai/3.jpg",
+          "alt": "Living area with TV and wooden table",
+          "width": 1440,
+          "height": 1080,
+          "category": "living"
+        },
+        {
+          "url": "/homes/comfy-2bhk-pallikaranai/4.jpg",
+          "alt": "Sofa and coffee table",
+          "width": 1440,
+          "height": 1080,
+          "category": "living"
+        },
+        {
+          "url": "/homes/comfy-2bhk-pallikaranai/5.jpg",
+          "alt": "City view from the balcony",
+          "width": 810,
+          "height": 1440,
+          "category": "view"
+        },
+        {
+          "url": "/homes/comfy-2bhk-pallikaranai/6.jpg",
+          "alt": "Gas hob in the kitchen",
+          "width": 1440,
+          "height": 810,
+          "category": "kitchen"
+        },
+        {
+          "url": "/homes/comfy-2bhk-pallikaranai/7.jpg",
+          "alt": "Bathroom with geyser",
+          "width": 810,
+          "height": 1440,
+          "category": "bathroom"
+        },
+        {
+          "url": "/homes/comfy-2bhk-pallikaranai/8.jpg",
+          "alt": "Building entrance",
+          "width": 810,
+          "height": 1440,
+          "category": "exterior"
+        }
+      ]
+    },
+    {
+      "slug": "comfortable-2bhk-radial-road",
+      "name": "Comfortable 2BHK, Radial Road",
+      "property": "Boutique Stays Pallavaram",
+      "city": "Chennai",
+      "type": "apartment",
+      "tagline": "A renovated two-bedroom 15 minutes from the airport",
+      "guests": 5,
+      "bedrooms": 2,
+      "beds": 2,
+      "baths": 2,
+      "price": 3000,
+      "lat": 12.954,
+      "lng": 80.171,
+      "amenities": [
+        "Wi-Fi",
+        "Air conditioning",
+        "Full kitchen",
+        "Washing machine",
+        "Free parking",
+        "Hot water",
+        "TV",
+        "Gym",
+        "Self check-in"
+      ],
+      "highlights": [
+        {
+          "icon": "pin",
+          "title": "Airport in 15 minutes",
+          "text": "With GST Road, OMR and hospitals close by."
+        },
+        {
+          "icon": "home",
+          "title": "Entire apartment",
+          "text": "The whole place is yours."
+        },
+        {
+          "icon": "calendar",
+          "title": "Free cancellation",
+          "text": "Up to 7 days before check-in."
+        }
+      ],
+      "houseRules": [
+        "No pets",
+        "Families and business guests only",
+        "Valid ID needed for all guests"
+      ],
+      "description": "A compact, renovated two-bedroom apartment in a peaceful residential community on the 200 Feet Radial Road.\n\nOne king and one queen bed, both rooms air-conditioned, a comfortable living space, a full kitchen and ground-floor car parking. About 15 minutes to the airport and 20 to the railway station.",
+      "images": [
+        {
+          "url": "/homes/comfortable-2bhk-radial-road/1.jpg",
+          "alt": "Living room with TV and green curtains",
+          "width": 1440,
+          "height": 1080,
+          "category": "living"
+        },
+        {
+          "url": "/homes/comfortable-2bhk-radial-road/2.jpg",
+          "alt": "Bedroom with an iron-frame bed",
+          "width": 1440,
+          "height": 810,
+          "category": "bedroom"
+        },
+        {
+          "url": "/homes/comfortable-2bhk-radial-road/3.jpg",
+          "alt": "Living room with two sofas",
+          "width": 1440,
+          "height": 1080,
+          "category": "living"
+        },
+        {
+          "url": "/homes/comfortable-2bhk-radial-road/4.jpg",
+          "alt": "Second bedroom",
+          "width": 1440,
+          "height": 810,
+          "category": "bedroom"
+        },
+        {
+          "url": "/homes/comfortable-2bhk-radial-road/5.jpg",
+          "alt": "Kitchen with microwave and hob",
+          "width": 1440,
+          "height": 810,
+          "category": "kitchen"
+        },
+        {
+          "url": "/homes/comfortable-2bhk-radial-road/6.jpg",
+          "alt": "Bathroom",
+          "width": 810,
+          "height": 1440,
+          "category": "bathroom"
+        }
+      ]
+    },
+    {
+      "slug": "bright-studio-near-ecr",
+      "name": "Bright Studio near ECR",
+      "property": "Boutique Stays Kelambakkam",
+      "city": "Chennai",
+      "type": "apartment",
+      "tagline": "A cosy studio minutes from ECR Beach and Chettinad Hospital",
+      "guests": 3,
+      "bedrooms": 1,
+      "beds": 1,
+      "baths": 1,
+      "price": 1600,
+      "lat": 12.799,
+      "lng": 80.223,
+      "amenities": [
+        "Wi-Fi",
+        "Air conditioning",
+        "Kitchenette",
+        "Washing machine",
+        "Free parking",
+        "Hot water",
+        "Balcony",
+        "TV",
+        "Lift",
+        "Workspace",
+        "Garden",
+        "Pets allowed",
+        "Self check-in"
+      ],
+      "highlights": [
+        {
+          "icon": "pin",
+          "title": "Near Chettinad Hospital",
+          "text": "And minutes from the beach."
+        },
+        {
+          "icon": "home",
+          "title": "Entire studio",
+          "text": "Private entrance, bathroom and kitchenette."
+        },
+        {
+          "icon": "calendar",
+          "title": "Free cancellation",
+          "text": "Up to 7 days before check-in."
+        }
+      ],
+      "houseRules": [
+        "No smoking",
+        "No parties or events"
+      ],
+      "description": "A bright, compact studio of about 200 square feet, minutes from ECR Beach and Chettinad Hospital.\n\nA comfortable bed with fresh linen, a kitchenette with stove and fridge, a smart TV and natural light all day. Good for one to three guests: solo travellers, couples and work trips.",
+      "images": [
+        {
+          "url": "/homes/bright-studio-near-ecr/1.jpg",
+          "alt": "Studio with bed and kitchenette",
+          "width": 1440,
+          "height": 810,
+          "category": "bedroom"
+        },
+        {
+          "url": "/homes/bright-studio-near-ecr/2.jpg",
+          "alt": "Kitchenette with hob and sink",
+          "width": 1440,
+          "height": 810,
+          "category": "kitchen"
+        },
+        {
+          "url": "/homes/bright-studio-near-ecr/3.jpg",
+          "alt": "Bed facing the TV",
+          "width": 1440,
+          "height": 810,
+          "category": "bedroom"
+        },
+        {
+          "url": "/homes/bright-studio-near-ecr/4.jpg",
+          "alt": "Kitchenette by the window",
+          "width": 1440,
+          "height": 810,
+          "category": "kitchen"
+        },
+        {
+          "url": "/homes/bright-studio-near-ecr/5.jpg",
+          "alt": "Trees and sky from the window",
+          "width": 810,
+          "height": 1440,
+          "category": "view"
+        },
+        {
+          "url": "/homes/bright-studio-near-ecr/6.jpg",
+          "alt": "Small balcony",
+          "width": 810,
+          "height": 1440,
+          "category": "outdoors"
+        },
+        {
+          "url": "/homes/bright-studio-near-ecr/7.jpg",
+          "alt": "Bathroom",
+          "width": 960,
+          "height": 1440,
+          "category": "bathroom"
+        },
+        {
+          "url": "/homes/bright-studio-near-ecr/8.jpg",
+          "alt": "Shared garden seating",
+          "width": 810,
+          "height": 1440,
+          "category": "outdoors"
+        }
+      ]
+    },
+    {
+      "slug": "cozy-1bhk-hsr-layout",
+      "name": "Cozy 1BHK, HSR Layout",
+      "property": "Boutique Stays HSR Layout",
+      "city": "Bengaluru",
+      "type": "apartment",
+      "tagline": "A compact one-bedroom steps from Kaveri Park",
+      "guests": 3,
+      "bedrooms": 1,
+      "beds": 1,
+      "baths": 1,
+      "price": 2200,
+      "lat": 12.91,
+      "lng": 77.649,
+      "amenities": [
+        "Wi-Fi",
+        "Full kitchen",
+        "Washing machine",
+        "Free parking",
+        "Hot water",
+        "Power backup",
+        "Balcony",
+        "TV",
+        "Lift",
+        "Pets allowed",
+        "Self check-in"
+      ],
+      "highlights": [
+        {
+          "icon": "pin",
+          "title": "Prime HSR Layout",
+          "text": "Cafés, shops and the park on foot."
+        },
+        {
+          "icon": "home",
+          "title": "Entire apartment",
+          "text": "The whole place is yours."
+        },
+        {
+          "icon": "calendar",
+          "title": "Free cancellation",
+          "text": "Up to 7 days before check-in."
+        }
+      ],
+      "houseRules": [
+        "No smoking",
+        "No parties or events"
+      ],
+      "description": "A compact one-bedroom apartment in HSR Layout, steps from Kaveri Park, with cafés, supermarkets and restaurants outside the door.\n\nA queen bedroom, a living room with smart TV, an open kitchen, a private balcony and a washing machine. First floor with a lift and power backup; fans rather than air conditioning.",
+      "images": [
+        {
+          "url": "/homes/cozy-1bhk-hsr-layout/1.jpg",
+          "alt": "Living room with a green sofa and open kitchen",
+          "width": 1440,
+          "height": 851,
+          "category": "living"
+        },
+        {
+          "url": "/homes/cozy-1bhk-hsr-layout/2.jpg",
+          "alt": "Queen bedroom",
+          "width": 1440,
+          "height": 816,
+          "category": "bedroom"
+        },
+        {
+          "url": "/homes/cozy-1bhk-hsr-layout/3.jpg",
+          "alt": "Living room with TV and lamp",
+          "width": 1440,
+          "height": 1080,
+          "category": "living"
+        },
+        {
+          "url": "/homes/cozy-1bhk-hsr-layout/4.jpg",
+          "alt": "Open kitchen",
+          "width": 1440,
+          "height": 810,
+          "category": "kitchen"
+        },
+        {
+          "url": "/homes/cozy-1bhk-hsr-layout/5.jpg",
+          "alt": "Green sofa and wooden table",
+          "width": 1440,
+          "height": 810,
+          "category": "living"
+        },
+        {
+          "url": "/homes/cozy-1bhk-hsr-layout/6.jpg",
+          "alt": "Kitchen with marble tiles",
+          "width": 810,
+          "height": 1440,
+          "category": "kitchen"
+        },
+        {
+          "url": "/homes/cozy-1bhk-hsr-layout/7.jpg",
+          "alt": "Bathroom",
+          "width": 810,
+          "height": 1440,
+          "category": "bathroom"
+        },
+        {
+          "url": "/homes/cozy-1bhk-hsr-layout/8.jpg",
+          "alt": "Building entrance",
+          "width": 810,
+          "height": 1440,
+          "category": "exterior"
+        }
+      ]
+    },
+    {
+      "slug": "terrace-bungalow-hyderabad",
+      "name": "Terrace Bungalow 2BHK",
+      "property": "Boutique Stays Secunderabad",
+      "city": "Hyderabad",
+      "type": "home",
+      "tagline": "The first floor of a villa, with a private open terrace",
+      "guests": 6,
+      "bedrooms": 2,
+      "beds": 3,
+      "baths": 2,
+      "price": 3500,
+      "lat": 17.491,
+      "lng": 78.594,
+      "amenities": [
+        "Wi-Fi",
+        "Air conditioning",
+        "Full kitchen",
+        "Washing machine",
+        "Free parking",
+        "Hot water",
+        "Terrace",
+        "TV",
+        "Workspace",
+        "Pets allowed",
+        "Self check-in"
+      ],
+      "highlights": [
+        {
+          "icon": "leaf",
+          "title": "Private terrace",
+          "text": "Open-air space for mornings and evenings."
+        },
+        {
+          "icon": "home",
+          "title": "Entire first floor",
+          "text": "Living room, kitchen and terrace are yours."
+        },
+        {
+          "icon": "calendar",
+          "title": "Free cancellation",
+          "text": "Up to 7 days before check-in."
+        }
+      ],
+      "houseRules": [
+        "No smoking",
+        "No parties or events",
+        "Valid ID needed for all guests"
+      ],
+      "description": "A bright two-bedroom home on the first floor of a villa, in a clean and quiet neighbourhood near the Outer Ring Road.\n\nA spacious hall, a full kitchen, two air-conditioned bedrooms and an open terrace for mornings and evenings. Parking beside the villa.",
+      "images": [
+        {
+          "url": "/homes/terrace-bungalow-hyderabad/1.jpg",
+          "alt": "Living room opening to the dining table",
+          "width": 1440,
+          "height": 810,
+          "category": "living"
+        },
+        {
+          "url": "/homes/terrace-bungalow-hyderabad/2.jpg",
+          "alt": "Bedroom with two beds and air conditioning",
+          "width": 810,
+          "height": 1440,
+          "category": "bedroom"
+        },
+        {
+          "url": "/homes/terrace-bungalow-hyderabad/3.jpg",
+          "alt": "Open terrace at sunset",
+          "width": 1080,
+          "height": 1440,
+          "category": "outdoors"
+        },
+        {
+          "url": "/homes/terrace-bungalow-hyderabad/4.jpg",
+          "alt": "Cane chair and dining table",
+          "width": 810,
+          "height": 1440,
+          "category": "living"
+        },
+        {
+          "url": "/homes/terrace-bungalow-hyderabad/5.jpg",
+          "alt": "Entrance landing",
+          "width": 1080,
+          "height": 1440,
+          "category": "exterior"
+        },
+        {
+          "url": "/homes/terrace-bungalow-hyderabad/6.jpg",
+          "alt": "Bathroom",
+          "width": 1080,
+          "height": 1440,
+          "category": "bathroom"
+        }
+      ]
+    },
+    {
+      "slug": "two-flats-one-floor",
+      "name": "Two Flats on One Floor",
+      "property": "Boutique Stays Pallikaranai",
+      "city": "Chennai",
+      "type": "apartment",
+      "tagline": "Two 2BHK flats side by side, for one large family or group",
+      "guests": 8,
+      "bedrooms": 4,
+      "beds": 4,
+      "baths": 4,
+      "price": 6800,
+      "lat": 12.949,
+      "lng": 80.208,
+      "amenities": [
+        "Wi-Fi",
+        "Air conditioning",
+        "Full kitchen",
+        "Free parking",
+        "Gym",
+        "Workspace",
+        "Pets allowed",
+        "Self check-in"
+      ],
+      "highlights": [
+        {
+          "icon": "users",
+          "title": "Room for eight",
+          "text": "Four bedrooms and four bathrooms."
+        },
+        {
+          "icon": "home",
+          "title": "Two entire flats",
+          "text": "Both are yours, on the same floor."
+        },
+        {
+          "icon": "calendar",
+          "title": "Free cancellation",
+          "text": "Up to 7 days before check-in."
+        }
+      ],
+      "houseRules": [
+        "Valid ID needed for all guests"
+      ],
+      "description": "Two two-bedroom apartments on the same floor, booked together by one group, so everyone stays close and still has space.\n\nFour air-conditioned bedrooms with queen beds, four bathrooms, two kitchens, two dining areas and parking for two cars, on the seventh floor.",
+      "images": [
+        {
+          "url": "/homes/two-flats-one-floor/1.jpg",
+          "alt": "Dining table and living room",
+          "width": 1440,
+          "height": 810,
+          "category": "living"
+        },
+        {
+          "url": "/homes/two-flats-one-floor/2.jpg",
+          "alt": "Bedroom with a queen bed",
+          "width": 1440,
+          "height": 810,
+          "category": "bedroom"
+        },
+        {
+          "url": "/homes/two-flats-one-floor/3.jpg",
+          "alt": "Living and dining room",
+          "width": 1440,
+          "height": 810,
+          "category": "living"
+        },
+        {
+          "url": "/homes/two-flats-one-floor/4.jpg",
+          "alt": "Corner sofa",
+          "width": 1440,
+          "height": 810,
+          "category": "living"
+        },
+        {
+          "url": "/homes/two-flats-one-floor/5.jpg",
+          "alt": "Kitchen",
+          "width": 1440,
+          "height": 810,
+          "category": "kitchen"
+        },
+        {
+          "url": "/homes/two-flats-one-floor/6.jpg",
+          "alt": "Bathroom",
+          "width": 810,
+          "height": 1440,
+          "category": "bathroom"
+        },
+        {
+          "url": "/homes/two-flats-one-floor/7.jpg",
+          "alt": "City view from the balcony",
+          "width": 1080,
+          "height": 1440,
+          "category": "view"
+        },
+        {
+          "url": "/homes/two-flats-one-floor/8.jpg",
+          "alt": "Gym in the building",
+          "width": 1440,
+          "height": 810,
+          "category": "other"
+        },
+        {
+          "url": "/homes/two-flats-one-floor/9.jpg",
+          "alt": "The apartment building",
+          "width": 1080,
+          "height": 1440,
+          "category": "exterior"
+        }
+      ]
+    }
+  ]
+}

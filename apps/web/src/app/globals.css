@@ -210,29 +210,32 @@ select.select-chevron option {
 /* Booking pages (they render the step indicator) drop sales prompts that compete with paying:
    the header "Book now" and the footer's "Talk to us before you book". CSS, not usePathname,
    because the host rewrite would make a pathname check mismatch on hydration. */
-body:has([data-booking-flow]) .hide-in-booking-flow {
+body:has([data-booking-flow]:not([style*="display: none"], [style*="display: none"] *)) .hide-in-booking-flow {
   display: none;
 }
 
+/* Page markers (data-booking-flow, data-stays-page, data-hero-search) only count while their page is
+   shown: after a client navigation Next keeps the previous page in the document with an inline
+   display: none, so each :has() leaves hidden ones out. */
 /* Where the header shows its search bar: everywhere from 640px up, except over the home page's own
    search until that has scrolled away; on phones only on the results page, in a second row that
    stays while the brand row scrolls off. "Book now" is there when the search bar is not. */
 @media (max-width: 639.98px) {
-  body:not(:has([data-stays-page])) .header-search,
-  body:has([data-stays-page]) .header-book {
+  body:not(:has([data-stays-page]:not([style*="display: none"], [style*="display: none"] *))) .header-search,
+  body:has([data-stays-page]:not([style*="display: none"], [style*="display: none"] *)) .header-book {
     display: none;
   }
-  body:has([data-stays-page]) .site-header {
+  body:has([data-stays-page]:not([style*="display: none"], [style*="display: none"] *)) .site-header {
     top: -66px; /* the brand row scrolls off, less the gap above the search row */
   }
 }
 /* Room for the Filters button before it arrives, so the bar doesn't jump. */
-body:has([data-stays-page]) .filters-slot {
+body:has([data-stays-page]:not([style*="display: none"], [style*="display: none"] *)) .filters-slot {
   display: block;
   min-width: 3rem;
 }
 @media (min-width: 1024px) {
-  body:has([data-stays-page]) .filters-slot {
+  body:has([data-stays-page]:not([style*="display: none"], [style*="display: none"] *)) .filters-slot {
     min-width: 6rem;
   }
 }
@@ -240,15 +243,14 @@ body:has([data-stays-page]) .filters-slot {
   .header-search {
     transition:
       opacity 0.2s ease-out,
-      transform 0.2s ease-out,
-      visibility 0.2s;
+      transform 0.2s ease-out;
   }
-  html:not([data-past-hero]) body:has([data-hero-search]) .header-search {
+  html:not([data-past-hero]) body:has([data-hero-search]:not([style*="display: none"], [style*="display: none"] *)) .header-search {
     visibility: hidden;
     opacity: 0;
     transform: translateY(8px);
   }
-  body:not(:has([data-hero-search])) .header-book,
+  body:not(:has([data-hero-search]:not([style*="display: none"], [style*="display: none"] *))) .header-book,
   html[data-past-hero] .header-book {
     display: none;
   }

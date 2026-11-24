@@ -37,7 +37,7 @@ async function HomePageContent({ params }: Pick<PageProps<"/[site]">, "params">)
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
       />
       <Track step="home" />
-      <Hero site={site} stays={listings} />
+      <Hero site={site} />
       <Intro site={site} />
       <Stays listings={listings} currency={site.currency} addsGst={site.pricesAddGst} />
       <Destinations listings={listings} currency={site.currency} />
