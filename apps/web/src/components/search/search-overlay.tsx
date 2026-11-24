@@ -307,7 +307,7 @@ function Desktop({ open, phase, target, active, setActive, close, search, draft,
 
       <div className={`absolute inset-x-0 top-0 transition-opacity duration-200 ${isOpen ? "opacity-100" : "pointer-events-none opacity-0"}`}>
         <div className="mx-auto flex h-[76px] max-w-[1440px] items-center justify-between px-4 sm:px-6 lg:px-8">
-          <span className={`truncate text-xl tracking-tight sm:text-2xl ${hero ? "invisible" : ""}`}>{brandName}</span>
+          <span className={`truncate text-xl tracking-tight lg:text-2xl ${hero ? "invisible" : ""}`}>{brandName}</span>
           <button type="button" onClick={close} aria-label="Close search" className="focus-own grid h-10 w-10 place-items-center rounded-full bg-white ring-1 ring-line hover:ring-ink focus-visible:ring-2 focus-visible:ring-ink">
             <Icon name="close" className="h-4 w-4" />
           </button>
@@ -354,7 +354,7 @@ function Desktop({ open, phase, target, active, setActive, close, search, draft,
             <input
               id="search-where"
               ref={input}
-              aria-controls="search-where-panel"
+              aria-controls={active === "where" ? "search-where-panel" : undefined}
               autoComplete="off"
               placeholder="Search places"
               value={typed || whereValue}

@@ -6,6 +6,7 @@ import { HeroSearchBar } from "@/components/search/header-search";
 import { Icon } from "@/components/icons";
 import { formatMoney } from "@/lib/dates";
 import type { ListingImage, ListingSummary, Site } from "@/lib/pms";
+import { FaqList } from "./faq";
 import { ListingCard } from "./listing-card";
 import { ListingPhoto } from "./listing-media";
 
@@ -34,7 +35,7 @@ export function Hero({ site }: { site: Site }) {
           <HeroSearchBar />
         </div>
         <ul className="mt-5 flex flex-wrap gap-x-6 gap-y-2 text-sm text-white/90">
-          {["Best rate, booked direct", "Instant confirmation", "Free cancellation up to 7 days"].map((t) => (
+          {["Best rate, booked direct", "Free cancellation up to 7 days"].map((t) => (
             <li key={t} className="flex items-center gap-2">
               <Icon name="check" className="h-4 w-4" strokeWidth={2} /> {t}
             </li>
@@ -178,7 +179,7 @@ export function Gallery({ images }: { images: ListingImage[] }) {
   if (images.length < 3) return null;
   return (
     <section className={`${container} py-12`}>
-      <Carousel label="Photo gallery" slideClassName="w-[80%] sm:w-[48%] lg:w-[38%]" gapClassName="gap-4">
+      <Carousel label="Photo gallery" itemName="image" slideClassName="w-[80%] sm:w-[48%] lg:w-[38%]" gapClassName="gap-4">
         {images.map((img, i) => (
           <ListingPhoto key={`${img.url}-${i}`} image={img} name="" sizes="(min-width: 1024px) 38vw, 80vw" className="aspect-[4/5] rounded-2xl" />
         ))}
@@ -192,7 +193,7 @@ export function Testimonials({ items }: { items: Site["testimonials"] }) {
   return (
     <section className="bg-brand py-16 text-white sm:py-20">
       <div className="mx-auto max-w-5xl px-4 sm:px-6">
-        <Carousel label="Guest reviews" slideClassName="w-full" gapClassName="gap-0" arrowTone="dark">
+        <Carousel label="Guest reviews" itemName="review" slideClassName="w-full" gapClassName="gap-0" arrowTone="dark">
           {items.map((t) => (
             <figure key={t.author} className="px-12 text-center sm:px-20">
               <blockquote className="text-h2">“{t.quote}”</blockquote>
@@ -213,7 +214,10 @@ export function Testimonials({ items }: { items: Site["testimonials"] }) {
   );
 }
 
-export function Faq({ items }: { items: Site["faqs"] }) {
+/** The home page shows the first few; all of them are on /faq. */
+const FAQ_PREVIEW = 3;
+
+export function FaqPreview({ items }: { items: Site["faqs"] }) {
   if (!items.length) return null;
   return (
     <section id="faq" className={`${container} py-12 sm:py-16`}>
@@ -221,20 +225,11 @@ export function Faq({ items }: { items: Site["faqs"] }) {
         <div>
           <h2 className="text-h1">Questions, answered</h2>
           <p className="mt-5 text-ink-soft">Can’t find what you need? Message us and we’ll reply quickly.</p>
+          <Link href="/faq" className={`${buttonClass("outline")} mt-6`}>
+            View all FAQs
+          </Link>
         </div>
-        <div className="divide-y divide-line border-y border-line">
-          {items.map((f) => (
-            <details key={f.q} className="group py-6 [&_summary::-webkit-details-marker]:hidden">
-              <summary className="flex cursor-pointer list-none items-center justify-between gap-6 text-lg">
-                {f.q}
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full ring-1 ring-line transition group-open:rotate-45">
-                  <span className="text-xl leading-none">+</span>
-                </span>
-              </summary>
-              <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">{f.a}</p>
-            </details>
-          ))}
-        </div>
+        <FaqList items={items.slice(0, FAQ_PREVIEW)} />
       </div>
     </section>
   );

@@ -88,7 +88,7 @@ export function ChatLauncher({ brandName, whatsapp }: Props) {
               maxLength={1000}
               placeholder="Write a message…"
               aria-label="Message"
-              className="max-h-28 flex-1 resize-none rounded-2xl bg-sand-deep px-4 py-2.5 text-sm outline-none"
+              className="max-h-28 flex-1 resize-none rounded-2xl bg-sand-deep px-4 py-2.5 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ink"
             />
             <button type="submit" disabled={!text.trim()} className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-brand text-white disabled:opacity-40" aria-label="Send on WhatsApp">
               <Icon name="arrowRight" className="h-4 w-4" />

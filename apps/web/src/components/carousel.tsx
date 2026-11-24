@@ -8,6 +8,8 @@ interface Props {
   /** Tailwind width classes for each slide, e.g. "w-[85%] sm:w-[calc((100%-2rem)/2)]". */
   slideClassName: string;
   label: string;
+  /** What one slide is, for the arrows: "Next image". */
+  itemName?: string;
   /** Arrow placement: over the slides' vertical middle, or in a row above them. */
   arrows?: "overlay" | "header";
   arrowTone?: "light" | "dark";
@@ -22,6 +24,7 @@ export function Carousel({
   children,
   slideClassName,
   label,
+  itemName = "slide",
   arrows = "overlay",
   arrowTone = "light",
   counter = false,
@@ -71,7 +74,7 @@ export function Carousel({
       type="button"
       onClick={() => go(dir)}
       disabled={dir === -1 ? edges.start : edges.end}
-      aria-label={dir === -1 ? "Previous" : "Next"}
+      aria-label={`${dir === -1 ? "Previous" : "Next"} ${itemName}`}
       className={`flex h-11 w-11 items-center justify-center rounded-full transition disabled:pointer-events-none disabled:opacity-0 ${btn}`}
     >
       <Icon name="arrowRight" className={`h-4 w-4 ${dir === -1 ? "rotate-180" : ""}`} />
@@ -86,9 +89,10 @@ export function Carousel({
           {arrow(1)}
         </div>
       )}
-      <div ref={track} className={`no-scrollbar flex snap-x snap-mandatory overflow-x-auto scroll-smooth ${gapClassName}`}>
+      {/* Focusable, so the arrow keys scroll it. */}
+      <div ref={track} role="group" aria-label={label} tabIndex={0} className={`no-scrollbar flex snap-x snap-mandatory overflow-x-auto scroll-smooth ${gapClassName}`}>
         {slides.map((s, i) => (
-          <div key={i} className={`shrink-0 snap-start ${slideClassName}`} aria-roledescription="slide" aria-label={`${i + 1} of ${slides.length}`}>
+          <div key={i} className={`shrink-0 snap-start ${slideClassName}`} role="group" aria-roledescription="slide" aria-label={`${i + 1} of ${slides.length}`}>
             {s}
           </div>
         ))}

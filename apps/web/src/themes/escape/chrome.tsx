@@ -6,6 +6,7 @@ import { Icon } from "@/components/icons";
 import { HeaderSearch, HeaderSearchFallback, SearchHost } from "@/components/search/header-search";
 import { SignInHost } from "@/components/sign-in";
 import { buttonClass } from "@/components/ui/button";
+import { ACCOUNT_LINKS } from "@/lib/features";
 import { telUrl, whatsappUrl } from "@/lib/links";
 import type { Place } from "@/components/search/where-panel";
 import type { Site } from "@/lib/pms";
@@ -13,7 +14,7 @@ import type { Site } from "@/lib/pms";
 function Wordmark({ site }: { site: Site }) {
   return (
     <Link href="/" className="min-w-0 leading-none">
-      <span className="block truncate text-xl tracking-tight text-ink sm:text-2xl">{site.brandName}</span>
+      <span className="block truncate text-xl tracking-tight text-ink lg:text-2xl">{site.brandName}</span>
       {site.location && <span className="mt-1 hidden truncate text-eyebrow uppercase text-ink-soft lg:block">{site.location.label}</span>}
     </Link>
   );
@@ -97,7 +98,7 @@ export function SiteFooter({ site }: { site: Site }) {
                 </Link>
               </li>
               <li>
-                <Link href="/#faq" className={link}>
+                <Link href="/faq" className={link}>
                   FAQ
                 </Link>
               </li>
@@ -106,11 +107,13 @@ export function SiteFooter({ site }: { site: Site }) {
                   Policies
                 </Link>
               </li>
-              <li>
-                <Link href="/account" className={link}>
-                  My trips
-                </Link>
-              </li>
+              {ACCOUNT_LINKS && (
+                <li>
+                  <Link href="/account" className={link}>
+                    My trips
+                  </Link>
+                </li>
+              )}
             </ul>
           </div>
           <div>
@@ -131,7 +134,7 @@ export function SiteFooter({ site }: { site: Site }) {
           </div>
         </div>
       </div>
-      <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 border-t border-line px-4 py-6 text-xs text-ink-soft sm:flex-row sm:px-6 lg:px-8">
+      <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 border-t border-line px-4 py-6 text-xs text-ink-soft sm:flex-row sm:px-6 lg:px-8 lg:max-[1536px]:pr-28">
         <span>
           © {site.brandName} ·{" "}
           <Link href="/policies" className="inline-flex min-h-11 items-center hover:text-ink">

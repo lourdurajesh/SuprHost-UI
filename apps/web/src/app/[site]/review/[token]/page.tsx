@@ -1,3 +1,4 @@
+import { ACCOUNT_LINKS } from "@/lib/features";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { connection } from "next/server";
@@ -39,7 +40,9 @@ async function ReviewContent({ params }: Pick<PageProps<"/[site]/review/[token]"
           <ReviewForm token={token} stayName={state.stayName} />
         </div>
       )}
-      <Link href="/account" className="mt-8 inline-flex min-h-11 items-center text-sm underline underline-offset-4">My trips</Link>
+      <Link href={ACCOUNT_LINKS ? "/account" : "/"} className="mt-8 inline-flex min-h-11 items-center text-sm underline underline-offset-4">
+        {ACCOUNT_LINKS ? "My trips" : "Back to home"}
+      </Link>
     </>
   );
 }

@@ -4,7 +4,6 @@ import { formatDate, formatMoney } from "@/lib/dates";
 import { stayUrl, type StayChoice } from "@/lib/links";
 import { listingSpecs, PROPERTY_TYPE } from "@/lib/listing-facts";
 import { plural } from "@/lib/text";
-import { Icon } from "@/components/icons";
 import { Rating } from "@/components/rating";
 import { WishlistButton } from "@/components/wishlist";
 import { ListingPhoto } from "./listing-media";
@@ -39,9 +38,9 @@ const day = (iso: string) => formatDate(iso, { day: "numeric", month: "short" })
 /** A home with a square photo, the same everywhere it is listed. The photo carries it; the text stays quiet. */
 export function ListingCard({ listing: l, currency, addsGst, stay, trip, window: free, active, heading: Heading = "h3", preload, sizes = "(min-width: 1024px) 25vw, 50vw", prefetch }: Props) {
   return (
-    <div className="relative min-w-0">
+    <div className="relative h-full min-w-0">
       <WishlistButton listingId={l.id} name={l.name} className="absolute right-2 top-2 z-10 sm:right-3 sm:top-3" />
-      <Link href={stayUrl(l.slug, stay)} prefetch={prefetch} className="group block">
+      <Link href={stayUrl(l.slug, stay)} prefetch={prefetch} className="group flex h-full flex-col">
         <div className="relative">
           <ListingPhoto
             image={l.image}
@@ -51,32 +50,24 @@ export function ListingCard({ listing: l, currency, addsGst, stay, trip, window:
             className={`aspect-square rounded-2xl ring-2 transition ${active ? "ring-ink" : "ring-transparent"}`}
             imgClassName="transition-transform duration-700 ease-out group-hover:scale-[1.04]"
           />
-          {l.instantBook && (
-            <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-white/95 px-2 py-1 text-xs shadow-sm sm:left-3 sm:top-3 sm:px-3">
-              <Icon name="bolt" className="h-3.5 w-3.5" /> <span className="max-sm:sr-only">Instant book</span>
-            </span>
-          )}
         </div>
-        <Heading className="mt-3 flex items-center justify-between gap-2 text-base leading-6">
-          <span className="truncate group-hover:underline group-hover:decoration-1 group-hover:underline-offset-4" title={l.name}>
-            {l.name}
-          </span>
-          <Rating rating={l.rating} className="shrink-0 text-sm font-normal text-ink" />
-        </Heading>
-        <p className="truncate text-sm leading-5 text-ink-soft">
+        <Heading className="mt-3 text-base leading-6 group-hover:underline group-hover:decoration-1 group-hover:underline-offset-4">{l.name}</Heading>
+        <Rating rating={l.rating} className="mt-0.5 text-sm" />
+        <p className="text-sm leading-5 text-ink-soft">
           {l.city} · {l.propertyName}
         </p>
-        <p className="truncate text-sm leading-5 text-ink-soft">
+        <p className="text-sm leading-5 text-ink-soft">
           <span className="max-sm:hidden">{PROPERTY_TYPE[l.propertyType]} · </span>
           {listingSpecs(l, ["bedrooms", "bathrooms"]).join(" · ")}
         </p>
         {free && (
-          <p className="truncate text-sm font-medium leading-5 text-accent">
+          <p className="text-sm font-medium leading-5 text-accent">
             <span className="max-sm:hidden">Available </span>
             {day(free.checkIn)} – {day(free.checkOut)}
           </p>
         )}
-        <p className="mt-0.5 truncate leading-6">
+        {/* Pushed to the bottom, so prices and actions line up across a row whatever the names need. */}
+        <p className="mt-auto pt-1 leading-6">
           <span className="font-medium">{formatMoney(trip ? trip.total : l.fromPrice, currency)}</span>
           <span className="text-sm text-ink-soft">
             {trip ? (
@@ -90,6 +81,7 @@ export function ListingCard({ listing: l, currency, addsGst, stay, trip, window:
             )}
           </span>
         </p>
+        <span className="mt-1 text-sm font-medium underline underline-offset-4">View details</span>
       </Link>
     </div>
   );

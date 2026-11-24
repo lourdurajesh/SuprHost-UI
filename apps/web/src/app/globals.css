@@ -279,6 +279,13 @@ body:has([data-stays-page]:not([style*="display: none"], [style*="display: none"
   }
 }
 
+/* Phones and tablets: room under the results page's footer, so "Show map" never covers its links. */
+@media (max-width: 1023px) {
+  body:has([data-stays-page]:not([style*="display: none"], [style*="display: none"] *)) footer {
+    padding-bottom: 5.5rem;
+  }
+}
+
 /* A stay page: the header scrolls away and the section bar takes its place. */
 body:has([data-listing-page]:not([style*="display: none"], [style*="display: none"] *)) .site-header {
   position: relative;
@@ -301,4 +308,10 @@ body:has([data-listing-page]:not([style*="display: none"], [style*="display: non
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* The map library removes the outline from its credit button. */
+.maplibregl-ctrl-attrib-button:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 1px;
 }

@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 import { contrast } from "@/lib/colors";
 import { customPalette, PALETTES, paletteVars, type Palette } from "@/lib/palettes";
 import { Icon } from "../icons";
+import { buttonClass, fieldClass } from "../ui/button";
 
-const KEY = "sh_palette_preview";
 type Preview = { id: string; brand?: string; accent?: string };
 
 const toPalette = (p: Preview): Palette | null =>
@@ -20,38 +20,22 @@ function paint(p: Palette | null) {
 }
 
 /**
- * Development only: try the palettes on the real pages and lock one in. A preview lives in this
- * browser (it survives page changes and reloads); "Lock in" writes it to src/lib/palette.lock.json
- * for this site, which is what everyone gets. Never rendered in a production build.
+ * Development only, on its own internal page (/dev/theme): try the palettes and lock one in. A preview
+ * colours this page alone; "Lock in" writes it to src/lib/palette.lock.json for this site, which is what
+ * everyone gets. Never rendered in a production build.
  */
-export function PaletteLab({ locked }: { locked: string | null }) {
-  const [open, setOpen] = useState(false);
+export function PaletteLab({ siteName, locked }: { siteName: string; locked: string | null }) {
   const [preview, setPreview] = useState<Preview | null>(null);
   const [custom, setCustom] = useState({ brand: "#d02f4c", accent: "#b3273f" });
   const [note, setNote] = useState("");
 
-  useEffect(() => {
-    try {
-      const saved = JSON.parse(localStorage.getItem(KEY) ?? "null") as Preview | null;
-      const p = saved && toPalette(saved);
-      if (saved && p) {
-        paint(p);
-        const t = setTimeout(() => setPreview(saved), 0);
-        return () => clearTimeout(t);
-      }
-    } catch {
-      // Storage blocked: previews just don't survive a reload.
-    }
-  }, []);
+  // Leaving the page drops the preview.
+  useEffect(() => () => paint(null), []);
 
   function tryOut(p: Preview | null) {
     setPreview(p);
     setNote("");
     paint(p && toPalette(p));
-    try {
-      if (p) localStorage.setItem(KEY, JSON.stringify(p));
-      else localStorage.removeItem(KEY);
-    } catch {}
   }
 
   async function lockIn() {
@@ -59,9 +43,6 @@ export function PaletteLab({ locked }: { locked: string | null }) {
     setNote("Saving…");
     const r = await fetch("/api/dev/palette", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(preview) }).catch(() => null);
     if (!r?.ok) return setNote("Couldn’t save it.");
-    try {
-      localStorage.removeItem(KEY);
-    } catch {}
     // The file is part of the build: reload to see the site as everyone will.
     setTimeout(() => window.location.reload(), 900);
     setNote("Locked in. Reloading…");
@@ -70,13 +51,11 @@ export function PaletteLab({ locked }: { locked: string | null }) {
   const current = preview?.id ?? locked;
   const shown = preview && toPalette(preview);
   return (
-    <div className="fixed bottom-20 left-4 z-[60] text-sm print:hidden">
-      {open && (
-        <div role="dialog" aria-label="Palette picker" className="mb-3 max-h-[70dvh] w-72 overflow-y-auto rounded-2xl bg-white p-4 text-ink shadow-2xl ring-1 ring-line">
-          <div className="flex items-center justify-between">
-            <p className="font-medium">Colour palette</p>
-            <span className="rounded-full bg-sand-deep px-2 py-0.5 text-xs text-ink-soft">Development</span>
-          </div>
+    <div className="mx-auto grid max-w-5xl gap-10 px-4 py-10 sm:px-6 lg:grid-cols-[22rem_1fr]">
+      <div>
+        <h1 className="text-h2">Theme for {siteName}</h1>
+        <p className="mt-2 text-sm text-ink-soft">Internal. Guests never see this page.</p>
+        <div className="mt-5">
           <ul className="mt-3 grid grid-cols-2 gap-2">
             {PALETTES.map((p) => (
               <li key={p.id}>
@@ -125,28 +104,35 @@ export function PaletteLab({ locked }: { locked: string | null }) {
             </p>
           )}
           <div className="mt-3 flex gap-2">
-            <button type="button" onClick={lockIn} disabled={!preview} className="min-h-10 flex-1 rounded-xl bg-brand px-3 text-white disabled:opacity-40">
+            <button type="button" onClick={lockIn} disabled={!preview} className={`${buttonClass("primary", "sm")} flex-1`}>
               Lock in
             </button>
-            <button type="button" onClick={() => tryOut(null)} disabled={!preview} className="min-h-10 rounded-xl px-3 ring-1 ring-line disabled:opacity-40">
+            <button type="button" onClick={() => tryOut(null)} disabled={!preview} className={buttonClass("outline", "sm")}>
               Undo
             </button>
           </div>
           <p role="status" className="mt-2 min-h-4 text-xs text-ink-soft">
-            {note || (preview ? "Previewing in this browser only." : "Pick one to try it on every page.")}
+            {note || (preview ? "Previewing on this page only." : "Pick one to try it here.")}
           </p>
         </div>
-      )}
-      <button
-        type="button"
-        onClick={() => setOpen(!open)}
-        aria-expanded={open}
-        aria-label="Palette picker (development)"
-        className="flex h-10 items-center gap-2 rounded-full bg-white pl-2 pr-3 text-xs shadow-lg ring-1 ring-line"
-      >
-        <span aria-hidden className="h-6 w-6 rounded-full" style={{ background: "conic-gradient(var(--brand) 0 33%, var(--accent) 0 66%, var(--ink) 0)" }} />
-        Colours
-      </button>
+      </div>
+      <section aria-label="Preview" className="space-y-6 rounded-2xl border border-line p-6">
+        <h2 className="text-h1">Feel the comfort</h2>
+        <p className="text-ink-soft">Secondary text, as under a home&rsquo;s name.</p>
+        <p className="font-medium text-accent">Accent text: 4 Dec – 6 Dec</p>
+        <div className="flex flex-wrap gap-3">
+          <span className={buttonClass()}>Reserve</span>
+          <span className={buttonClass("dark")}>Next</span>
+          <span className={buttonClass("outline")}>Message the host</span>
+          <span className={buttonClass("soft")}>Show all</span>
+        </div>
+        <label className="block text-sm">
+          A field
+          <input className={`${fieldClass} mt-1.5`} placeholder="you@example.com" />
+        </label>
+        <p className="rounded-2xl bg-sand-deep p-5">A soft panel</p>
+        <p className="rounded-2xl bg-brand p-5 text-white">A brand panel</p>
+      </section>
     </div>
   );
 }

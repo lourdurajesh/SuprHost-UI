@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useRef } from "react";
+import { ACCOUNT_LINKS } from "@/lib/features";
 import { telUrl, whatsappUrl } from "@/lib/links";
 import { Icon } from "./icons";
 import { buttonClass, iconButton } from "./ui/button";
@@ -48,10 +49,10 @@ export function MobileMenu({ brandName, whatsapp, phone }: Props) {
         <nav aria-label="Menu" className="relative flex flex-1 flex-col overflow-y-auto px-5">
           <Link href="/stays" onClick={close} className={item}>Stays</Link>
           <Link href="/#about" onClick={close} className={item}>Our story</Link>
-          <Link href="/#faq" onClick={close} className={item}>FAQ</Link>
+          <Link href="/faq" onClick={close} className={item}>FAQ</Link>
           <Link href="/policies" onClick={close} className={item}>Policies</Link>
           <Link href="/#contact" onClick={close} className={item}>Contact</Link>
-          <Link href="/account" onClick={close} className={item}>Your trips and sign in</Link>
+          {ACCOUNT_LINKS && <Link href="/account" onClick={close} className={item}>Your trips and sign in</Link>}
           <div className="mt-auto space-y-3 py-6">
             {chat && (
               <a href={chat} target="_blank" rel="noopener noreferrer" className={`${buttonClass("outline")} w-full`}>

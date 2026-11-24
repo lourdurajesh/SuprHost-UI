@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { getListings, getSite, type ListingImage } from "@/lib/pms";
-import { About, Destinations, Faq, Gallery, Hero, Highlights, Intro, Stays, Testimonials } from "@/themes/escape/home";
+import { About, Destinations, FaqPreview, Gallery, Hero, Highlights, Intro, Stays, Testimonials } from "@/themes/escape/home";
 import { Suspense } from "react";
 import { Track } from "@/components/track";
 
@@ -45,7 +45,7 @@ async function HomePageContent({ params }: Pick<PageProps<"/[site]">, "params">)
       <About about={site.about} />
       <Gallery images={gallery} />
       <Testimonials items={site.testimonials} />
-      <Faq items={site.faqs} />
+      <FaqPreview items={site.faqs} />
     </>
   );
 }

@@ -91,7 +91,7 @@ export function ReviewsPanel({ slug, rating, brandName }: { slug: string; rating
         <p role="status" className="sr-only">
           {reviews ? `${plural(shown.length, "review")} shown` : ""}
         </p>
-        <div className="mt-6 relative md:min-h-0 md:flex-1 md:overflow-y-auto md:pb-8 md:pr-2">
+        <div role="region" aria-label="Reviews" tabIndex={0} className="relative mt-6 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:min-h-0 md:flex-1 md:overflow-y-auto md:pb-8 md:pr-2">
           {failed ? (
             <p className="py-6 text-ink-soft">The reviews couldn’t be loaded just now. Please try again in a moment.</p>
           ) : !reviews ? (

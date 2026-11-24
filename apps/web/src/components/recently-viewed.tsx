@@ -25,7 +25,7 @@ export function RecentlyViewed({ currency, offered }: { currency: string; offere
                 )}
               </span>
               <span className="min-w-0">
-                <span className="block truncate text-sm group-hover:underline">{s.name}</span>
+                <span className="block text-sm leading-tight group-hover:underline">{s.name}</span>
                 <span className="block truncate text-sm text-ink-soft">
                   {s.place} · {formatMoney(s.fromPrice, currency)}
                 </span>

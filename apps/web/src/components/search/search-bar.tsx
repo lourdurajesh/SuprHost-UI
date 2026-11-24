@@ -121,10 +121,10 @@ export function SearchBar({ query, variant, pending = false }: { query: SearchQu
         data-search-bar={`${variant}-phone`}
         onClick={(e) => launch("where", e)}
         className={`focus-own flex min-w-0 flex-1 items-center gap-3 rounded-full bg-white px-4 py-2 text-left text-ink shadow-[0_2px_10px_rgba(0,0,0,0.08)] ring-1 ring-line focus-visible:ring-2 focus-visible:ring-ink sm:hidden ${variant === "hero" ? "w-full py-3" : ""}`}
-        aria-label={`Search stays: ${t.where}, ${t.when}, ${t.who}`}
       >
         <Icon name="search" className="h-4 w-4 shrink-0" strokeWidth={2.2} />
         <span className="min-w-0">
+          <span className="sr-only">Search stays: </span>
           <span className="block truncate text-sm font-medium">{variant === "hero" && !query.city ? "Where to?" : t.where}</span>
           <span className="block truncate text-xs text-ink-soft">
             {t.when} · {t.who}

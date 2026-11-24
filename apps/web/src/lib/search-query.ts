@@ -49,7 +49,6 @@ export function queryFromParams(p: { get(name: string): string | null }): Search
     bedrooms: num("bedrooms"),
     beds: num("beds"),
     bathrooms: num("bathrooms"),
-    instantBook: p.get("instantBook") === "true" || undefined,
     types: list("types") as PropertyType[] | undefined,
     amenities: list("amenities"),
     sort: (p.get("sort") as SearchSort | null) ?? undefined,

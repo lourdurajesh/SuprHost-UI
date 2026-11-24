@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { getListings, getSite } from "@/lib/pms";
 import { allSiteKeys } from "@/lib/sites";
-import { lockedPalette, paletteCss, sitePalette } from "@/lib/palettes";
+import { paletteCss, sitePalette } from "@/lib/palettes";
 import { ChatLauncher } from "@/components/chat-launcher";
 import { SiteFooter, SiteHeader } from "@/themes/escape/chrome";
 
@@ -28,7 +28,6 @@ export async function generateMetadata({ params }: LayoutProps<"/[site]">): Prom
 
 type SiteParams = LayoutProps<"/[site]">["params"];
 
-
 // The layout never awaits the URL itself: each part that needs the site reads it inside its own
 // <Suspense>, so the page body renders without waiting and client navigations stay instant.
 export default function SiteLayout({ children, params }: LayoutProps<"/[site]">) {
@@ -40,7 +39,7 @@ export default function SiteLayout({ children, params }: LayoutProps<"/[site]">)
       <Suspense fallback={<div className="h-[76px]" aria-hidden />}>
         <Header params={params} />
       </Suspense>
-      <main id="main" className="flex-1">
+      <main id="main" tabIndex={-1} className="flex-1 outline-none">
         {children}
       </main>
       <Suspense fallback={null}>
@@ -57,12 +56,9 @@ async function Header({ params }: { params: SiteParams }) {
   const places = [...new Set(listings.map((l) => l.city))].sort().map((value) => ({ value, count: listings.filter((l) => l.city === value).length }));
   // The locked palette, else one made from the PMS's colours (see lib/palettes).
   const palette = sitePalette(key, site.colors);
-  // Imported in development only, so its code never reaches a production build.
-  const PaletteLab = process.env.NODE_ENV === "development" ? (await import("@/components/dev/palette-lab")).PaletteLab : null;
   return (
     <>
       <style>{paletteCss(palette)}</style>
-      {PaletteLab && <PaletteLab locked={lockedPalette(key)?.id ?? null} />}
       <SiteHeader site={site} places={places} />
     </>
   );

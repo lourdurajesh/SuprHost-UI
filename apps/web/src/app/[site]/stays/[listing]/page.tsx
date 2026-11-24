@@ -223,7 +223,7 @@ async function ListingPageContent({ params }: Pick<PageProps<"/[site]/stays/[lis
               <ul className="mt-6 grid grid-cols-2 gap-4">
                 {bedrooms.map((img) => (
                   <li key={img.url}>
-                    <ListingPhoto image={img} name="" sizes="(min-width: 768px) 320px, 50vw" className="aspect-[3/2] rounded-xl" />
+                    <ListingPhoto image={{ ...img, alt: "" }} name="" sizes="(min-width: 768px) 320px, 50vw" className="aspect-[3/2] rounded-xl" />
                     <p className="mt-3 text-sm">{img.alt}</p>
                   </li>
                 ))}

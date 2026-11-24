@@ -100,6 +100,8 @@ export function BookingWidget({ listingId, city, maxGuests, minNights: listingMi
   const action = ready ? "Reserve" : checkIn && checkOut ? (quoteError || tooShort ? "Change dates" : "Checking price…") : "Check availability";
   const field = "flex min-h-14 flex-col justify-center px-4 py-2 text-left";
 
+  const message = tooShort ? `Minimum stay is ${minNights} nights${minNights !== listingMinNights ? " for this check-in date" : ""}.` : quoteError;
+
   return (
     <>
       <div className="rounded-2xl border border-line bg-white p-5 shadow-[0_6px_20px_rgba(0,0,0,0.12)] sm:p-6">
@@ -123,7 +125,8 @@ export function BookingWidget({ listingId, city, maxGuests, minNights: listingMi
             type="button"
             onClick={() => setDatesOpen(true)}
             className="grid w-full grid-cols-2 divide-x divide-field text-sm hover:bg-sand-deep/50"
-            aria-label={checkIn && checkOut ? `Dates: ${formatDate(checkIn)} to ${formatDate(checkOut)}. Change dates` : "Add dates"}
+            aria-haspopup="dialog"
+            aria-describedby={message ? "booking-message" : undefined}
           >
             <span className={field}>
               <span className="text-eyebrow text-ink-soft">Check-in</span>
@@ -141,12 +144,9 @@ export function BookingWidget({ listingId, city, maxGuests, minNights: listingMi
         </div>
 
         {availabilityFailed && <p className="mt-3 text-sm text-red-700">Could not load availability. Your dates will still be checked.</p>}
-        {tooShort && (
-          <p className="mt-3 text-sm text-red-700">
-            Minimum stay is {minNights} nights{minNights !== listingMinNights ? " for this check-in date" : ""}.
-          </p>
-        )}
-        {quoteError && !tooShort && <p className="mt-3 text-sm text-red-700">{quoteError}</p>}
+        <p id="booking-message" role="alert" className="mt-3 text-sm text-red-700 empty:hidden">
+          {message}
+        </p>
 
         <button
           type="button"

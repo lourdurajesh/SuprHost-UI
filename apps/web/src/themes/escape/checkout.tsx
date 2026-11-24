@@ -25,7 +25,7 @@ export function CheckoutShell({ title, back, children }: { title: string; back: 
 }
 
 /** Steps and summary side by side; on phones the summary comes first, folded to one line. */
-export const checkoutGrid = "mt-6 grid items-start gap-6 lg:mt-8 lg:grid-cols-[minmax(0,1fr)_372px] lg:gap-20";
+export const checkoutGrid = "mt-6 grid grid-cols-[minmax(0,1fr)] items-start gap-6 lg:mt-8 lg:grid-cols-[minmax(0,1fr)_372px] lg:gap-20";
 
 /** What the summary shows of a booking that has been made. */
 export const summaryOf = ({ listing, checkIn, checkOut, guests, quote }: BookingSummary) => ({
@@ -111,7 +111,7 @@ export function StaySummary({
           <summary className="flex min-h-16 cursor-pointer list-none items-center gap-3 p-3">
             <ListingPhoto image={image} name="" sizes="56px" className="h-14 w-14 shrink-0 rounded-lg" />
             <span className="min-w-0 flex-1">
-              <span className="block truncate font-medium">{name}</span>
+              <span className="block font-medium leading-snug">{name}</span>
               <span className="block truncate text-sm text-ink-soft">
                 {stayDates(checkIn, checkOut)} · {guestText}
               </span>

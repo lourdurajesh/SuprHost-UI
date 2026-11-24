@@ -46,7 +46,6 @@ export function SearchFilters({ query, facets, currency, count, prices }: Props)
     (query.bedrooms ? 1 : 0) +
     (query.beds ? 1 : 0) +
     (query.bathrooms ? 1 : 0) +
-    (query.instantBook ? 1 : 0) +
     (query.minPrice || query.maxPrice ? 1 : 0);
 
   // Applied filters as removable chips, so guests can see and undo what narrows the list.
@@ -55,7 +54,6 @@ export function SearchFilters({ query, facets, currency, count, prices }: Props)
     ...(query.bedrooms ? [{ key: "bedrooms", label: `${query.bedrooms}+ bedrooms`, next: { ...query, bedrooms: undefined } }] : []),
     ...(query.beds ? [{ key: "beds", label: `${query.beds}+ beds`, next: { ...query, beds: undefined } }] : []),
     ...(query.bathrooms ? [{ key: "bathrooms", label: `${query.bathrooms}+ bathrooms`, next: { ...query, bathrooms: undefined } }] : []),
-    ...(query.instantBook ? [{ key: "instant", label: "Instant Book", next: { ...query, instantBook: undefined } }] : []),
     ...(query.minPrice || query.maxPrice
       ? [
           {
@@ -97,7 +95,7 @@ export function SearchFilters({ query, facets, currency, count, prices }: Props)
       </Dialog>
 
       <div className="flex flex-wrap items-center gap-2">
-        <h1 className="mr-2 min-w-0 truncate text-lg max-sm:flex-1">
+        <h1 className="mr-2 min-w-0 text-lg leading-tight max-sm:flex-1">
           <span aria-live="polite">
             {pending
               ? "Updating…"
@@ -118,7 +116,7 @@ export function SearchFilters({ query, facets, currency, count, prices }: Props)
         {applied.length > 1 && (
           <button
             type="button"
-            onClick={() => apply({ ...query, types: undefined, bedrooms: undefined, beds: undefined, bathrooms: undefined, instantBook: undefined, minPrice: undefined, maxPrice: undefined, amenities: undefined })}
+            onClick={() => apply({ ...query, types: undefined, bedrooms: undefined, beds: undefined, bathrooms: undefined, minPrice: undefined, maxPrice: undefined, amenities: undefined })}
             className="min-h-9 px-1 text-sm underline underline-offset-4"
           >
             Clear filters

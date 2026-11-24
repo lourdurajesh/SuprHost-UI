@@ -43,7 +43,7 @@ export function ReviewForm({ token, stayName }: { token: string; stayName: strin
     <form onSubmit={submit} noValidate className="space-y-6">
       <fieldset>
         <legend className="text-sm font-medium">Your rating</legend>
-        <div role="radiogroup" aria-label="Rating" className="mt-2 flex items-center gap-1">
+        <div role="radiogroup" aria-label="Rating" aria-describedby={error ? "review-error" : undefined} className="mt-2 flex items-center gap-1">
           {LABELS.map((label, i) => {
             const value = i + 1;
             return (
@@ -65,14 +65,15 @@ export function ReviewForm({ token, stayName }: { token: string; stayName: strin
           maxLength={2000}
           value={text}
           onChange={(e) => setText(e.target.value)}
-          aria-describedby="review-help"
+          aria-invalid={Boolean(error)}
+          aria-describedby={error ? "review-error review-help" : "review-help"}
           className={`${fieldClass} mt-1.5`}
           placeholder="The place, the hosts, anything future guests should know"
         />
         <p id="review-help" className="mt-1 text-sm text-ink-soft">Your first name and the month appear with your review. {2000 - text.length} characters left.</p>
       </div>
 
-      {error && <p role="alert" className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-800">{error}</p>}
+      {error && <p id="review-error" role="alert" className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-800">{error}</p>}
 
       <button type="submit" disabled={state === "sending"} className={buttonClass()}>
         {state === "sending" ? "Sending…" : "Send review"}

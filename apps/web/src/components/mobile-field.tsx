@@ -19,7 +19,7 @@ export function MobileField({ id, value, onChange, label = "Mobile number", erro
         {label}
       </label>
       <div
-        className={`mt-1.5 flex items-stretch overflow-hidden rounded-xl border bg-white transition focus-within:border-ink ${
+        className={`mt-1.5 flex items-stretch overflow-hidden rounded-xl border bg-white transition focus-within:border-ink focus-within:ring-1 focus-within:ring-ink ${
           error ? "border-red-600" : "border-field"
         } ${readOnly ? "bg-sand text-ink-soft" : ""}`}
       >

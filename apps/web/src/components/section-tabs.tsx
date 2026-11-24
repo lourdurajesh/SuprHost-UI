@@ -73,11 +73,11 @@ export function SectionTabs({ tabs, fromPrice, currency, addsGst }: { tabs: Tab[
           ))}
         </div>
         <div className={`hidden items-center gap-5 transition-opacity md:flex ${cardAway ? "opacity-100" : "pointer-events-none opacity-0"}`} inert={!cardAway}>
-          <p className="text-right text-sm leading-tight">
+          <p className="hidden text-right text-sm leading-tight lg:block">
             <span className="text-base font-medium">{formatMoney(fromPrice, currency)}</span> / night
             {addsGst && <span className="block text-ink-soft">+ GST</span>}
           </p>
-          <a href="#book" className={buttonClass()}>
+          <a href="#book" className={`${buttonClass()} whitespace-nowrap`}>
             Check availability
           </a>
         </div>

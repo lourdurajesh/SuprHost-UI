@@ -1,9 +1,9 @@
 import { maskMobile } from "@/lib/mobile";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { Icon } from "@/components/icons";
+import { SignInButton } from "@/components/sign-in-button";
 import { buttonClass } from "@/components/ui/button";
 import { formatDate, formatMoney, todayIn } from "@/lib/dates";
 import { bookingUrl, whatsappUrl } from "@/lib/links";
@@ -29,7 +29,14 @@ async function Trips({ params }: Pick<PageProps<"/[site]/account">, "params">) {
   const { site: key } = await params;
   const token = await readSessionToken();
   const session = token ? await getGuestSession(key, token) : null;
-  if (!token || !session) redirect("/?signin=1&next=/account");
+  if (!token || !session)
+    return (
+      <>
+        <h1 className="text-[1.75rem] leading-tight sm:text-[2rem]">My trips</h1>
+        <p className="mt-3 text-ink-soft">Log in with the mobile number or email you booked with to see your trips.</p>
+        <SignInButton next="/account" className="mt-6" />
+      </>
+    );
   const [site, trips, saved] = await Promise.all([getSite(key), getTrips(key, token), getWishlist(key, token).catch(() => [])]);
   if (!site) return null;
 

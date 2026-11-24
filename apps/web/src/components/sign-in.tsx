@@ -23,7 +23,7 @@ const signedIn = (next: string | null) => {
 
 /**
  * The popup itself, once per page (site layout). Pages that need a signed-in guest send others to
- * "/?signin=1&next=…", which opens it here.
+ * "/account?signin=1&next=…", which opens it here.
  */
 export function SignInHost({ brandName, phoneSignIn }: { brandName: string; phoneSignIn: boolean }) {
   const params = useSearchParams();

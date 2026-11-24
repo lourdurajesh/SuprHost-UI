@@ -4,7 +4,7 @@ import locks from "./palette.lock.json";
 /**
  * The site's colours. Every colour on the site comes from one palette: `brand` (buttons and other
  * fills, with white text), `brand2` (the far end of a button's gradient), `accent` (small coloured
- * text), and the neutrals. Pick one in development with the palette picker (components/dev/palette-lab),
+ * text), and the neutrals. Pick one in development on the internal page /dev/theme (components/dev/palette-lab),
  * which writes the choice to palette.lock.json; until one is locked, the PMS's two brand colours are used.
  */
 export interface Palette {

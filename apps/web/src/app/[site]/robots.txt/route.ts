@@ -8,7 +8,7 @@ export async function generateStaticParams() {
 export async function GET(_request: Request, ctx: RouteContext<"/[site]/robots.txt">) {
   const site = await getSite((await ctx.params).site);
   const body = site
-    ? `User-agent: *\nAllow: /\nDisallow: /book\nDisallow: /api/\n\nSitemap: ${site.canonicalUrl}/sitemap.xml\n`
+    ? `User-agent: *\nAllow: /\nDisallow: /book\nDisallow: /api/\nDisallow: /dev/\n\nSitemap: ${site.canonicalUrl}/sitemap.xml\n`
     : "User-agent: *\nDisallow: /\n";
   return new Response(body, { headers: { "Content-Type": "text/plain; charset=utf-8" } });
 }

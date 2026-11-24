@@ -78,7 +78,7 @@ export function ShareButton({ listingId, name, facts, image, variant = "text", c
             <img src={mediaSrc(image.url)} alt="" width={64} height={64} loading="lazy" className="h-16 w-16 shrink-0 rounded-xl object-cover" />
           )}
           <p className="min-w-0">
-            <span className="block truncate font-medium">{name}</span>
+            <span className="block font-medium">{name}</span>
             <span className="block truncate text-sm text-ink-soft">{facts}</span>
           </p>
         </div>

@@ -68,7 +68,6 @@ export const searchParamsSchema = z.object({
   bedrooms: z.coerce.number().int().min(1).max(20).optional().catch(undefined),
   beds: z.coerce.number().int().min(1).max(30).optional().catch(undefined),
   bathrooms: z.coerce.number().int().min(1).max(20).optional().catch(undefined),
-  instantBook: z.literal("true").transform(() => true).optional().catch(undefined),
   types: z.preprocess(csv, z.array(z.enum(["cottage", "suite", "villa", "home", "apartment"])).max(5)).optional().catch(undefined),
   amenities: z.preprocess(csv, z.array(z.string().max(40)).max(12)).optional().catch(undefined),
   city: z.string().max(60).optional().catch(undefined),

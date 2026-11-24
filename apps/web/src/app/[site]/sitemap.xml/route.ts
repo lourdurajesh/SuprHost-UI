@@ -19,6 +19,7 @@ export async function GET(_request: Request, ctx: RouteContext<"/[site]/sitemap.
     { loc: `${site.canonicalUrl}/`, priority: "1.0" },
     { loc: `${site.canonicalUrl}/stays`, priority: "0.9" },
     ...listings.map((l) => ({ loc: `${site.canonicalUrl}/stays/${l.slug}`, priority: "0.8" })),
+    { loc: `${site.canonicalUrl}/faq`, priority: "0.3" },
     { loc: `${site.canonicalUrl}/policies`, priority: "0.3" },
   ];
   const xml =

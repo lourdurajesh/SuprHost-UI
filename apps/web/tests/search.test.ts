@@ -19,7 +19,6 @@ test("a search survives the trip through the URL", () => {
     types: ["apartment"],
     amenities: ["Wi-Fi", "Air conditioning"],
     minPrice: 2000,
-    instantBook: true,
     sort: "price_asc",
   };
   assert.deepEqual(read(toSearchString(q)), q);

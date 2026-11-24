@@ -88,10 +88,12 @@ export function StaysMap({ pins, activeId, onPinHover, className = "", approxima
           style: mapStyle(),
           center: pins[0] ? [pins[0].lng, pins[0].lat] : [78.96, 22.59], // the middle of India, until pins or bounds place it
           zoom,
-          attributionControl: { compact: true },
+          attributionControl: false,
           cooperativeGestures: true,
         });
         m.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
+        // The map credit, on the side the chat button never covers.
+        m.addControl(new maplibregl.AttributionControl({ compact: true }), "bottom-left");
         shown = m;
         setMade({ map: m, lib: maplibregl });
 
@@ -171,7 +173,7 @@ export function StaysMap({ pins, activeId, onPinHover, className = "", approxima
   }, [activeId, pinsKey, made]);
 
   return (
-    <div ref={el} role="region" aria-label="Map" className={`relative overflow-hidden bg-sand-deep ${className}`}>
+    <div ref={el} role="region" aria-label={approximate ? "Map of the area" : "Map of stays"} className={`relative overflow-hidden bg-sand-deep ${className}`}>
       {failed && <p className="absolute inset-0 flex items-center justify-center text-sm text-ink-soft">Map unavailable</p>}
     </div>
   );

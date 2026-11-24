@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { addDays, minNightsOn, overlapsBusy, toIso, toUtc } from "@/lib/dates";
 import type { StayRule } from "@/lib/pms/types";
 
@@ -18,6 +18,9 @@ interface Props {
   rules?: StayRule[];
   onChange: (checkIn: string | null, checkOut: string | null) => void;
 }
+
+/** Keys that move between days, and how far. Up and Down are a week, Page Up and Page Down four. */
+const STEPS: Record<string, number> = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -7, ArrowDown: 7, PageUp: -28, PageDown: 28 };
 
 const WEEKDAYS = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
 const SPOKEN = new Intl.DateTimeFormat("en-IN", { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
@@ -43,12 +46,16 @@ function isBusyNight(date: string, busy: Busy) {
   return busy.some((b) => date >= b.start && date < b.end);
 }
 
+/** Two months of days. One Tab stop: the arrow keys move between the days that can be chosen. */
 export function DateRangePicker({ today, busy, checkIn, checkOut, maxNights, minNights = 1, rules = [], onChange }: Props) {
   // Near the end of a month, open on the next one rather than a grid of past days.
   const [view, setView] = useState(() => monthStart(checkIn ?? addDays(today, 5)));
   const [hover, setHover] = useState<string | null>(null);
   const months = useMemo(() => [view, addMonths(view, 1)], [view]);
   const lastBookable = addDays(today, 540);
+  const box = useRef<HTMLDivElement>(null);
+  const [cursor, setCursor] = useState<string | null>(null);
+  const focusNext = useRef(false);
 
   function canCheckOut(date: string) {
     if (!checkIn || date < addDays(checkIn, minNightsOn(checkIn, rules, minNights))) return false;
@@ -64,10 +71,43 @@ export function DateRangePicker({ today, busy, checkIn, checkOut, maxNights, min
     }
   }
 
+  function isDisabled(date: string) {
+    if (date < today || date > lastBookable) return true;
+    const pickingOut = Boolean(checkIn && !checkOut);
+    return isBusyNight(date, busy) && !(pickingOut && canCheckOut(date));
+  }
+
+  const dayButton = (date: string) => box.current?.querySelector<HTMLElement>(`[data-date="${date}"]`);
+
+  function onKeyDown(e: React.KeyboardEvent) {
+    const from = (e.target as HTMLElement).dataset.date;
+    const step = STEPS[e.key];
+    if (!from || !step) return;
+    e.preventDefault();
+    // On to the next day that can be chosen, in the same direction.
+    let to = addDays(from, step);
+    while (to >= today && to <= lastBookable && isDisabled(to)) to = addDays(to, Math.abs(step) === 7 ? step : Math.sign(step));
+    if (isDisabled(to)) return;
+    if (!dayButton(to)?.offsetParent) setView(monthStart(to));
+    focusNext.current = true;
+    setCursor(to);
+  }
+
+  useEffect(() => {
+    if (!focusNext.current || !cursor) return;
+    focusNext.current = false;
+    box.current?.querySelector<HTMLElement>(`[data-date="${cursor}"]`)?.focus();
+  }, [cursor, view]);
+
+  // The day Tab lands on: where the keys last were, else the chosen check-in, else the first free day.
+  const open = months.flatMap((m) => monthDays(m)).filter((d): d is string => d !== null && !isDisabled(d));
+  const tabStop = [cursor, checkIn].find((d) => d && open.includes(d)) ?? open[0];
+
   const rangeEnd = checkOut ?? (checkIn && hover && canCheckOut(hover) ? hover : null);
 
   return (
-    <div className="@container">
+    <div ref={box} role="group" aria-label="Calendar" onKeyDown={onKeyDown} className="@container">
+      <p className="sr-only">Use the arrow keys to move between days, and Enter to choose one.</p>
       <div className="flex items-center justify-between">
         <button
           type="button"
@@ -107,8 +147,7 @@ export function DateRangePicker({ today, busy, checkIn, checkOut, maxNights, min
                 if (!date) return <span key={`e${i}`} />;
                 const past = date < today || date > lastBookable;
                 const busyNight = isBusyNight(date, busy);
-                const pickingOut = Boolean(checkIn && !checkOut);
-                const disabled = past || (pickingOut ? !canCheckOut(date) && busyNight : busyNight);
+                const disabled = isDisabled(date);
                 const isStart = date === checkIn;
                 const isEnd = date === rangeEnd;
                 const inRange = checkIn && rangeEnd && date > checkIn && date < rangeEnd;
@@ -116,7 +155,10 @@ export function DateRangePicker({ today, busy, checkIn, checkOut, maxNights, min
                   <button
                     key={date}
                     type="button"
+                    data-date={date}
+                    tabIndex={date === tabStop ? 0 : -1}
                     disabled={disabled}
+                    onFocus={() => setCursor(date)}
                     onClick={() => select(date)}
                     onMouseEnter={() => setHover(date)}
                     aria-pressed={isStart || isEnd}
