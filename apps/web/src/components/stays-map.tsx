@@ -81,8 +81,10 @@ export function StaysMap({ pins, activeId, onPinHover, className = "", approxima
     const container = el.current;
     const registry = markers.current;
     import("maplibre-gl")
-      .then(({ default: maplibregl }) => {
+      .then((maplibregl) => {
         if (cancelled) return;
+        // Its background worker, served from this site like the rest (the default looks next to the script).
+        maplibregl.setWorkerUrl(new URL("maplibre-gl/dist/maplibre-gl-worker.mjs", import.meta.url).toString());
         const m = new maplibregl.Map({
           container,
           style: mapStyle(),
