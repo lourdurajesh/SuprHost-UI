@@ -27,8 +27,8 @@ export function describeWhen(q: SearchQuery, short = false): string {
     return q.flex ? `${range} (±${q.flex})` : range;
   }
   if (q.stay || q.months?.length) {
-    const length = q.stay ? STAY_LABEL[q.stay] : "Any length";
-    const months = q.months?.length ? ` in ${q.months.map((m) => monthName(m, short || q.months!.length > 1)).join(", ")}` : "";
+    const length = STAY_LABEL[q.stay ?? "weekend"]; // no length in the link means a weekend
+    const months = q.months?.length ? ` in ${q.months.map((m) => monthName(m, short || q.months!.length > 1)).join(", ")}` : ", any time";
     return `${length}${months}`;
   }
   return "Add dates";

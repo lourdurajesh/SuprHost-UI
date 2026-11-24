@@ -602,25 +602,32 @@ export const mock = {
   search: async (key: string, q: SearchQuery): Promise<SearchResult> => {
     if (key !== site.key) return { hits: [], facets: { types: [], cities: [], amenities: [], price: { min: 0, max: 0 } } };
     const dated = q.checkIn && q.checkOut && q.checkOut > q.checkIn;
-    // "I'm flexible": a stay length and months; each home answers with its first free window.
-    const flexNights = q.stay === "weekend" ? 2 : q.stay === "week" ? 7 : q.stay === "month" ? 28 : 0;
+    // "I'm flexible", as the PMS answers it: each home's first free window. No length means a weekend;
+    // no usable month (none, past, too far off) means the next six.
+    const flexible = !dated && Boolean(q.stay || q.months?.length);
+    const stay = q.stay ?? "weekend";
+    const flexNights = { weekend: 2, week: 7, month: 28 }[stay];
     const windows: { checkIn: string; checkOut: string }[] = [];
-    if (!dated && flexNights && q.months?.length) {
-      for (const m of [...new Set(q.months)].sort().slice(0, 6)) {
+    if (flexible) {
+      const [y, mo] = today().split("-").map(Number);
+      const upcoming = Array.from({ length: 24 }, (_, i) => new Date(Date.UTC(y, mo - 1 + i, 1)).toISOString().slice(0, 7));
+      const chosen = upcoming.filter((m) => q.months?.includes(m)).slice(0, 6);
+      for (const m of chosen.length ? chosen : upcoming.slice(0, 6)) {
         for (let d = `${m}-01`; d.startsWith(m); d = addDays(d, 1)) {
           if (d < today()) continue;
-          if (q.stay === "weekend" && new Date(`${d}T00:00:00Z`).getUTCDay() !== 5) continue;
+          if (stay === "weekend" && new Date(`${d}T00:00:00Z`).getUTCDay() !== 5) continue;
           windows.push({ checkIn: d, checkOut: addDays(d, flexNights) });
         }
       }
     }
-    const nights = dated ? nightsBetween(q.checkIn!, q.checkOut!) : windows.length ? flexNights : null;
+    const nights = dated ? nightsBetween(q.checkIn!, q.checkOut!) : flexible ? flexNights : null;
     let hits: SearchHit[] = listings.map((l) => {
       const summary = toSummary(l);
       const busy = [...seededBusy(summary.id, today()), ...heldRanges(summary.id)];
-      if (windows.length) {
-        const win = windows.find((w) => !overlapsBusy(w.checkIn, w.checkOut, busy));
-        return { ...summary, available: !!win, altCheckIn: win?.checkIn ?? null, altCheckOut: win?.checkOut ?? null, nights, total: nights! * summary.fromPrice };
+      if (flexible) {
+        const fits = flexNights >= l.minNights && flexNights <= l.maxNights;
+        const win = fits ? windows.find((w) => !overlapsBusy(w.checkIn, w.checkOut, busy)) : undefined;
+        return { ...summary, available: !!win, altCheckIn: win?.checkIn ?? null, altCheckOut: win?.checkOut ?? null, nights, total: win ? flexNights * summary.fromPrice : null };
       }
       return {
         ...summary,

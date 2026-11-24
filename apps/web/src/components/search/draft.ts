@@ -16,7 +16,7 @@ export function draftFrom(q: SearchQuery): Draft {
     checkIn: q.checkIn,
     checkOut: q.checkOut,
     flex: q.flex,
-    stay: q.stay,
+    stay: q.stay ?? (q.months?.length ? "weekend" : undefined),
     months: q.months ?? [],
     children,
     adults: Math.max(0, (q.guests ?? 0) - children),

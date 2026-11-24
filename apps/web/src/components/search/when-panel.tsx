@@ -61,7 +61,7 @@ export function WhenPanel({
             type="button"
             role="tab"
             aria-selected={draft.mode === m}
-            onClick={() => onChange({ mode: m })}
+            onClick={() => onChange(m === "flexible" ? { mode: m, stay: draft.stay ?? "weekend" } : { mode: m })}
             className="focus-own relative z-10 min-h-10 rounded-full px-4 capitalize focus-visible:ring-2 focus-visible:ring-ink"
           >
             {m}
@@ -98,7 +98,7 @@ export function WhenPanel({
             <p className="text-center text-lg">How long would you like to stay?</p>
             <div className="mt-4 flex flex-wrap justify-center gap-2">
               {(Object.keys(STAY_LABEL) as StayLength[]).map((s) => (
-                <button key={s} type="button" aria-pressed={draft.stay === s} onClick={() => onChange({ stay: draft.stay === s ? undefined : s })} className={chip(draft.stay === s)}>
+                <button key={s} type="button" aria-pressed={draft.stay === s} onClick={() => onChange({ stay: s })} className={chip(draft.stay === s)}>
                   {STAY_LABEL[s]}
                 </button>
               ))}
@@ -137,7 +137,7 @@ export function WhenPanel({
                 <Icon name="chevronRight" className="h-4 w-4" />
               </button>
             </div>
-            <p className="mt-3 text-center text-sm text-ink-soft">Pick up to six months. Each home shows the first stretch it has free.</p>
+            <p className="mt-3 text-center text-sm text-ink-soft">Pick up to six months, or none for any time soon. Each home shows the first stretch it has free.</p>
           </div>
         </div>
       )}

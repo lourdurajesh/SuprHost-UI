@@ -102,7 +102,7 @@ export function SearchFilters({ query, facets, currency, count, timezone, prices
 
       <div className="mt-3 flex flex-wrap items-center gap-2">
         <p className="mr-2 text-sm text-ink" aria-live="polite">
-          {pending ? "Updating…" : `${count} stay${count === 1 ? "" : "s"}${query.checkIn && query.checkOut ? " available for your dates" : query.stay && query.months?.length ? " with a free window" : ""}`}
+          {pending ? "Updating…" : `${count} stay${count === 1 ? "" : "s"}${query.checkIn && query.checkOut ? " available for your dates" : query.stay || query.months?.length ? ` free for a ${query.stay ?? "weekend"}` : ""}`}
         </p>
         {applied.map((f) => (
           <button

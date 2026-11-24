@@ -245,7 +245,7 @@ function Desktop({ shown, active, setActive, close, search, whereValue, typed, s
                   ref={input}
                   role="combobox"
                   aria-expanded={active === "where"}
-                  aria-controls="search-where-list"
+                  aria-controls="search-where-panel"
                   autoComplete="off"
                   placeholder="Search places"
                   value={typed || whereValue}
