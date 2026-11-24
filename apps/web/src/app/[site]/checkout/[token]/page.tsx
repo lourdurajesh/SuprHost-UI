@@ -3,10 +3,11 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { connection } from "next/server";
-import { PaymentPanel } from "@/components/payment-panel";
-import { getBooking, getSite } from "@/lib/pms";
+import { PaymentSteps } from "@/components/payment-steps";
+import { getBooking, getListing, getSite } from "@/lib/pms";
+import { formatDate } from "@/lib/dates";
 import { bookingToken } from "@/lib/validation";
-import { CheckoutSteps, StaySummary } from "@/themes/escape/checkout";
+import { checkoutGrid, CheckoutShell, StaySummary } from "@/themes/escape/checkout";
 
 // Holder-of-token page: never indexed, never cached, and the token never leaves this origin in
 // a Referer (Referrer-Policy: strict-origin-when-cross-origin sends the origin only).
@@ -14,13 +15,15 @@ export const metadata: Metadata = { title: "Payment", robots: { index: false, fo
 
 export default function CheckoutPage({ params }: PageProps<"/[site]/checkout/[token]">) {
   return (
-    <div className="mx-auto max-w-6xl px-4 pb-10 pt-8 sm:px-6 sm:pt-12">
-      <CheckoutSteps current={1} />
-      <h1 className="mt-6 text-h1">Payment</h1>
-      <Suspense fallback={<div className="mt-8 h-[28rem] animate-pulse rounded-3xl bg-sand-deep" />}>
-        <CheckoutContent params={params} />
-      </Suspense>
-    </div>
+    <Suspense
+      fallback={
+        <CheckoutShell title="Confirm and pay" back="/stays">
+          <div className="mt-8 h-[28rem] animate-pulse rounded-2xl bg-sand-deep" />
+        </CheckoutShell>
+      }
+    >
+      <CheckoutContent params={params} />
+    </Suspense>
   );
 }
 
@@ -42,46 +45,85 @@ async function CheckoutContent({ params }: Pick<PageProps<"/[site]/checkout/[tok
     );
   }
 
-  // Phones: extra space at the bottom so the pinned Pay bar never covers the end of the page.
-  return (
-    <div className="mt-8 grid gap-8 max-lg:pb-28 lg:grid-cols-[1fr_420px] lg:gap-12">
-      <section>
-        <p className="text-sm text-ink-soft">
-          Reservation <span className="font-mono font-medium text-ink">{booking.reference}</span> for {booking.guestName}
-        </p>
-        <div className="mt-5">
-          <PaymentPanel
-            token={token}
-            total={booking.quote.total}
-            currency={booking.quote.currency}
-            methods={booking.paymentMethods}
-            holdExpiresAt={booking.holdExpiresAt}
-            simulated={booking.payment.mode === "simulated"}
-          />
-        </div>
-      </section>
+  const listing = booking.listing.slug ? await getListing(key, booking.listing.slug) : null;
+  const rules = [...new Set([...site.policies.houseRules, ...(listing?.houseRules ?? [])])];
+  const simulated = booking.payment.mode === "simulated";
+  const day = (iso: string) => formatDate(iso, { weekday: "short", day: "numeric", month: "short" });
 
-      <StaySummary
-        name={booking.listing.name}
-        propertyName={booking.listing.propertyName}
-        image={booking.listing.image}
-        checkIn={booking.checkIn}
-        checkOut={booking.checkOut}
-        guests={booking.guests}
-        quote={booking.quote}
-        footer={<p className="mt-5 rounded-xl bg-sand-deep px-4 py-3 text-xs leading-relaxed text-ink-soft">{site.policies.cancellation}</p>}
-      />
-    </div>
+  return (
+    <CheckoutShell title={simulated ? "Confirm your booking" : "Confirm and pay"} back={`/stays/${booking.listing.slug}`}>
+      <div className={checkoutGrid}>
+        <PaymentSteps
+          token={token}
+          guestName={booking.guestName}
+          reference={booking.reference}
+          total={booking.quote.total}
+          currency={booking.quote.currency}
+          methods={booking.paymentMethods}
+          holdExpiresAt={booking.holdExpiresAt}
+          simulated={simulated}
+          review={
+            <div className="space-y-5 text-sm">
+              <dl className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <dt className="font-medium">Check-in</dt>
+                  <dd className="text-ink-soft">
+                    {day(booking.checkIn)}, from {site.policies.checkInTime}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="font-medium">Check-out</dt>
+                  <dd className="text-ink-soft">
+                    {day(booking.checkOut)}, by {site.policies.checkOutTime}
+                  </dd>
+                </div>
+              </dl>
+              {rules.length > 0 && (
+                <div>
+                  <p className="font-medium">House rules</p>
+                  <ul className="mt-1 list-disc space-y-0.5 pl-5 text-ink-soft">
+                    {rules.map((r) => (
+                      <li key={r}>{r}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              <p className="border-t border-line pt-5 text-ink-soft">
+                By continuing you agree to the house rules and the{" "}
+                <Link href="/policies" target="_blank" className="font-medium text-ink underline underline-offset-4">
+                  booking policies
+                </Link>
+                . Please bring a photo ID for each adult guest.
+              </p>
+            </div>
+          }
+        />
+
+        <StaySummary
+          name={booking.listing.name}
+          propertyName={booking.listing.propertyName}
+          image={booking.listing.image}
+          rating={listing?.rating}
+          checkIn={booking.checkIn}
+          checkOut={booking.checkOut}
+          guests={booking.guests}
+          quote={booking.quote}
+          cancellation={site.policies.cancellation}
+        />
+      </div>
+    </CheckoutShell>
   );
 }
 
-function Gone({ message, href = "/#stays" }: { message: string; href?: string }) {
+function Gone({ message, href = "/stays" }: { message: string; href?: string }) {
   return (
-    <div className="mt-8 rounded-2xl border border-line p-6 sm:p-8">
-      <p>{message}</p>
-      <Link href={href} className="mt-5 inline-flex rounded-xl bg-brand px-6 py-3 font-medium text-white">
-        Choose dates again
-      </Link>
-    </div>
+    <CheckoutShell title="Confirm and pay" back={href}>
+      <div className="mt-8 rounded-2xl border border-line p-6 sm:p-8">
+        <p>{message}</p>
+        <Link href={href} className="mt-5 inline-flex rounded-xl bg-brand px-6 py-3 font-medium text-white">
+          Choose dates again
+        </Link>
+      </div>
+    </CheckoutShell>
   );
 }

@@ -172,7 +172,7 @@ export function ManageBooking({ token, listingId, checkIn, checkOut, guests, tot
         ref={cancelDialog}
         aria-labelledby="cancel-heading"
         onClick={(e) => e.target === cancelDialog.current && cancelDialog.current.close()}
-        className="m-auto w-[min(480px,calc(100vw-2rem))] rounded-2xl bg-white p-6 text-ink backdrop:bg-black/40"
+        className="modal-in m-auto w-[min(30rem,calc(100vw-2rem))] rounded-[28px] bg-white p-6 text-ink shadow-[0_24px_80px_-20px_rgba(0,0,0,0.5)] backdrop:bg-black/40"
       >
         <h3 id="cancel-heading" className="text-h3">Cancel this booking?</h3>
         <dl className="mt-4 space-y-2 text-sm">

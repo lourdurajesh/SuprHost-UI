@@ -40,7 +40,7 @@ export function MobileField({ id, value, onChange, label = "Mobile number", erro
           onChange={(e) => onChange(e.target.value)}
           aria-invalid={Boolean(error)}
           aria-describedby={error ? `${id}-error` : undefined}
-          className="min-w-0 flex-1 bg-transparent px-4 py-3.5 text-base outline-none read-only:text-ink-soft"
+          className="focus-own min-w-0 flex-1 bg-transparent px-4 py-3.5 text-base outline-none read-only:text-ink-soft"
         />
       </div>
       {error && (

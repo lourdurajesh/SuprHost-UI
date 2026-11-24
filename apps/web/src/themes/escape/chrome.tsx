@@ -32,7 +32,7 @@ export function SiteHeader({ site, places }: { site: Site; places: Place[] }) {
             <HeaderSearch />
           </Suspense>
         </div>
-        <nav aria-label="Main" className="col-start-3 flex shrink-0 items-center justify-end gap-2 text-ink md:gap-3">
+        <nav aria-label="Main" className="hide-in-booking-flow col-start-3 flex shrink-0 items-center justify-end gap-2 text-ink md:gap-3">
           <Link href="/stays" className="header-book hide-in-booking-flow inline-flex min-h-11 shrink-0 items-center whitespace-nowrap rounded-full bg-brand px-5 text-white transition hover:brightness-125">
             Book now
           </Link>
@@ -60,7 +60,7 @@ export function SiteFooter({ site }: { site: Site }) {
   const link = "inline-flex min-h-11 items-center text-ink hover:text-ink-soft";
   return (
     <footer id="contact" className="relative z-10 mt-12 border-t border-line bg-white lg:mt-16 print:hidden">
-      <div className="mx-auto grid max-w-7xl gap-12 px-4 py-12 sm:px-6 lg:grid-cols-[1.3fr_1fr] lg:px-8">
+      <div className="hide-in-booking-flow mx-auto grid max-w-7xl gap-12 px-4 py-12 sm:px-6 lg:grid-cols-[1.3fr_1fr] lg:px-8">
         <div className="hide-in-booking-flow lg:border-r lg:border-line lg:pr-16">
           <h2 className="text-h1">Talk to us before you book</h2>
           <p className="mt-4 max-w-md leading-relaxed text-ink-soft">

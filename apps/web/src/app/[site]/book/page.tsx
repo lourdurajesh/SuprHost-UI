@@ -3,23 +3,29 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { CheckoutForm } from "@/components/checkout-form";
 import { Track } from "@/components/track";
-import { getGuestSession, getListings, getQuote, getSite, PmsError } from "@/lib/pms";
+import { getGuestSession, getListing, getListings, getQuote, getSite, PmsError } from "@/lib/pms";
 import { readSessionToken } from "@/lib/session";
 import { stayQuery } from "@/lib/validation";
-import { CheckoutSteps, StaySummary } from "@/themes/escape/checkout";
+import { ChangeDates, ChangeGuests } from "@/components/change-stay";
+import { StepCard } from "@/components/step-card";
+import { checkoutGrid, CheckoutShell, StaySummary } from "@/themes/escape/checkout";
 
 export const metadata: Metadata = { title: "Your details", robots: { index: false, follow: false } };
 
 export default function BookPage({ params, searchParams }: PageProps<"/[site]/book">) {
   return (
-    <div className="mx-auto max-w-6xl px-4 pb-10 pt-8 sm:px-6 sm:pt-12">
+    <>
       <Track step="checkout" />
-      <CheckoutSteps current={0} />
-      <h1 className="mt-6 text-h1">Your details</h1>
-      <Suspense fallback={<div className="mt-8 h-[28rem] animate-pulse rounded-2xl bg-sand-deep" />}>
+      <Suspense
+        fallback={
+          <CheckoutShell title="Confirm and book" back="/stays">
+            <div className="mt-8 h-[28rem] animate-pulse rounded-2xl bg-sand-deep" />
+          </CheckoutShell>
+        }
+      >
         <BookContent params={params} searchParams={searchParams} />
       </Suspense>
-    </div>
+    </>
   );
 }
 
@@ -49,54 +55,56 @@ async function BookContent({ params, searchParams }: Pick<PageProps<"/[site]/boo
     throw e;
   }
 
-  return (
-    <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_420px] lg:gap-12">
-      <section>
-        <h2 className="text-h2">Who’s staying?</h2>
-        <p className="mt-1 text-ink-soft">
-          {session ? "Check your details. Your confirmation and check-in details go to your email." : "Your details become your guest account, so you can find this booking and book faster next time."}
-        </p>
-        <div className="mt-6">
-          <CheckoutForm
-            listingId={listing.id}
-            checkIn={checkIn}
-            checkOut={checkOut}
-            guests={guests}
-            holdMinutes={site.payments.holdMinutes}
-            session={session}
-            phoneSignIn={site.features.includes("guest.phone_sign_in")}
-          />
-        </div>
-      </section>
+  const full = await getListing(key, listing.slug);
+  const stay = { listingId: listing.id, checkIn, checkOut, guests };
+  const back = `/stays/${listing.slug}?${new URLSearchParams({ checkIn, checkOut, guests: String(guests) })}`;
 
-      <StaySummary
-        name={listing.name}
-        propertyName={listing.propertyName}
-        image={listing.image}
-        checkIn={checkIn}
-        checkOut={checkOut}
-        guests={guests}
-        quote={quote}
-        footer={
-          <>
-            <p className="mt-5 rounded-xl bg-sand-deep px-4 py-3 text-xs leading-relaxed text-ink-soft">{site.policies.cancellation}</p>
-            <Link href={`/stays/${listing.slug}`} className="mt-2 inline-flex min-h-11 items-center text-sm font-medium underline underline-offset-4">
-              Change dates or guests
-            </Link>
-          </>
-        }
-      />
-    </div>
+  return (
+    <CheckoutShell title="Confirm and book" back={back}>
+      <div className={checkoutGrid}>
+        <div className="space-y-5">
+          <StepCard n={1} title="Your details" state="open">
+            <CheckoutForm
+              listingId={listing.id}
+              checkIn={checkIn}
+              checkOut={checkOut}
+              guests={guests}
+              holdMinutes={site.payments.holdMinutes}
+              session={session}
+              phoneSignIn={site.features.includes("guest.phone_sign_in")}
+            />
+          </StepCard>
+          <StepCard n={2} title="Choose how to pay" state="todo" />
+          <StepCard n={3} title="Review your booking" state="todo" />
+        </div>
+
+        <StaySummary
+          name={listing.name}
+          propertyName={listing.propertyName}
+          image={listing.image}
+          rating={listing.rating}
+          checkIn={checkIn}
+          checkOut={checkOut}
+          guests={guests}
+          quote={quote}
+          cancellation={site.policies.cancellation}
+          changeDates={<ChangeDates stay={stay} timezone={site.timezone} minNights={full?.minNights ?? 1} maxNights={full?.maxNights ?? 60} />}
+          changeGuests={<ChangeGuests stay={stay} maxGuests={listing.maxGuests} />}
+        />
+      </div>
+    </CheckoutShell>
   );
 }
 
-function StartOver({ message, href = "/#stays" }: { message: string; href?: string }) {
+function StartOver({ message, href = "/stays" }: { message: string; href?: string }) {
   return (
-    <div className="mt-8 rounded-2xl border border-line p-6 sm:p-8">
-      <p>{message}</p>
-      <Link href={href} className="mt-5 inline-flex rounded-xl bg-brand px-6 py-3 font-medium text-white">
-        Choose dates
-      </Link>
-    </div>
+    <CheckoutShell title="Confirm and book" back={href}>
+      <div className="mt-8 rounded-2xl border border-line p-6 sm:p-8">
+        <p>{message}</p>
+        <Link href={href} className="mt-5 inline-flex rounded-xl bg-brand px-6 py-3 font-medium text-white">
+          Choose dates
+        </Link>
+      </div>
+    </CheckoutShell>
   );
 }

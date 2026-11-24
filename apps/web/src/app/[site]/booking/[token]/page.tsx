@@ -5,10 +5,10 @@ import { Suspense } from "react";
 import { connection } from "next/server";
 import { Icon } from "@/components/icons";
 import { ManageBooking } from "@/components/manage-booking";
-import { formatDate, formatMoney } from "@/lib/dates";
+import { formatDate, formatMoney, todayIn } from "@/lib/dates";
 import { getBooking, getListing, getSite } from "@/lib/pms";
 import { bookingToken } from "@/lib/validation";
-import { CheckoutSteps, StaySummary } from "@/themes/escape/checkout";
+import { StaySummary } from "@/themes/escape/checkout";
 
 export const metadata: Metadata = { title: "Your booking", robots: { index: false, follow: false } };
 
@@ -16,8 +16,7 @@ const METHOD_LABEL = { upi: "UPI", card: "Card", netbanking: "Net banking" } as 
 
 export default function ConfirmationPage({ params }: PageProps<"/[site]/booking/[token]">) {
   return (
-    <div className="mx-auto max-w-6xl px-4 pb-10 pt-8 sm:px-6 sm:pt-12">
-      <CheckoutSteps current={2} />
+    <div className="mx-auto max-w-[1064px] px-4 pb-10 pt-8 sm:px-6 sm:pt-12">
       <Suspense fallback={<div className="mt-8 h-[28rem] animate-pulse rounded-3xl bg-sand-deep" />}>
         <Confirmation params={params} />
       </Suspense>
@@ -40,32 +39,42 @@ async function Confirmation({ params }: Pick<PageProps<"/[site]/booking/[token]"
     );
   }
   if (booking.status === "pending_payment") redirect(`/checkout/${encodeURIComponent(token)}`);
-  const listing = booking.manage && booking.listing.slug ? await getListing(key, booking.listing.slug) : null;
+  const listing = booking.listing.slug ? await getListing(key, booking.listing.slug) : null;
   const cancelled = booking.status === "cancelled";
+  const past = booking.status === "confirmed" && booking.checkOut < todayIn(site.timezone);
+  // With online payment off nothing was taken, so there is never anything to refund.
+  const simulated = booking.payment.mode === "simulated";
 
-  const mapsUrl = site.location
-    ? `https://www.google.com/maps/search/?api=1&query=${site.location.lat},${site.location.lng}`
-    : null;
+  // The booked home's own place. Never the site's: that can be in another city.
+  const at = listing?.location;
+  const mapsUrl = at ? `https://www.google.com/maps/search/?api=1&query=${at.lat},${at.lng}` : null;
   const whatsapp = site.contact.whatsapp?.replace(/\D/g, "");
 
   return (
-    <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_420px] lg:gap-12">
+    <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_372px] lg:gap-20">
       <section>
-        <div className="rounded-2xl bg-brand p-6 text-white sm:p-10">
-          <span className="flex h-12 w-12 items-center justify-center rounded-full bg-white text-brand">
-            <Icon name="check" className="h-7 w-7" strokeWidth={2.5} />
-          </span>
-          <h1 className="mt-5 text-h1">
-            {booking.status === "confirmed" ? `You’re going to ${booking.listing.name}!` : cancelled ? "This booking is cancelled" : "This booking is no longer active"}
+        <div>
+          <p className={`flex items-center gap-3 font-medium ${booking.status === "confirmed" ? "" : "text-ink-soft"}`}>
+            <span aria-hidden className={`grid h-10 w-10 place-items-center rounded-full text-white ${booking.status === "confirmed" ? "bg-brand" : "bg-ink-soft"}`}>
+              <Icon name={booking.status === "confirmed" ? "check" : "close"} className="h-5 w-5" strokeWidth={2.5} />
+            </span>
+            {past ? "Past stay" : booking.status === "confirmed" ? "Booking confirmed" : cancelled ? "Cancelled" : "Not active"}
+          </p>
+          <h1 className="mt-5 text-[1.75rem] leading-tight sm:text-[2rem]">
+            {past ? `Your stay at ${booking.listing.name}` : booking.status === "confirmed" ? `You’re going to ${booking.listing.name}!` : cancelled ? "This booking is cancelled" : "This booking is no longer active"}
           </h1>
-          <p className="mt-3 max-w-lg text-white/85">
-            {booking.status === "confirmed"
+          <p className="mt-3 max-w-lg text-ink-soft">
+            {past
+              ? `Thank you for staying with us, ${booking.guestName.split(" ")[0]}.`
+              : booking.status === "confirmed"
               ? `Thank you, ${booking.guestName.split(" ")[0]}. Your booking is confirmed and the details are on their way to ${booking.guestEmailMasked}.`
               : cancelled
-                ? `The dates are released. Any refund is shown in the email we sent to ${booking.guestEmailMasked}.`
+                ? simulated
+                  ? "The dates are released. You hadn’t paid online, so there is nothing to refund."
+                  : `The dates are released. Any refund is shown in the email we sent to ${booking.guestEmailMasked}.`
                 : "Please contact us if you think this is a mistake."}
           </p>
-          <div className="mt-6 inline-flex flex-wrap items-center gap-x-3 rounded-full bg-white/15 px-4 py-2 text-sm">
+          <div className="mt-5 inline-flex flex-wrap items-center gap-x-3 rounded-xl bg-sand-deep px-4 py-2.5 text-sm">
             Booking reference <span className="font-mono text-base font-medium tracking-wider">{booking.reference}</span>
           </div>
         </div>
@@ -79,19 +88,33 @@ async function Confirmation({ params }: Pick<PageProps<"/[site]/booking/[token]"
                 icon="wallet"
                 label="Payment"
                 value={
-                  booking.payment.mode === "simulated"
+                  simulated
                     ? "Arranged with host"
                     : `Paid${booking.payment.method ? ` by ${METHOD_LABEL[booking.payment.method]}` : ""}`
                 }
               />
             </div>
 
-            <div className="mt-10 border-t border-line pt-8">
+            {past && (
+              <div className="mt-8 flex flex-wrap gap-3">
+                <Link href={`/review/${encodeURIComponent(token)}`} className="inline-flex min-h-12 items-center rounded-xl bg-brand px-6 font-medium text-white">
+                  Write a review
+                </Link>
+                <Link href={`/stays/${booking.listing.slug}`} className="inline-flex min-h-12 items-center rounded-xl px-6 font-medium ring-1 ring-line hover:bg-sand-deep">
+                  Book again
+                </Link>
+                <Link href={`/booking/${encodeURIComponent(token)}/receipt`} className="inline-flex min-h-12 items-center rounded-xl px-6 font-medium ring-1 ring-line hover:bg-sand-deep">
+                  Receipt
+                </Link>
+              </div>
+            )}
+
+            <div className={past ? "hidden" : "mt-10 border-t border-line pt-8"}>
               <h2 className="text-h2">What happens next</h2>
               <ol className="mt-5 space-y-5">
                 {[
                   ["mail", "Check your inbox", "Your confirmation and receipt are on the way. Keep the booking reference handy."],
-                  ["chat", "We’ll be in touch", "A day before arrival we’ll send directions and the caretaker’s number."],
+                  ["chat", "We’ll be in touch", "A day before arrival we’ll send directions and how to get in."],
                   ["key", "Arrive and relax", `Check-in is from ${site.policies.checkInTime}. Bring a photo ID for each adult guest.`],
                 ].map(([icon, title, text]) => (
                   <li key={title} className="flex gap-4">
@@ -120,13 +143,13 @@ async function Confirmation({ params }: Pick<PageProps<"/[site]/booking/[token]"
                     <Icon name="chat" className="h-4 w-4" /> Message the host
                   </a>
                 )}
-                <Link href="/" className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium text-ink-soft hover:text-ink">
+                <Link href="/" className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-medium text-ink-soft hover:text-ink">
                   Back to home
                 </Link>
               </div>
             </div>
 
-            {booking.manage && (
+            {booking.manage && !past && (
               <ManageBooking
                 token={token}
                 listingId={booking.quote.listingId}
@@ -137,7 +160,7 @@ async function Confirmation({ params }: Pick<PageProps<"/[site]/booking/[token]"
                 currency={booking.quote.currency}
                 timezone={site.timezone}
                 manage={booking.manage}
-                paid={booking.payment.status === "paid"}
+                paid={booking.payment.status === "paid" && !simulated}
                 minNights={listing?.minNights ?? 1}
                 maxNights={listing?.maxNights ?? 30}
               />
@@ -160,11 +183,12 @@ async function Confirmation({ params }: Pick<PageProps<"/[site]/booking/[token]"
         name={booking.listing.name}
         propertyName={booking.listing.propertyName}
         image={booking.listing.image}
+        rating={listing?.rating}
         checkIn={booking.checkIn}
         checkOut={booking.checkOut}
         guests={booking.guests}
         quote={booking.quote}
-        footer={<p className="mt-5 rounded-xl bg-sand-deep px-4 py-3 text-xs leading-relaxed text-ink-soft">{site.policies.cancellation}</p>}
+        cancellation={site.policies.cancellation}
       />
     </div>
   );

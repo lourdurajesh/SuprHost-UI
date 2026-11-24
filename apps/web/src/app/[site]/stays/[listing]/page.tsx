@@ -9,7 +9,7 @@ import { CalendarSlot } from "@/components/calendar-slot";
 import { MoreDialog } from "@/components/more-dialog";
 import { ShareButton } from "@/components/share-button";
 import { Rating } from "@/components/rating";
-import { formatDate } from "@/lib/dates";
+import { ReviewItem, ReviewsDialog } from "@/components/reviews";
 import { groupAmenities } from "@/lib/amenity-groups";
 import { relatedStays } from "@/lib/related-stays";
 import { Track } from "@/components/track";
@@ -175,11 +175,7 @@ async function ListingPageContent({ params }: Pick<PageProps<"/[site]/stays/[lis
               Entire {kind.toLowerCase()} in {listing.city}
             </h2>
             <p className="mt-1">{specs.join(" · ")}</p>
-            {listing.rating && listing.rating.count > 0 && (
-              <a href="#reviews" className="mt-1 inline-flex min-h-11 items-center font-medium underline-offset-4 hover:underline">
-                <Rating rating={listing.rating} />
-              </a>
-            )}
+            {listing.rating && listing.rating.count > 0 && <ReviewsDialog trigger="link" rating={listing.rating} reviews={reviews} brandName={site.brandName} />}
           </header>
 
           <div className="flex items-center gap-5 border-t border-line py-6">
@@ -284,35 +280,17 @@ async function ListingPageContent({ params }: Pick<PageProps<"/[site]/stays/[lis
             Guest reviews <Rating rating={listing.rating} className="text-base" />
           </h2>
           <ul className="mt-8 grid gap-x-24 gap-y-10 md:grid-cols-2">
-            {reviews.map((r, i) => (
+            {reviews.slice(0, 6).map((r, i) => (
               <li key={`${r.author}-${r.month}-${i}`}>
-                <div className="flex items-center gap-4">
-                  <span aria-hidden className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-sand-deep font-medium">
-                    {r.author.charAt(0)}
-                  </span>
-                  <p>
-                    <span className="block font-medium">{r.author}</span>
-                    {/* Every website review is tied to a completed booking, so the label is always true. */}
-                    <span className="block text-sm text-ink-soft">Verified stay</span>
-                  </p>
-                </div>
-                <p className="mt-3 text-sm">
-                  <span aria-hidden className="tracking-widest">
-                    {"★".repeat(r.rating)}
-                    <span className="text-field">{"★".repeat(5 - r.rating)}</span>
-                  </span>
-                  <span className="sr-only">Rated {r.rating} out of 5</span>
-                  <span className="text-ink-soft"> · {formatDate(`${r.month}-01`, { month: "long", year: "numeric" })}</span>
-                </p>
-                <p className="mt-2 whitespace-pre-line">{r.text}</p>
-                {r.reply && (
-                  <p className="mt-3 border-l-2 border-line pl-4 text-sm text-ink-soft">
-                    <span className="font-medium text-ink">Reply from {site.brandName}:</span> {r.reply}
-                  </p>
-                )}
+                <ReviewItem review={r} brandName={site.brandName} clamp />
               </li>
             ))}
           </ul>
+          {listing.rating && (
+            <div className="mt-10">
+              <ReviewsDialog trigger="button" rating={listing.rating} reviews={reviews} brandName={site.brandName} />
+            </div>
+          )}
         </section>
       )}
 

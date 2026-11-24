@@ -14,7 +14,7 @@ export const metadata: Metadata = { title: "My trips", robots: { index: false, f
 
 export default function AccountPage({ params }: PageProps<"/[site]/account">) {
   return (
-    <div className="mx-auto max-w-5xl px-4 pb-10 pt-10 sm:px-6">
+    <div className="mx-auto max-w-[1064px] px-4 pb-10 pt-8 sm:px-6 sm:pt-12">
       <Suspense fallback={<div className="h-80 animate-pulse rounded-3xl bg-sand-deep" />}>
         <Trips params={params} />
       </Suspense>
@@ -39,7 +39,7 @@ async function Trips({ params }: Pick<PageProps<"/[site]/account">, "params">) {
     <>
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-h1">My trips</h1>
+          <h1 className="text-[1.75rem] leading-tight sm:text-[2rem]">My trips</h1>
           <p className="mt-2 text-ink-soft">Signed in as {session.signedInWith === "phone" ? maskMobile(session.phone ?? "") : session.email}</p>
         </div>
         {session.role === "host" && session.pmsUrl && (
@@ -50,9 +50,9 @@ async function Trips({ params }: Pick<PageProps<"/[site]/account">, "params">) {
       </div>
 
       <section className="mt-10">
-        <h2 className="text-2xl tracking-tight">Upcoming</h2>
+        <h2 className="text-h2">Upcoming</h2>
         {upcoming.length === 0 ? (
-          <div className="mt-5 rounded-3xl bg-sand-deep p-8">
+          <div className="mt-5 rounded-2xl bg-sand-deep p-8">
             <p>No upcoming trips yet.</p>
             <Link href="/stays" className="mt-4 inline-flex rounded-xl bg-brand px-6 py-3 text-white">
               Find a stay
@@ -69,7 +69,7 @@ async function Trips({ params }: Pick<PageProps<"/[site]/account">, "params">) {
 
       {past.length > 0 && (
         <section className="mt-12">
-          <h2 className="text-2xl tracking-tight">Past and cancelled</h2>
+          <h2 className="text-h2">Past and cancelled</h2>
           <ul className="mt-5 space-y-4">
             {past.map((t) => (
               <TripRow key={t.reference} trip={t} whatsapp={whatsapp} muted />
@@ -79,11 +79,11 @@ async function Trips({ params }: Pick<PageProps<"/[site]/account">, "params">) {
       )}
 
       <section className="mt-12" aria-labelledby="saved-heading">
-        <h2 id="saved-heading" className="text-2xl tracking-tight">Saved stays</h2>
+        <h2 id="saved-heading" className="text-h2">Saved stays</h2>
         {saved.length === 0 ? (
           <p className="mt-3 text-ink-soft">Tap the heart on any stay to save it here.</p>
         ) : (
-          <div className="mt-5 grid gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-5 grid grid-cols-2 gap-x-4 gap-y-8 sm:gap-x-6 lg:grid-cols-4">
             {saved.map((l) => (
               <ListingCard key={l.id} listing={l} currency={site.currency} addsGst={site.pricesAddGst} />
             ))}
@@ -91,10 +91,10 @@ async function Trips({ params }: Pick<PageProps<"/[site]/account">, "params">) {
         )}
       </section>
 
-      <section className="mt-12 rounded-3xl p-6 ring-1 ring-line sm:p-8">
-        <h2 className="text-xl tracking-tight">Messages</h2>
+      <section className="mt-12 rounded-2xl p-6 ring-1 ring-line sm:p-8">
+        <h2 className="text-h2">Messages</h2>
         <p className="mt-2 text-ink-soft">
-          Questions about a stay? Message us on WhatsApp with your booking reference. Conversations on this site are coming soon.
+          Questions about a stay? Message us on WhatsApp with your booking reference.
         </p>
         {whatsapp && (
           <a href={`https://wa.me/${whatsapp}`} target="_blank" rel="noopener noreferrer" className="mt-5 inline-flex items-center gap-2 rounded-xl px-5 py-2.5 ring-1 ring-line hover:bg-sand-deep">
@@ -109,27 +109,27 @@ async function Trips({ params }: Pick<PageProps<"/[site]/account">, "params">) {
 function TripRow({ trip, whatsapp, muted = false }: { trip: TripSummary; whatsapp?: string; muted?: boolean }) {
   return (
     // No opacity for past trips: faded text would drop below 4.5:1.
-    <li className={`flex flex-col gap-5 rounded-3xl p-4 ring-1 sm:flex-row sm:items-center ${muted ? "ring-line bg-sand-deep/40" : "ring-line"}`}>
-      <ListingPhoto image={trip.listing.image} name="" sizes="200px" className="aspect-[4/3] w-full shrink-0 rounded-2xl sm:w-44" />
+    <li className={`flex flex-col gap-5 rounded-2xl p-4 ring-1 sm:flex-row sm:items-center ${muted ? "ring-line bg-sand-deep/40" : "ring-line"}`}>
+      <ListingPhoto image={trip.listing.image} name="" sizes="200px" className="aspect-[4/3] w-full shrink-0 rounded-xl sm:aspect-square sm:w-36" />
       <div className="flex-1">
         <p className="text-sm text-ink-soft">
           {trip.listing.propertyName} · <span className="font-mono">{trip.reference}</span>
           {trip.status === "cancelled" && <span className="ml-2 rounded-full bg-red-50 px-2 py-0.5 text-xs text-red-800">Cancelled</span>}
         </p>
-        <p className="mt-1 text-xl tracking-tight">{trip.listing.name}</p>
+        <p className="mt-1 text-lg font-medium">{trip.listing.name}</p>
         <p className="mt-1 text-ink-soft">
           {formatDate(trip.checkIn, { weekday: "short", day: "numeric", month: "short" })} – {formatDate(trip.checkOut)} · {trip.guests} guest
           {trip.guests === 1 ? "" : "s"} · {formatMoney(trip.total, trip.currency)}
         </p>
       </div>
-      <div className="flex gap-2 sm:flex-col">
+      <div className="flex flex-wrap gap-2 sm:flex-col">
         {trip.token && (
-          <Link href={`/booking/${encodeURIComponent(trip.token)}`} className="rounded-xl bg-brand px-5 py-2.5 text-center text-sm text-white">
+          <Link href={`/booking/${encodeURIComponent(trip.token)}`} className={`inline-flex min-h-11 items-center justify-center rounded-xl px-5 text-center text-sm ${muted ? "ring-1 ring-line hover:bg-sand-deep" : "bg-brand text-white"}`}>
             View booking
           </Link>
         )}
         {trip.token && muted && trip.status === "confirmed" && (
-          <Link href={`/review/${encodeURIComponent(trip.token)}`} className="rounded-xl px-5 py-2.5 text-center text-sm ring-1 ring-ink hover:bg-sand-deep">
+          <Link href={`/review/${encodeURIComponent(trip.token)}`} className="inline-flex min-h-11 items-center justify-center rounded-xl px-5 text-center text-sm ring-1 ring-ink hover:bg-sand-deep">
             Write a review
           </Link>
         )}
@@ -138,7 +138,7 @@ function TripRow({ trip, whatsapp, muted = false }: { trip: TripSummary; whatsap
             href={`https://wa.me/${whatsapp}?text=${encodeURIComponent(`Hello! About booking ${trip.reference}`)}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="rounded-xl px-5 py-2.5 text-center text-sm ring-1 ring-line hover:bg-sand-deep"
+            className="inline-flex min-h-11 items-center justify-center rounded-xl px-5 text-center text-sm ring-1 ring-line hover:bg-sand-deep"
           >
             Message host
           </a>

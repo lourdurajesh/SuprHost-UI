@@ -48,7 +48,8 @@ export function CheckoutForm({ listingId, checkIn, checkOut, guests, holdMinutes
   const widget = useRef<HTMLDivElement>(null);
   const widgetId = useRef<string | null>(null);
   // One key per form instance: a double click or a retry after a timeout cannot hold dates twice.
-  const [idempotencyKey] = useState(() => crypto.randomUUID());
+  // Per stay: the dates or guests can be changed on this page, and that is a different hold.
+  const keys = useRef(new Map<string, string>());
   const [details, setDetails] = useState<Details>({
     name: session?.name ?? "",
     email: session?.email ?? "",
@@ -108,6 +109,9 @@ export function CheckoutForm({ listingId, checkIn, checkOut, guests, holdMinutes
     setBusy("book");
     try {
       const website = (document.getElementById("website") as HTMLInputElement | null)?.value ?? "";
+      const stay = `${checkIn}|${checkOut}|${guests}`;
+      const idempotencyKey = keys.current.get(stay) ?? crypto.randomUUID();
+      keys.current.set(stay, idempotencyKey);
       const res = await fetch("/api/bookings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -203,7 +207,7 @@ export function CheckoutForm({ listingId, checkIn, checkOut, guests, holdMinutes
   }
 
   const input =
-    "mt-1.5 w-full rounded-lg border border-field bg-white px-4 py-3 text-base outline-none transition placeholder:text-ink-soft focus:border-brand focus:ring-4 focus:ring-brand/10 read-only:bg-sand read-only:text-ink-soft";
+    "focus-own mt-1.5 w-full rounded-xl border border-field bg-white px-4 py-3.5 text-base outline-none transition placeholder:text-ink-soft focus:border-ink focus:ring-1 focus:ring-ink read-only:bg-sand-deep read-only:text-ink-soft";
   const error = (f: Field) =>
     errors[f] && (
       <p id={`${f}-error`} className="mt-1.5 text-sm text-red-700">
@@ -216,7 +220,7 @@ export function CheckoutForm({ listingId, checkIn, checkOut, guests, holdMinutes
     </p>
   );
   const primary =
-    "group flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-brand px-6 py-3.5 font-medium text-white transition hover:brightness-110 disabled:opacity-50";
+    "group ml-auto flex min-h-12 items-center justify-center gap-2 rounded-xl bg-ink px-8 font-medium text-white transition hover:brightness-125 disabled:opacity-50 max-sm:w-full";
 
   if (step === "code") {
     return (
@@ -257,7 +261,7 @@ export function CheckoutForm({ listingId, checkIn, checkOut, guests, holdMinutes
         </div>
         {formError}
         <button type="submit" disabled={Boolean(busy) || code.length !== 6} className={primary}>
-          {busy === "book" ? "Holding your dates…" : busy === "verify" ? "Checking…" : "Confirm and continue to payment"}
+          {busy === "book" ? "Holding your dates…" : busy === "verify" ? "Checking…" : "Next"}
         </button>
         <div className="flex flex-wrap justify-between gap-3 text-sm">
           <button type="button" onClick={() => { setStep("details"); setErrors({}); }} className="min-h-11 underline underline-offset-4">
@@ -395,10 +399,9 @@ export function CheckoutForm({ listingId, checkIn, checkOut, guests, holdMinutes
         </p>
       )}
       <button type="submit" disabled={Boolean(busy) || (needsChallenge && !turnstileToken)} className={primary}>
-        {busy === "book" ? "Holding your dates…" : busy === "code" ? "Sending code…" : session ? "Continue to payment" : "Continue"}
-        {!busy && <Icon name="arrowRight" className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />}
+        {busy === "book" ? "Holding your dates…" : busy === "code" ? "Sending code…" : "Next"}
       </button>
-      <p className="flex items-center justify-center gap-1.5 text-center text-sm text-ink-soft">
+      <p className="flex items-center gap-1.5 text-sm text-ink-soft">
         <Icon name="lock" className="h-3.5 w-3.5" />
         {session
           ? `Your dates are held for ${holdMinutes} minutes while you pay.`
