@@ -84,11 +84,7 @@ export function AccountMenu() {
       {open && (
         <div role="menu" aria-label="Menu" onKeyDown={onMenuKey} className="absolute right-0 top-full mt-2 w-60 overflow-hidden rounded-2xl bg-white py-2 text-base shadow-xl ring-1 ring-line">
           {session && <p className="truncate px-4 pb-2 pt-1 text-xs text-ink-soft">{session.signedInWith === "phone" ? maskMobile(session.phone ?? "") : session.email}</p>}
-          {!ACCOUNT_LINKS ? null : session ? (
-            <Link role="menuitem" href="/account" onClick={() => setOpen(false)} className="flex items-center gap-3 px-4 min-h-11 py-2.5 hover:bg-sand-deep focus-visible:bg-sand-deep">
-              <Icon name="calendar" className="h-4 w-4" /> My trips
-            </Link>
-          ) : (
+          {ACCOUNT_LINKS && !session && (
             <button
               role="menuitem"
               type="button"
@@ -100,6 +96,12 @@ export function AccountMenu() {
             >
               Log in or sign up
             </button>
+          )}
+          {/* Always there: signed out, the page itself offers to log in. */}
+          {ACCOUNT_LINKS && (
+            <Link role="menuitem" href="/account" onClick={() => setOpen(false)} className="flex items-center px-4 min-h-11 py-2.5 hover:bg-sand-deep focus-visible:bg-sand-deep">
+              My trips
+            </Link>
           )}
           {session?.role === "host" && session.pmsUrl && (
             <a role="menuitem" href={session.pmsUrl} className="flex items-center gap-3 px-4 min-h-11 py-2.5 hover:bg-sand-deep focus-visible:bg-sand-deep">

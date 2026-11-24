@@ -52,7 +52,7 @@ export function MobileMenu({ brandName, whatsapp, phone }: Props) {
           <Link href="/faq" onClick={close} className={item}>FAQ</Link>
           <Link href="/policies" onClick={close} className={item}>Policies</Link>
           <Link href="/#contact" onClick={close} className={item}>Contact</Link>
-          {ACCOUNT_LINKS && <Link href="/account" onClick={close} className={item}>Your trips and sign in</Link>}
+          {ACCOUNT_LINKS && <Link href="/account" onClick={close} className={item}>My trips</Link>}
           <div className="mt-auto space-y-3 py-6">
             {chat && (
               <a href={chat} target="_blank" rel="noopener noreferrer" className={`${buttonClass("outline")} w-full`}>
