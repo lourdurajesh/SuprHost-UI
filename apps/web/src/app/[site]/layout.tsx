@@ -36,6 +36,15 @@ export default function SiteLayout({ children, params }: LayoutProps<"/[site]">)
       <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded focus:bg-white focus:px-3 focus:py-2">
         Skip to content
       </a>
+      {process.env.SITE_ACCESS_CODE && (
+        // On the edge, so it moves nothing: the map and the header keep their places.
+        <p
+          role="note"
+          className="pointer-events-none fixed left-0 top-1/2 z-40 -translate-y-1/2 rounded-r bg-ink px-2 py-px text-[11px] leading-none text-white [writing-mode:vertical-rl]"
+        >
+          Test site
+        </p>
+      )}
       <Suspense fallback={<div className="h-[76px]" aria-hidden />}>
         <Header params={params} />
       </Suspense>

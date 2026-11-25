@@ -9,6 +9,9 @@ const baseUrl = process.env.PMS_API_URL?.replace(/\/+$/, "");
 const keyId = process.env.PMS_API_KEY_ID;
 const secret = process.env.PMS_API_SECRET;
 
+// A live API answers in milliseconds. A test API on a free plan may have to wake up first.
+const timeoutMs = Math.min(Math.max(Number(process.env.PMS_TIMEOUT_MS) || 8000, 1000), 45_000);
+
 export const pmsConfigured = Boolean(baseUrl && keyId && secret);
 
 interface CallOptions {
@@ -43,7 +46,7 @@ export async function pmsFetch<T>(path: string, { method = "GET", body, headers 
       "X-SuprHost-Timestamp": timestamp,
       "X-SuprHost-Signature": signature,
     },
-    signal: AbortSignal.timeout(8000),
+    signal: AbortSignal.timeout(timeoutMs),
   });
 
   if (!res.ok) {

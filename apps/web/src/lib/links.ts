@@ -49,3 +49,8 @@ export const telUrl = (phone: string | null | undefined) => (phone ? `tel:${phon
 
 export const mapsUrl = (at: { lat: number; lng: number } | null | undefined) =>
   at ? `https://www.google.com/maps/search/?api=1&query=${at.lat},${at.lng}` : null;
+
+/** Where to go after the access code: a path on this site, never another address. */
+export function safeNext(value: string | null): string {
+  return value && /^\/(?![/\\])/.test(value) && !/[\r\n\\]/.test(value) && !value.startsWith("/access") ? value : "/";
+}
