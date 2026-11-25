@@ -5,9 +5,9 @@ const isDev = process.env.NODE_ENV === "development";
 // Listing photos come from the public image CDN (never the private ID-document bucket).
 const imageOrigin = process.env.IMAGE_CDN_ORIGIN?.replace(/\/+$/, "");
 const turnstile = "https://challenges.cloudflare.com";
-// Map tiles: MapTiler when a key is configured; OpenStreetMap raster tiles only as the
-// keyless fallback for local development (see components/stays-map.tsx).
-const mapHosts = process.env.NEXT_PUBLIC_MAPTILER_KEY ? "https://api.maptiler.com" : "https://tile.openstreetmap.org";
+// Map style, tiles, fonts and icons: MapTiler when a key is configured, else OpenFreeMap
+// (see components/stays-map.tsx).
+const mapHosts = process.env.NEXT_PUBLIC_MAPTILER_KEY ? "https://api.maptiler.com" : "https://tiles.openfreemap.org";
 
 // Static CSP so pages stay prerendered and CDN-cacheable. Nonces would force every page to render
 // per request (no static shell, no edge cache), which breaks the speed budget. Inline scripts are

@@ -28,25 +28,12 @@ interface Props {
 }
 
 const KEY = process.env.NEXT_PUBLIC_MAPTILER_KEY;
-const STYLE_ID = process.env.NEXT_PUBLIC_MAPTILER_STYLE ?? "streets-v2";
 
-// MapTiler in production. Without a key (local development only) fall back to OpenStreetMap's
-// raster tiles, which are fine for testing but not for production traffic.
-function mapStyle() {
-  if (KEY) return `https://api.maptiler.com/maps/${STYLE_ID}/style.json?key=${KEY}`;
-  return {
-    version: 8 as const,
-    sources: {
-      osm: {
-        type: "raster" as const,
-        tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
-        tileSize: 256,
-        attribution: "© OpenStreetMap contributors",
-      },
-    },
-    layers: [{ id: "osm", type: "raster" as const, source: "osm" }],
-  };
-}
+// OpenFreeMap needs no key and allows commercial use, but comes without a service guarantee. With a
+// MapTiler key the map uses MapTiler instead. The hosts allowed here are in next.config.ts (CSP).
+const MAP_STYLE = KEY
+  ? `https://api.maptiler.com/maps/${process.env.NEXT_PUBLIC_MAPTILER_STYLE ?? "streets-v2"}/style.json?key=${KEY}`
+  : "https://tiles.openfreemap.org/styles/liberty";
 
 // MapLibre (~220 KB gzip) is only downloaded when the map scrolls into view.
 export function StaysMap({ pins, activeId, onPinHover, className = "", approximate = false, zoom = 12, initialBounds = null, onMoveEnd }: Props) {
@@ -87,7 +74,7 @@ export function StaysMap({ pins, activeId, onPinHover, className = "", approxima
         maplibregl.setWorkerUrl(new URL("maplibre-gl/dist/maplibre-gl-worker.mjs", import.meta.url).toString());
         const m = new maplibregl.Map({
           container,
-          style: mapStyle(),
+          style: MAP_STYLE,
           center: pins[0] ? [pins[0].lng, pins[0].lat] : [78.96, 22.59], // the middle of India, until pins or bounds place it
           zoom,
           attributionControl: false,
@@ -96,6 +83,20 @@ export function StaysMap({ pins, activeId, onPinHover, className = "", approxima
         m.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
         // The map credit, on the side the chat button never covers.
         m.addControl(new maplibregl.AttributionControl({ compact: true }), "bottom-left");
+        // On a small map it starts folded behind its "i" button, so the "Show list" button doesn't cover it.
+        if (container.clientWidth < 640) {
+          m.once("load", () => {
+            const credit = container.querySelector("details.maplibregl-ctrl-attrib");
+            credit?.removeAttribute("open");
+            credit?.classList.remove("maplibregl-compact-show");
+          });
+        }
+        // A map whose style never arrives is blank: say so instead. Single missing tiles are ignored.
+        let styled = false;
+        m.once("style.load", () => (styled = true));
+        m.on("error", () => {
+          if (!styled && !cancelled) setFailed(true);
+        });
         shown = m;
         setMade({ map: m, lib: maplibregl });
 
@@ -176,7 +177,7 @@ export function StaysMap({ pins, activeId, onPinHover, className = "", approxima
 
   return (
     <div ref={el} role="region" aria-label={approximate ? "Map of the area" : "Map of stays"} className={`relative overflow-hidden bg-sand-deep ${className}`}>
-      {failed && <p className="absolute inset-0 flex items-center justify-center text-sm text-ink-soft">Map unavailable</p>}
+      {failed && <p className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center text-sm text-ink-soft">Map unavailable</p>}
     </div>
   );
 }
