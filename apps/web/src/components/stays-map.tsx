@@ -161,7 +161,9 @@ export function StaysMap({ pins, activeId, onPinHover, className = "", approxima
     if (list.length > 0 && !keepView) {
       const bounds = new maplibregl.LngLatBounds();
       list.forEach((p) => bounds.extend([p.lng, p.lat]));
-      m.fitBounds(bounds, { padding: 60, maxZoom: 13, duration: 0 });
+      // Extra room at the top (the "search as I move" box) and bottom right (the chat button), so
+      // no pin starts out hidden under them.
+      m.fitBounds(bounds, { padding: { top: 100, bottom: 90, left: 60, right: 80 }, maxZoom: 13, duration: 0 });
     }
   }, [made, pinsKey, approximate, keepView]);
 

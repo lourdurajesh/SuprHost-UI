@@ -28,8 +28,9 @@ export async function pmsFetch<T>(path: string, { method = "GET", body, headers 
   // Next.js refuses Date.now() during prerendering, and this value is never rendered.
   const timestamp = Math.floor((performance.timeOrigin + performance.now()) / 1000).toString();
   const bodyHash = createHash("sha256").update(payload).digest("hex");
-  // Sign the target exactly as it goes on the wire (URL normalisation drops an empty "?", etc.).
-  const url = new URL(`${baseUrl}/api/public/v1${path}`);
+  // Sign the target exactly as it goes on the wire. An empty query ("…/search?") is dropped first:
+  // url.search reads "" for it, but fetch still sends the "?", and the API signs what it receives.
+  const url = new URL(`${baseUrl}/api/public/v1${path.replace(/\?$/, "")}`);
   const signedPath = `${url.pathname.slice(new URL(baseUrl!).pathname.replace(/\/$/, "").length + "/api/public/v1".length)}${url.search}`;
   const signature = createHmac("sha256", secret!)
     .update(`${method}\n${signedPath}\n${timestamp}\n${bodyHash}`)

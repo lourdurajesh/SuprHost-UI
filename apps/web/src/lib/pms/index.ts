@@ -171,7 +171,8 @@ export async function searchListings(key: string, q: SearchQuery): Promise<Searc
     if (v === undefined || v === "" || (Array.isArray(v) && v.length === 0)) continue;
     params.set(k, Array.isArray(v) ? v.join(",") : String(v));
   }
-  return pmsFetch<SearchResult>(`/sites/${site(key)}/search?${params}`);
+  const qs = params.toString();
+  return pmsFetch<SearchResult>(`/sites/${site(key)}/search${qs ? `?${qs}` : ""}`);
 }
 
 // ---- guest accounts: passwordless email codes; the PMS owns codes and sessions -------------
