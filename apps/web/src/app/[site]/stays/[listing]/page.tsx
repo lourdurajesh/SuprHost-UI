@@ -270,6 +270,8 @@ async function ListingPageContent({ params }: Pick<PageProps<"/[site]/stays/[lis
             timezone={site.timezone}
             pricesAddGst={site.pricesAddGst}
             askHost={whatsapp ? { whatsapp, stayName: listing.name } : undefined}
+            instantBook={listing.instantBook}
+            requestHours={site.payments.requestHours}
           />
         </aside>
       </div>

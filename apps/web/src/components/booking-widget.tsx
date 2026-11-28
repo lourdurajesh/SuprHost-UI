@@ -31,13 +31,18 @@ interface Props {
   timezone: string;
   /** The host's WhatsApp and the stay's name: adds an "Ask the host" link that carries the guest's dates. */
   askHost?: { whatsapp: string; stayName: string };
+  /** False: the host accepts each booking first, so the button asks instead of reserving. */
+  instantBook?: boolean;
+  /** Hours the host has to answer a request. */
+  requestHours?: number;
 }
 
 // The only interactive island on a listing page: availability and price load live, everything
 // else on the page is prerendered. Compact on purpose — dates open in a dialog — so the panel fits
 // the viewport and Reserve is always in view. Below lg the panel sits in the page and a fixed bar
 // at the bottom carries the price and the next action.
-export function BookingWidget({ listingId, city, maxGuests, minNights: listingMinNights, maxNights, fromPrice, currency, timezone, pricesAddGst, askHost }: Props) {
+export function BookingWidget({ listingId, city, maxGuests, minNights: listingMinNights, maxNights, fromPrice, currency, timezone, pricesAddGst, askHost, instantBook = true, requestHours = 24 }: Props) {
+  const reserveLabel = instantBook ? "Reserve" : "Request to book";
   const router = useRouter();
   const [datesOpen, setDatesOpen] = useState(false);
   const calendarSlot = useCalendarSlot(listingId);
@@ -97,7 +102,7 @@ export function BookingWidget({ listingId, city, maxGuests, minNights: listingMi
   }
 
   const ready = Boolean(checkIn && checkOut && quote);
-  const action = ready ? "Reserve" : checkIn && checkOut ? (quoteError || tooShort ? "Change dates" : "Checking price…") : "Check availability";
+  const action = ready ? reserveLabel : checkIn && checkOut ? (quoteError || tooShort ? "Change dates" : "Checking price…") : "Check availability";
   const field = "flex min-h-14 flex-col justify-center px-4 py-2 text-left";
 
   const message = tooShort ? `Minimum stay is ${minNights} nights${minNights !== listingMinNights ? " for this check-in date" : ""}.` : quoteError;
@@ -167,7 +172,11 @@ export function BookingWidget({ listingId, city, maxGuests, minNights: listingMi
             <div className="mt-3 h-7 rounded bg-sand-deep" />
           </div>
         )}
-        <p className="mt-3 text-center text-sm text-ink-soft">You won’t be charged until you confirm. Best price, booked direct.</p>
+        <p className="mt-3 text-center text-sm text-ink-soft">
+          {instantBook
+            ? "You won’t be charged until you confirm. Best price, booked direct."
+            : `The host confirms each booking, usually within ${requestHours} hours. You won’t be charged unless they accept.`}
+        </p>
         {askHost && (
           <a
             href={
@@ -204,7 +213,7 @@ export function BookingWidget({ listingId, city, maxGuests, minNights: listingMi
             disabled={Boolean(checkIn && checkOut && !quote && !quoteError && !tooShort)}
             className={`${buttonClass()} shrink-0`}
           >
-            {ready ? "Reserve" : checkIn && checkOut && !quoteError && !tooShort ? "Checking…" : "Check dates"}
+            {ready ? reserveLabel : checkIn && checkOut && !quoteError && !tooShort ? "Checking…" : "Check dates"}
           </button>
         </div>
       </div>

@@ -37,7 +37,8 @@ async function CheckoutContent({ params }: Pick<PageProps<"/[site]/checkout/[tok
   const site = await getSite(key);
 
   if (!booking || !site) return <Gone message="We couldn’t find this reservation." />;
-  if (booking.status === "confirmed") redirect(bookingUrl(token));
+  // Confirmed bookings and requests to book (waiting, declined, withdrawn) have their own page.
+  if (["confirmed", "awaiting_host", "declined", "withdrawn"].includes(booking.status)) redirect(bookingUrl(token));
   if (booking.status !== "pending_payment" || !booking.holdExpiresAt) {
     return (
       <Gone

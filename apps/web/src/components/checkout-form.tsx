@@ -20,6 +20,8 @@ interface Props {
   session: GuestSession | null;
   /** The PMS can send SMS codes: new guests confirm their mobile number instead of their email. */
   phoneSignIn?: boolean;
+  /** Request to book: the host accepts first, so this sends a request instead of holding dates for payment. */
+  request?: { hours: number } | null;
 }
 
 type Field = "name" | "email" | "phone" | "message" | "code" | "form";
@@ -35,7 +37,8 @@ interface Details {
 // a new guest confirms their mobile number (SMS code) or their email (email code), which signs them
 // in and saves their details; a returning guest sees them prefilled. Then the booking holds the
 // dates for payment.
-export function CheckoutForm({ listingId, checkIn, checkOut, guests, holdMinutes, session, phoneSignIn = false }: Props) {
+export function CheckoutForm({ listingId, checkIn, checkOut, guests, holdMinutes, session, phoneSignIn = false, request = null }: Props) {
+  const booking = request ? "Sending your request…" : "Holding your dates…";
   const signedInByPhone = session?.signedInWith === "phone";
   const mountedAt = useRef(0);
   // One key per form instance: a double click or a retry after a timeout cannot hold dates twice.
@@ -118,8 +121,9 @@ export function CheckoutForm({ listingId, checkIn, checkOut, guests, holdMinutes
 
       if (res.ok && typeof body.token === "string") {
         // Full navigation so the header picks up a session started on this page.
+        // A request waits for the host on its booking page; a booking goes on to payment.
         // eslint-disable-next-line @next/next/no-location-assign-relative-destination
-        window.location.assign(`/checkout/${encodeURIComponent(body.token)}`);
+        window.location.assign(`/${body.status === "awaiting_host" ? "booking" : "checkout"}/${encodeURIComponent(body.token)}`);
         return;
       }
       if (res.status === 400 && body.fields) showErrors(body.fields);
@@ -209,7 +213,7 @@ export function CheckoutForm({ listingId, checkIn, checkOut, guests, holdMinutes
         {formError}
         <div className="flex justify-end">
           <button type="submit" disabled={Boolean(busy) || code.length !== 6} className={next}>
-            {busy === "book" ? "Holding your dates…" : busy === "verify" ? "Checking…" : "Next"}
+            {busy === "book" ? booking : busy === "verify" ? "Checking…" : request ? "Send request" : "Next"}
           </button>
         </div>
         <div className="flex flex-wrap justify-between gap-3 text-sm">
@@ -342,13 +346,15 @@ export function CheckoutForm({ listingId, checkIn, checkOut, guests, holdMinutes
       )}
       <div className="flex justify-end">
         <button type="submit" disabled={Boolean(busy) || !check.ready} className={next}>
-          {busy === "book" ? "Holding your dates…" : busy === "code" ? "Sending code…" : "Next"}
+          {busy === "book" ? booking : busy === "code" ? "Sending code…" : request && session ? "Send request" : "Next"}
         </button>
       </div>
       <p className="flex items-center gap-1.5 text-sm text-ink-soft">
         <Icon name="lock" className="h-3.5 w-3.5" />
         {session
-          ? `Your dates are held for ${holdMinutes} minutes while you pay.`
+          ? request
+            ? `The host has ${request.hours} hours to accept. Your dates are held until then, and nothing is charged unless they accept.`
+            : `Your dates are held for ${holdMinutes} minutes while you pay.`
           : mobileMode
             ? "Next, we’ll text a code to your mobile to confirm it’s you. That creates your account."
             : "Next, we’ll email you a code to confirm it’s you. That creates your account."}

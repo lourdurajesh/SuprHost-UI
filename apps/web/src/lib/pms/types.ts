@@ -45,7 +45,7 @@ export interface Site {
   currency: string;
   timezone: string;
   /** "simulated" until a payment plugin is enabled: the payment step confirms without charging. */
-  payments: { mode: "simulated" | "live"; methods: PaymentMethod[]; holdMinutes: number };
+  payments: { mode: "simulated" | "live"; methods: PaymentMethod[]; holdMinutes: number; /** Hours the host has to answer a request to book. */ requestHours?: number };
   features: FeatureCode[];
   /** The host is GST-registered: per-night prices are before tax, quotes and trip totals include it. */
   pricesAddGst: boolean;
@@ -243,15 +243,27 @@ export interface CreateBookingInput {
   message: string;
 }
 
-/** A booking holding its dates while the guest pays. `token` is a secret bearer value. */
+/**
+ * A booking holding its dates while the guest pays, or (`awaiting_host`) a request to book holding
+ * them until the host answers by `holdExpiresAt`. `token` is a secret bearer value.
+ */
 export interface BookingHold {
   token: string;
   reference: string;
-  status: "pending_payment";
+  status: "pending_payment" | "awaiting_host";
   holdExpiresAt: string;
 }
 
-export type BookingStatus = "pending_payment" | "confirmed" | "expired" | "cancelled";
+/** `awaiting_host`, `declined` and `withdrawn` are requests to book (listings without instant booking). */
+export type BookingStatus = "pending_payment" | "awaiting_host" | "confirmed" | "declined" | "withdrawn" | "expired" | "cancelled";
+
+/** For a request to book: when the host answered, their note, and whether it ended unanswered. */
+export interface RequestInfo {
+  decidedAt: string | null;
+  hostNote: string | null;
+  lapsed: boolean;
+  guestMessage: string | null;
+}
 
 export interface BookingSummary {
   reference: string;
@@ -268,6 +280,8 @@ export interface BookingSummary {
   paymentMethods: PaymentMethod[];
   /** What the guest can do from My trips; amounts include tax. */
   manage?: ManageInfo | null;
+  /** Set for a request to book. */
+  request?: RequestInfo | null;
 }
 
 export interface ManageInfo {
@@ -282,7 +296,7 @@ export interface ManageInfo {
 }
 
 export interface CancelResult {
-  status: "cancelled";
+  status: "cancelled" | "withdrawn";
   charge: number;
   refund: number;
 }

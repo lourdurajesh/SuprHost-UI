@@ -27,7 +27,7 @@ async function Receipt({ params }: Pick<PageProps<"/[site]/booking/[token]/recei
   const { site: key, token } = await params;
   const booking = bookingToken.safeParse(token).success ? await getBooking(key, token) : null;
   const site = await getSite(key);
-  if (!booking || !site || booking.status === "pending_payment" || booking.status === "expired") {
+  if (!booking || !site || ["pending_payment", "expired", "awaiting_host", "declined", "withdrawn"].includes(booking.status)) {
     return <p className="rounded-2xl border border-line p-6">There’s no receipt for this booking yet.</p>;
   }
 

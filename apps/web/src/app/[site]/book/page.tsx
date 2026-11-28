@@ -60,9 +60,11 @@ async function BookContent({ params, searchParams }: Pick<PageProps<"/[site]/boo
   const full = await getListing(key, listing.slug);
   const stay = { listingId: listing.id, checkIn, checkOut, guests };
   const back = stayUrl(listing.slug, stay);
+  // Without instant booking the host accepts first: the guest sends a request, and pays only after a yes.
+  const request = listing.instantBook ? null : { hours: site.payments.requestHours ?? 24 };
 
   return (
-    <CheckoutShell title="Confirm and book" back={back}>
+    <CheckoutShell title={request ? "Request to book" : "Confirm and book"} back={back}>
       <div className={checkoutGrid}>
         <div className="space-y-5">
           <StepCard n={1} title="Your details" state="open">
@@ -74,10 +76,17 @@ async function BookContent({ params, searchParams }: Pick<PageProps<"/[site]/boo
               holdMinutes={site.payments.holdMinutes}
               session={session}
               phoneSignIn={site.features.includes("guest.phone_sign_in")}
+              request={request}
             />
           </StepCard>
-          <StepCard n={2} title="Choose how to pay" state="todo" />
-          <StepCard n={3} title="Review your booking" state="todo" />
+          {request ? (
+            <StepCard n={2} title="The host replies" state="todo" />
+          ) : (
+            <>
+              <StepCard n={2} title="Choose how to pay" state="todo" />
+              <StepCard n={3} title="Review your booking" state="todo" />
+            </>
+          )}
         </div>
 
         <StaySummary

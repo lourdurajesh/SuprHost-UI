@@ -5,9 +5,11 @@ import { Suspense } from "react";
 import { connection } from "next/server";
 import { Icon } from "@/components/icons";
 import { ManageBooking } from "@/components/manage-booking";
+import { WithdrawRequest } from "@/components/withdraw-request";
 import { formatDate, formatMoney, todayIn } from "@/lib/dates";
 import { bookingUrl, mapsUrl, stayUrl, whatsappUrl } from "@/lib/links";
 import { getBooking, getListing, getSite } from "@/lib/pms";
+import type { BookingSummary, Site } from "@/lib/pms/types";
 import { bookingToken } from "@/lib/validation";
 import { buttonClass } from "@/components/ui/button";
 import { StaySummary, summaryOf } from "@/themes/escape/checkout";
@@ -41,6 +43,10 @@ async function Confirmation({ params }: Pick<PageProps<"/[site]/booking/[token]"
     );
   }
   if (booking.status === "pending_payment") redirect(`/checkout/${encodeURIComponent(token)}`);
+  if (booking.status === "awaiting_host" || booking.status === "declined" || booking.status === "withdrawn") {
+    const listing = booking.listing.slug ? await getListing(key, booking.listing.slug) : null;
+    return <RequestState booking={booking} site={site} token={token} rating={listing?.rating} />;
+  }
   const listing = booking.listing.slug ? await getListing(key, booking.listing.slug) : null;
   const cancelled = booking.status === "cancelled";
   const past = booking.status === "confirmed" && booking.checkOut < todayIn(site.timezone);
@@ -177,6 +183,97 @@ async function Confirmation({ params }: Pick<PageProps<"/[site]/booking/[token]"
       </section>
 
       <StaySummary {...summaryOf(booking)} rating={listing?.rating} cancellation={site.policies.cancellation} phoneFirst={false} />
+    </div>
+  );
+}
+
+/** A request to book: waiting for the host, declined (or unanswered in time), or withdrawn by the guest. */
+function RequestState({ booking, site, token, rating }: { booking: BookingSummary; site: Site; token: string; rating?: Parameters<typeof StaySummary>[0]["rating"] }) {
+  const first = booking.guestName.split(" ")[0];
+  const waiting = booking.status === "awaiting_host";
+  const lapsed = booking.request?.lapsed ?? false;
+  const replyBy = booking.holdExpiresAt
+    ? new Intl.DateTimeFormat("en-IN", { weekday: "short", day: "numeric", month: "short", hour: "numeric", minute: "2-digit", timeZone: site.timezone })
+        .format(new Date(booking.holdExpiresAt))
+    : null;
+  const message = whatsappUrl(site.contact.whatsapp, `Hello! About my request ${booking.reference}`);
+  const label = waiting ? "Request sent" : booking.status === "withdrawn" ? "Request withdrawn" : lapsed ? "Request ended" : "Request not accepted";
+  const title = waiting
+    ? "Your request is with the host"
+    : booking.status === "withdrawn"
+      ? "You withdrew this request"
+      : lapsed
+        ? "The host couldn’t reply in time"
+        : "The host can’t take this booking";
+  const text = waiting
+    ? `Thank you, ${first}. The host will reply${replyBy ? ` by ${replyBy}` : " soon"}. Your dates are held until then, and nothing is charged unless they accept. We’ll let you know at ${booking.guestEmailMasked}.`
+    : booking.status === "withdrawn"
+      ? "The dates are released and nothing was charged."
+      : "Nothing was charged, and the dates are open again. You’re welcome to try other dates or another stay.";
+
+  return (
+    <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_372px] lg:gap-20">
+      <section>
+        <p className={`flex items-center gap-3 font-medium ${waiting ? "" : "text-ink-soft"}`}>
+          <span aria-hidden className={`grid h-10 w-10 place-items-center rounded-full text-white ${waiting ? "bg-brand" : "bg-ink-soft"}`}>
+            <Icon name={waiting ? "clock" : "close"} className="h-5 w-5" strokeWidth={2.5} />
+          </span>
+          {label}
+        </p>
+        <h1 className="mt-5 text-[1.75rem] leading-tight sm:text-[2rem]">{title}</h1>
+        <p className="mt-3 max-w-lg text-ink-soft">{text}</p>
+        {booking.request?.hostNote && (
+          <blockquote className="mt-5 max-w-lg border-l-2 border-line pl-4 text-ink-soft">
+            <p className="text-sm font-medium text-ink">The host says</p>
+            <p className="mt-1">“{booking.request.hostNote}”</p>
+          </blockquote>
+        )}
+        <div className="mt-5 inline-flex flex-wrap items-center gap-x-3 rounded-xl bg-sand-deep px-4 py-2.5 text-sm">
+          Request reference <span className="font-mono text-base font-medium tracking-wider">{booking.reference}</span>
+        </div>
+
+        {waiting ? (
+          <>
+            <div className="mt-10 border-t border-line pt-8">
+              <h2 className="text-h2">What happens next</h2>
+              <ol className="mt-5 space-y-5">
+                {[
+                  ["clock", "The host reviews your request", replyBy ? `They have until ${replyBy} to accept or decline.` : "They’ll accept or decline shortly."],
+                  ["check", "If they accept", "Your booking is confirmed and you get the details by email."],
+                  ["close", "If they can’t", "Nothing is charged and the dates open again."],
+                ].map(([icon, title, body]) => (
+                  <li key={title} className="flex gap-4">
+                    <Icon name={icon} className="mt-0.5 h-6 w-6 shrink-0 text-accent" />
+                    <div>
+                      <p className="font-medium">{title}</p>
+                      <p className="text-sm text-ink-soft">{body}</p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+              {message && (
+                <a href={message} target="_blank" rel="noopener noreferrer" className={`${buttonClass("outline", "sm")} mt-8`}>
+                  <Icon name="chat" className="h-4 w-4" /> Message the host
+                </a>
+              )}
+            </div>
+            {booking.manage?.canCancel && <WithdrawRequest token={token} />}
+          </>
+        ) : (
+          <div className="mt-8 flex flex-wrap gap-3">
+            {booking.listing.slug && (
+              <Link href={stayUrl(booking.listing.slug)} className={buttonClass()}>
+                Try other dates
+              </Link>
+            )}
+            <Link href="/stays" className={buttonClass("outline")}>
+              See all stays
+            </Link>
+          </div>
+        )}
+      </section>
+
+      <StaySummary {...summaryOf(booking)} rating={rating} cancellation={site.policies.cancellation} phoneFirst={false} />
     </div>
   );
 }

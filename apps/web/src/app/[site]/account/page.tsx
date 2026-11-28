@@ -41,8 +41,10 @@ async function Trips({ params }: Pick<PageProps<"/[site]/account">, "params">) {
   if (!site) return null;
 
   const today = todayIn(site.timezone);
-  const upcoming = trips.filter((t) => t.status === "confirmed" && t.checkOut >= today).reverse();
-  const past = trips.filter((t) => !(t.status === "confirmed" && t.checkOut >= today));
+  // A request waiting for the host is upcoming too; a declined or withdrawn one is history.
+  const live = (t: TripSummary) => (t.status === "confirmed" || t.status === "awaiting_host") && t.checkOut >= today;
+  const upcoming = trips.filter(live).reverse();
+  const past = trips.filter((t) => !live(t));
   const { whatsapp } = site.contact;
   const chat = whatsappUrl(whatsapp);
 
@@ -127,6 +129,9 @@ function TripRow({ trip, whatsapp, muted = false }: { trip: TripSummary; whatsap
         <p className="text-sm text-ink-soft">
           {trip.listing.propertyName} · <span className="font-mono">{trip.reference}</span>
           {trip.status === "cancelled" && <span className="ml-2 rounded-full bg-red-50 px-2 py-0.5 text-xs text-red-800">Cancelled</span>}
+          {trip.status === "awaiting_host" && <span className="ml-2 rounded-full bg-sand-deep px-2 py-0.5 text-xs text-ink">Waiting for the host</span>}
+          {trip.status === "declined" && <span className="ml-2 rounded-full bg-red-50 px-2 py-0.5 text-xs text-red-800">Not accepted</span>}
+          {trip.status === "withdrawn" && <span className="ml-2 rounded-full bg-sand-deep px-2 py-0.5 text-xs text-ink">Withdrawn</span>}
         </p>
         <p className="mt-1 text-lg font-medium">{trip.listing.name}</p>
         <p className="mt-1 text-ink-soft">
@@ -136,7 +141,7 @@ function TripRow({ trip, whatsapp, muted = false }: { trip: TripSummary; whatsap
       <div className="flex flex-wrap gap-2 sm:flex-col">
         {trip.token && (
           <Link href={bookingUrl(trip.token)} className={buttonClass(muted ? "outline" : "primary", "sm")}>
-            View booking
+            {trip.status === "awaiting_host" || trip.status === "declined" || trip.status === "withdrawn" ? "View request" : "View booking"}
           </Link>
         )}
         {trip.token && muted && trip.status === "confirmed" && (
