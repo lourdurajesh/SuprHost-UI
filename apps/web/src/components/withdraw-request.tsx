@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { bookingUrl } from "@/lib/links";
 import { openSignIn } from "./sign-in";
@@ -12,7 +11,6 @@ import { Dialog, DialogBody, DialogFooter, DialogHeader } from "./ui/dialog";
  * email or mobile; a signed-out guest is sent to sign in and brought back here.
  */
 export function WithdrawRequest({ token }: { token: string }) {
-  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -24,7 +22,8 @@ export function WithdrawRequest({ token }: { token: string }) {
     if (r?.status === 401) return openSignIn(bookingUrl(token));
     setOpen(false);
     setBusy(false);
-    if (r?.ok) return router.refresh();
+    // A full reload: the booking page is rendered on the server and a soft refresh can keep the old state.
+    if (r?.ok) return window.location.reload();
     const body = await r?.json().catch(() => null);
     setError(body?.message ?? "We couldn’t withdraw your request. Please try again or contact us.");
   }
