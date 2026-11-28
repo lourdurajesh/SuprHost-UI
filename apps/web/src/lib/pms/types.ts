@@ -273,7 +273,7 @@ export interface StayMessage {
   sentAt: string;
 }
 
-/** The guest–host conversation of a request or booking; canSend is false once it has ended. */
+/** The guestâ€“host conversation of a request or booking; canSend is false once it has ended. */
 export interface Conversation {
   messages: StayMessage[];
   canSend: boolean;

@@ -123,7 +123,7 @@ export async function payBooking(key: string, token: string, payment: PaymentInp
   });
 }
 
-/** The guest–host conversation of a request or booking. The booking token is the credential. */
+/** The guestâ€“host conversation of a request or booking. The booking token is the credential. */
 export async function getConversation(key: string, token: string): Promise<Conversation | null> {
   if (useMock) return { messages: [], canSend: true, hostName: "Your host", guestName: "" };
   return orNull(pmsFetch<Conversation>(`/sites/${site(key)}/bookings/${encodeURIComponent(token)}/messages`));
