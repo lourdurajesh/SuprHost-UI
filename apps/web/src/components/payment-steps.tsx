@@ -40,7 +40,11 @@ function Countdown({ until, onEnd }: { until: string; onEnd: () => void }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ended]);
   const two = (n: number) => String(Math.floor(n)).padStart(2, "0");
-  return <span className="font-mono font-medium tabular-nums text-ink">{left === null ? "--:--" : `${two(left / 60_000)}:${two((left % 60_000) / 1000)}`}</span>;
+  // "14:52", or "11:59:59" for an accepted request with hours to pay.
+  const text = left === null ? "--:--" : left >= 3_600_000
+    ? `${Math.floor(left / 3_600_000)}:${two((left % 3_600_000) / 60_000)}:${two((left % 60_000) / 1000)}`
+    : `${two(left / 60_000)}:${two((left % 60_000) / 1000)}`;
+  return <span className="font-mono font-medium tabular-nums text-ink">{text}</span>;
 }
 
 // Steps 2 and 3 of checkout (step 1, the guest's details, made the hold). The selected method is sent

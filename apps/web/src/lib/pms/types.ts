@@ -265,6 +265,22 @@ export interface RequestInfo {
   guestMessage: string | null;
 }
 
+/** One message between the guest and the host about a request or booking. */
+export interface StayMessage {
+  id: string;
+  fromHost: boolean;
+  body: string;
+  sentAt: string;
+}
+
+/** The guest–host conversation of a request or booking; canSend is false once it has ended. */
+export interface Conversation {
+  messages: StayMessage[];
+  canSend: boolean;
+  hostName: string;
+  guestName: string;
+}
+
 export interface BookingSummary {
   reference: string;
   status: BookingStatus;

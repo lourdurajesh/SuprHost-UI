@@ -7,6 +7,7 @@ import type {
   BookingHold,
   BookingSummary,
   CancelResult,
+  Conversation,
   ReviewState,
   CreateBookingInput,
   Listing,
@@ -118,6 +119,21 @@ export async function payBooking(key: string, token: string, payment: PaymentInp
   return pmsFetch<PaymentResult>(`/sites/${site(key)}/bookings/${encodeURIComponent(token)}/payments`, {
     method: "POST",
     body: payment,
+    headers: abuseHeaders(ctx),
+  });
+}
+
+/** The guest–host conversation of a request or booking. The booking token is the credential. */
+export async function getConversation(key: string, token: string): Promise<Conversation | null> {
+  if (useMock) return { messages: [], canSend: true, hostName: "Your host", guestName: "" };
+  return orNull(pmsFetch<Conversation>(`/sites/${site(key)}/bookings/${encodeURIComponent(token)}/messages`));
+}
+
+export async function sendGuestMessage(key: string, token: string, body: string, ctx: RequestContext): Promise<Conversation> {
+  if (useMock) return { messages: [], canSend: true, hostName: "Your host", guestName: "" };
+  return pmsFetch<Conversation>(`/sites/${site(key)}/bookings/${encodeURIComponent(token)}/messages`, {
+    method: "POST",
+    body: { body },
     headers: abuseHeaders(ctx),
   });
 }

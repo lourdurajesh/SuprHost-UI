@@ -5,7 +5,7 @@ import { CheckoutForm } from "@/components/checkout-form";
 import { RequestSteps } from "@/components/request-steps";
 import { Track } from "@/components/track";
 import { getGuestSession, getListing, getListings, getQuote, getSite, PmsError } from "@/lib/pms";
-import { formatDate } from "@/lib/dates";
+import { formatDate, formatMoney } from "@/lib/dates";
 import { stayUrl } from "@/lib/links";
 import { readSessionToken } from "@/lib/session";
 import { stayQuery } from "@/lib/validation";
@@ -81,7 +81,7 @@ async function BookContent({ params, searchParams }: Pick<PageProps<"/[site]/boo
             phoneSignIn={phoneSignIn}
             hours={site.payments.requestHours ?? 24}
             simulated={site.payments.mode === "simulated"}
-            methods={site.payments.methods}
+            total={formatMoney(quote.total, quote.currency)}
             review={
               <div className="space-y-5 text-sm">
                 <dl className="grid gap-4 sm:grid-cols-2">

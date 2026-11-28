@@ -88,6 +88,8 @@ export const bookingToken = z.string().regex(/^[A-Za-z0-9_-]{32,64}$/);
 
 export const reviewBody = z.object({ rating: z.number().int().min(1).max(5), text: z.string().trim().min(10).max(2000) }).strict();
 
+export const messageBody = z.object({ body: z.string().trim().min(1).max(2000) }).strict();
+
 export const changeDatesBody = asStay(z.object({ checkIn: isoDate, checkOut: isoDate }).strict());
 
 export const paymentBody = z
