@@ -5,7 +5,6 @@ import { readSessionToken } from "@/lib/session";
 import { isSiteKey } from "@/lib/sites";
 import { createBookingBody } from "@/lib/validation";
 
-const MIN_FILL_MS = 3000;
 const MAX_BODY_BYTES = 8 * 1024;
 
 // Bots that trip a silent check get a response shaped like success so they learn nothing, but no
@@ -49,9 +48,10 @@ export async function POST(request: NextRequest, ctx: RouteContext<"/[site]/api/
     return NextResponse.json({ error: "invalid_request", fields }, { status: 400 });
   }
 
-  const { elapsedMs, idempotencyKey, listingId, checkIn, checkOut, guests, name, email, phone, message } =
-    parsed.data;
-  if (elapsedMs < MIN_FILL_MS) return silentlyAccept();
+  // No minimum fill time here: only a guest who proved their mobile or email with a code gets this
+  // far, and a returning guest's details are already filled in, so a quick "Send" is normal. A
+  // timer counted from when the form appeared silently dropped real bookings on a slow load.
+  const { idempotencyKey, listingId, checkIn, checkOut, guests, name, email, phone, message } = parsed.data;
   if (isDisposableEmail(email)) {
     return NextResponse.json({ error: "invalid_request", fields: { email: "Please use a permanent email address" } }, { status: 400 });
   }
