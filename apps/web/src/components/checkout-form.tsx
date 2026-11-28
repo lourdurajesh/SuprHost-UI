@@ -3,12 +3,20 @@
 import { useEffect, useRef, useState } from "react";
 import type { GuestSession } from "@/lib/pms/types";
 import { requestCode, verifyCode } from "@/lib/auth-client";
+import { createBooking, nextPageFor } from "@/lib/create-booking";
 import { maskMobile, toMobile } from "@/lib/mobile";
 import { Icon } from "./icons";
 import { MobileField } from "./mobile-field";
 import { CodeInput, Honeypot, honeypotValue, TestModeCode } from "./sign-in-code";
 import { TurnstileWidget, useTurnstile } from "./turnstile";
 import { buttonClass, fieldClass, textButton } from "./ui/button";
+
+/** Who is booking, once they've confirmed it's them. The phone is normalised (+91… for a confirmed mobile). */
+export interface GuestDetails {
+  name: string;
+  email: string;
+  phone: string;
+}
 
 interface Props {
   listingId: string;
@@ -20,8 +28,11 @@ interface Props {
   session: GuestSession | null;
   /** The PMS can send SMS codes: new guests confirm their mobile number instead of their email. */
   phoneSignIn?: boolean;
-  /** Request to book: the host accepts first, so this sends a request instead of holding dates for payment. */
-  request?: { hours: number } | null;
+  /**
+   * Request to book: this form is only step 1 (sign in and details). Instead of booking, it hands the
+   * confirmed details to the steps that follow, and the request is sent from the last one.
+   */
+  onReady?: (details: GuestDetails) => void;
 }
 
 type Field = "name" | "email" | "phone" | "message" | "code" | "form";
@@ -36,9 +47,8 @@ interface Details {
 // Step 1 of checkout. Booking needs a signed-in guest, and the details typed here are the account:
 // a new guest confirms their mobile number (SMS code) or their email (email code), which signs them
 // in and saves their details; a returning guest sees them prefilled. Then the booking holds the
-// dates for payment.
-export function CheckoutForm({ listingId, checkIn, checkOut, guests, holdMinutes, session, phoneSignIn = false, request = null }: Props) {
-  const booking = request ? "Sending your request…" : "Holding your dates…";
+// dates for payment (or, for a request to book, the guest moves on to the next step).
+export function CheckoutForm({ listingId, checkIn, checkOut, guests, holdMinutes, session, phoneSignIn = false, onReady }: Props) {
   const signedInByPhone = session?.signedInWith === "phone";
   const mountedAt = useRef(0);
   // One key per form instance: a double click or a retry after a timeout cannot hold dates twice.
@@ -95,48 +105,44 @@ export function CheckoutForm({ listingId, checkIn, checkOut, guests, holdMinutes
     if (first) requestAnimationFrame(() => document.getElementById(first)?.focus());
   }
 
-  async function book(): Promise<void> {
-    setBusy("book");
-    try {
-      const website = honeypotValue("website");
-      const stay = `${checkIn}|${checkOut}|${guests}`;
-      const idempotencyKey = keys.current.get(stay) ?? crypto.randomUUID();
-      keys.current.set(stay, idempotencyKey);
-      const res = await fetch("/api/bookings", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          listingId,
-          checkIn,
-          checkOut,
-          guests,
-          ...details,
-          phone: mobileMode ? (toMobile(details.phone) ?? details.phone) : details.phone,
-          website,
-          elapsedMs: Math.round(performance.now() - mountedAt.current),
-          idempotencyKey,
-        }),
-      });
-      const body = await res.json().catch(() => ({}));
+  const confirmed = (): GuestDetails => ({
+    name: details.name.trim(),
+    email: details.email.trim(),
+    phone: mobileMode ? (toMobile(details.phone) ?? details.phone) : details.phone,
+  });
 
-      if (res.ok && typeof body.token === "string") {
-        // Full navigation so the header picks up a session started on this page.
-        // A request waits for the host on its booking page; a booking goes on to payment.
-        // eslint-disable-next-line @next/next/no-location-assign-relative-destination
-        window.location.assign(`/${body.status === "awaiting_host" ? "booking" : "checkout"}/${encodeURIComponent(body.token)}`);
-        return;
-      }
-      if (res.status === 400 && body.fields) showErrors(body.fields);
-      else if (res.status === 401) {
-        setStep("details");
-        setErrors({ form: `Your sign-in has expired. Confirm your ${mobileMode ? "mobile number" : "email"} again to continue.` });
-      } else if (res.status === 409) setErrors({ form: "Sorry, those dates were just booked. Please choose other dates." });
-      else if (res.status === 422) setErrors({ form: body.message ?? "These details don't match this stay." });
-      else if (res.status === 429) setErrors({ form: "Too many attempts. Please wait a few minutes and try again." });
-      else setErrors({ form: "Something went wrong on our side. Please try again, or contact us directly." });
-    } catch {
-      setErrors({ form: "Network problem. Please check your connection and try again." });
+  // Signed in with valid details: book now, or hand over to the next step of a request.
+  async function proceed(): Promise<void> {
+    if (onReady) {
+      setBusy(null);
+      onReady(confirmed());
+      return;
     }
+    setBusy("book");
+    const stay = `${checkIn}|${checkOut}|${guests}`;
+    const idempotencyKey = keys.current.get(stay) ?? crypto.randomUUID();
+    keys.current.set(stay, idempotencyKey);
+    const result = await createBooking({
+      listingId,
+      checkIn,
+      checkOut,
+      guests,
+      ...confirmed(),
+      message: details.message,
+      website: honeypotValue("website"),
+      elapsedMs: Math.round(performance.now() - mountedAt.current),
+      idempotencyKey,
+    });
+    if (result.ok) {
+      // Full navigation so the header picks up a session started on this page.
+      window.location.assign(nextPageFor(result.token, result.status));
+      return;
+    }
+    if (result.fields) showErrors(result.fields);
+    else if (result.signInExpired) {
+      setStep("details");
+      setErrors({ form: `Your sign-in has expired. Confirm your ${mobileMode ? "mobile number" : "email"} again to continue.` });
+    } else setErrors({ form: result.message });
     setBusy(null);
   }
 
@@ -161,7 +167,7 @@ export function CheckoutForm({ listingId, checkIn, checkOut, guests, holdMinutes
     const found = checkDetails();
     showErrors(found);
     if (Object.keys(found).length) return;
-    if (session) await book();
+    if (session) await proceed();
     else await sendCode();
   }
 
@@ -180,7 +186,7 @@ export function CheckoutForm({ listingId, checkIn, checkOut, guests, holdMinutes
       setErrors({ code: problem });
       return;
     }
-    await book();
+    await proceed();
   }
 
   const input = `${fieldClass} mt-1.5`;
@@ -196,6 +202,7 @@ export function CheckoutForm({ listingId, checkIn, checkOut, guests, holdMinutes
     </p>
   );
   const next = `${buttonClass("dark")} max-sm:w-full`;
+  const proceedLabel = onReady ? "Continue" : "Next";
 
   if (step === "code") {
     return (
@@ -213,7 +220,7 @@ export function CheckoutForm({ listingId, checkIn, checkOut, guests, holdMinutes
         {formError}
         <div className="flex justify-end">
           <button type="submit" disabled={Boolean(busy) || code.length !== 6} className={next}>
-            {busy === "book" ? booking : busy === "verify" ? "Checking…" : request ? "Send request" : "Next"}
+            {busy === "book" ? "Holding your dates…" : busy === "verify" ? "Checking…" : proceedLabel}
           </button>
         </div>
         <div className="flex flex-wrap justify-between gap-3 text-sm">
@@ -318,21 +325,24 @@ export function CheckoutForm({ listingId, checkIn, checkOut, guests, holdMinutes
       </div>
       <p className="-mt-2 text-sm text-ink-soft">The host uses your mobile number to reach you about this stay.</p>
 
-      <div>
-        <label htmlFor="message" className="text-sm font-medium">
-          Anything we should know? <span className="font-normal text-ink-soft">(optional)</span>
-        </label>
-        <textarea
-          id="message"
-          rows={3}
-          maxLength={1000}
-          placeholder="Arrival time, special occasions, dietary needs…"
-          value={details.message}
-          onChange={set("message")}
-          className={input}
-        />
-        {error("message")}
-      </div>
+      {/* A request asks for its message to the host in the review step. */}
+      {!onReady && (
+        <div>
+          <label htmlFor="message" className="text-sm font-medium">
+            Anything we should know? <span className="font-normal text-ink-soft">(optional)</span>
+          </label>
+          <textarea
+            id="message"
+            rows={3}
+            maxLength={1000}
+            placeholder="Arrival time, special occasions, dietary needs…"
+            value={details.message}
+            onChange={set("message")}
+            className={input}
+          />
+          {error("message")}
+        </div>
+      )}
 
       <Honeypot id="website" />
 
@@ -346,14 +356,14 @@ export function CheckoutForm({ listingId, checkIn, checkOut, guests, holdMinutes
       )}
       <div className="flex justify-end">
         <button type="submit" disabled={Boolean(busy) || !check.ready} className={next}>
-          {busy === "book" ? booking : busy === "code" ? "Sending code…" : request && session ? "Send request" : "Next"}
+          {busy === "book" ? "Holding your dates…" : busy === "code" ? "Sending code…" : proceedLabel}
         </button>
       </div>
       <p className="flex items-center gap-1.5 text-sm text-ink-soft">
         <Icon name="lock" className="h-3.5 w-3.5" />
         {session
-          ? request
-            ? `The host has ${request.hours} hours to accept. Your dates are held until then, and nothing is charged unless they accept.`
+          ? onReady
+            ? "Nothing is charged until the host accepts your request."
             : `Your dates are held for ${holdMinutes} minutes while you pay.`
           : mobileMode
             ? "Next, we’ll text a code to your mobile to confirm it’s you. That creates your account."

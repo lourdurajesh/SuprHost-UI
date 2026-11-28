@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { CheckoutForm } from "@/components/checkout-form";
+import { RequestSteps } from "@/components/request-steps";
 import { Track } from "@/components/track";
 import { getGuestSession, getListing, getListings, getQuote, getSite, PmsError } from "@/lib/pms";
+import { formatDate } from "@/lib/dates";
 import { stayUrl } from "@/lib/links";
 import { readSessionToken } from "@/lib/session";
 import { stayQuery } from "@/lib/validation";
@@ -60,34 +62,79 @@ async function BookContent({ params, searchParams }: Pick<PageProps<"/[site]/boo
   const full = await getListing(key, listing.slug);
   const stay = { listingId: listing.id, checkIn, checkOut, guests };
   const back = stayUrl(listing.slug, stay);
+  const phoneSignIn = site.features.includes("guest.phone_sign_in");
   // Without instant booking the host accepts first: the guest sends a request, and pays only after a yes.
-  const request = listing.instantBook ? null : { hours: site.payments.requestHours ?? 24 };
+  const request = !listing.instantBook;
+  const rules = [...new Set([...site.policies.houseRules, ...(full?.houseRules ?? [])])];
+  const day = (iso: string) => formatDate(iso, { weekday: "short", day: "numeric", month: "short" });
 
   return (
     <CheckoutShell title={request ? "Request to book" : "Confirm and book"} back={back}>
       <div className={checkoutGrid}>
-        <div className="space-y-5">
-          <StepCard n={1} title="Your details" state="open">
-            <CheckoutForm
-              listingId={listing.id}
-              checkIn={checkIn}
-              checkOut={checkOut}
-              guests={guests}
-              holdMinutes={site.payments.holdMinutes}
-              session={session}
-              phoneSignIn={site.features.includes("guest.phone_sign_in")}
-              request={request}
-            />
-          </StepCard>
-          {request ? (
-            <StepCard n={2} title="The host replies" state="todo" />
-          ) : (
-            <>
-              <StepCard n={2} title="Choose how to pay" state="todo" />
-              <StepCard n={3} title="Review your booking" state="todo" />
-            </>
-          )}
-        </div>
+        {request ? (
+          <RequestSteps
+            listingId={listing.id}
+            checkIn={checkIn}
+            checkOut={checkOut}
+            guests={guests}
+            session={session}
+            phoneSignIn={phoneSignIn}
+            hours={site.payments.requestHours ?? 24}
+            simulated={site.payments.mode === "simulated"}
+            methods={site.payments.methods}
+            review={
+              <div className="space-y-5 text-sm">
+                <dl className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <dt className="font-medium">Check-in</dt>
+                    <dd className="text-ink-soft">
+                      {day(checkIn)}, from {site.policies.checkInTime}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="font-medium">Check-out</dt>
+                    <dd className="text-ink-soft">
+                      {day(checkOut)}, by {site.policies.checkOutTime}
+                    </dd>
+                  </div>
+                </dl>
+                {rules.length > 0 && (
+                  <div>
+                    <p className="font-medium">House rules</p>
+                    <ul className="mt-1 list-disc space-y-0.5 pl-5 text-ink-soft">
+                      {rules.map((r) => (
+                        <li key={r}>{r}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                <p className="border-t border-line pt-5 text-ink-soft">
+                  By sending this request you agree to the house rules and the{" "}
+                  <Link href="/policies" target="_blank" className="font-medium text-ink underline underline-offset-4">
+                    booking policies
+                  </Link>
+                  . Please bring a photo ID for each adult guest.
+                </p>
+              </div>
+            }
+          />
+        ) : (
+          <div className="space-y-5">
+            <StepCard n={1} title="Your details" state="open">
+              <CheckoutForm
+                listingId={listing.id}
+                checkIn={checkIn}
+                checkOut={checkOut}
+                guests={guests}
+                holdMinutes={site.payments.holdMinutes}
+                session={session}
+                phoneSignIn={phoneSignIn}
+              />
+            </StepCard>
+            <StepCard n={2} title="Choose how to pay" state="todo" />
+            <StepCard n={3} title="Review your booking" state="todo" />
+          </div>
+        )}
 
         <StaySummary
           name={listing.name}
