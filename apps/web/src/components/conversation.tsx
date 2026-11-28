@@ -5,11 +5,21 @@ import type { Conversation as ConversationData } from "@/lib/pms/types";
 import { Icon } from "./icons";
 import { buttonClass, fieldClass } from "./ui/button";
 
-const POLL_MS = 15_000;
+/** How often to check for the host's messages: quickly while the two of you are chatting, slowly once it goes quiet. */
+const ACTIVE_POLL_MS = 3_000;
+const QUIET_POLL_MS = 15_000;
+/** A conversation counts as active this long after its last message. */
+const ACTIVE_FOR_MS = 5 * 60_000;
+
+function pollInterval(data: ConversationData) {
+  const last = data.messages[data.messages.length - 1];
+  return last && Date.now() - Date.parse(last.sentAt) < ACTIVE_FOR_MS ? ACTIVE_POLL_MS : QUIET_POLL_MS;
+}
 
 /**
  * The guest–host conversation on the booking page. New messages from the host show up while the
- * page is open (checked every 15 seconds while it's visible); the host is emailed about the guest's.
+ * page is open (checked every 3 seconds while the two are chatting, every 15 once it goes quiet,
+ * and not while the page is hidden); the host is emailed about the guest's.
  */
 export function Conversation({ token, initial, timezone }: { token: string; initial: ConversationData; timezone: string }) {
   const [data, setData] = useState(initial);
@@ -19,21 +29,33 @@ export function Conversation({ token, initial, timezone }: { token: string; init
   const list = useRef<HTMLOListElement>(null);
   const url = `/api/bookings/${encodeURIComponent(token)}/messages`;
 
+  // Counts checks, so the next one is scheduled even when a check fails or nothing changed.
+  const [checks, setChecks] = useState(0);
+
   const refresh = useCallback(async () => {
     const r = await fetch(url, { cache: "no-store" }).catch(() => null);
     if (r?.ok) setData(await r.json());
+    setChecks((n) => n + 1);
   }, [url]);
 
+  // Checks again after each answer, at the pace the conversation sets; only while the page is visible,
+  // and at once when the guest comes back to it.
   useEffect(() => {
-    const tick = () => {
+    if (!data.canSend) return;
+    const id = window.setTimeout(() => {
+      // Hidden: skip this check but keep the schedule going.
+      if (document.visibilityState === "visible") void refresh();
+      else setChecks((n) => n + 1);
+    }, pollInterval(data));
+    return () => window.clearTimeout(id);
+  }, [data, checks, refresh]);
+
+  useEffect(() => {
+    const back = () => {
       if (document.visibilityState === "visible") void refresh();
     };
-    const id = window.setInterval(tick, POLL_MS);
-    document.addEventListener("visibilitychange", tick);
-    return () => {
-      window.clearInterval(id);
-      document.removeEventListener("visibilitychange", tick);
-    };
+    document.addEventListener("visibilitychange", back);
+    return () => document.removeEventListener("visibilitychange", back);
   }, [refresh]);
 
   // Keep the newest message in view.
